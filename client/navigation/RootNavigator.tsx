@@ -1,237 +1,168 @@
-/**
- * Navigation Configuration
- * Main app navigation with auth flow
- */
-
 import React from 'react';
+import { ActivityIndicator, View, StyleSheet } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Ionicons } from '@expo/vector-icons';
-import { View, ActivityIndicator, Platform } from 'react-native';
 
-import { Colors, Spacing } from '@/constants/theme';
 import { useAuth } from '@/contexts/AuthContext';
-import { linkingConfig } from '@/lib/deep-linking';
+import { colors } from '@/theme';
+import type { RootStackParamList, AuthStackParamList } from './types';
+
+// Navigators
+import MainTabNavigator from './MainTabNavigator';
 
 // Auth Screens
-import LoginScreen from '@/screens/LoginScreen';
-import RegisterScreen from '@/screens/RegisterScreen';
-import ForgotPasswordScreen from '@/screens/ForgotPasswordScreen';
-import VerifyEmailScreen from '@/screens/VerifyEmailScreen';
+import LoginScreen from '@/screens/auth/LoginScreen';
 
-// Main Screens
-import HomeScreen from '@/screens/HomeScreen';
-import MessagesScreen from '@/screens/MessagesScreen';
-import ProfileScreen from '@/screens/ProfileScreen';
-import DealsScreen from '@/screens/DealsScreen';
+// Modal Screens
+import InvestModalScreen from '@/screens/modals/InvestModalScreen';
+import InvestmentDetailScreen from '@/screens/main/InvestmentDetailScreen';
 
-// Stack Screens
-import CreatePostScreen from '@/screens/CreatePostScreen';
-import PostDetailScreen from '@/screens/PostDetailScreen';
-import ConversationScreen from '@/screens/ConversationScreen';
-import NewConversationScreen from '@/screens/NewConversationScreen';
-import NotificationsScreen from '@/screens/NotificationsScreen';
-import SearchScreen from '@/screens/SearchScreen';
-import EditProfileScreen from '@/screens/EditProfileScreen';
-import UserProfileScreen from '@/screens/UserProfileScreen';
-import RoomDetailScreen from '@/screens/RoomDetailScreen';
-import HashtagScreen from '@/screens/HashtagScreen';
-import FollowersScreen from '@/screens/FollowersScreen';
-import BookmarksScreen from '@/screens/BookmarksScreen';
-import LeaderboardScreen from '@/screens/LeaderboardScreen';
-import AchievementsScreen from '@/screens/AchievementsScreen';
-import SettingsScreen from '@/screens/SettingsScreen';
-import PremiumScreen from '@/screens/PremiumScreen';
-import AMADetailScreen from '@/screens/AMADetailScreen';
-import CourseDetailScreen from '@/screens/CourseDetailScreen';
-import EventDetailScreen from '@/screens/EventDetailScreen';
-import DealDetailScreen from '@/screens/DealDetailScreen';
-import AIChatScreen from '@/screens/AIChatScreen';
-import LessonPlayerScreen from '@/screens/LessonPlayerScreen';
-import ChangePasswordScreen from '@/screens/ChangePasswordScreen';
-import BlockedUsersScreen from '@/screens/BlockedUsersScreen';
-import DeleteAccountScreen from '@/screens/DeleteAccountScreen';
+// Other Screens
+import SettingsScreen from '@/screens/settings/SettingsScreen';
+import DocumentsScreen from '@/screens/settings/DocumentsScreen';
+import PaymentMethodsScreen from '@/screens/settings/PaymentMethodsScreen';
+import SupportScreen from '@/screens/settings/SupportScreen';
+import LegalScreen from '@/screens/settings/LegalScreen';
 
-// Types
-import { RootStackParamList, MainTabParamList, AuthStackParamList } from '@/types';
-
-const Stack = createNativeStackNavigator<RootStackParamList>();
-const Tab = createBottomTabNavigator<MainTabParamList>();
+const RootStack = createNativeStackNavigator<RootStackParamList>();
 const AuthStack = createNativeStackNavigator<AuthStackParamList>();
 
-// Auth Navigator
+/**
+ * Auth Navigator
+ * Handles login/signup flow
+ */
 function AuthNavigator() {
   return (
     <AuthStack.Navigator
       screenOptions={{
         headerShown: false,
-        animation: 'slide_from_right',
+        animation: 'fade',
       }}
     >
       <AuthStack.Screen name="Login" component={LoginScreen} />
-      <AuthStack.Screen name="Register" component={RegisterScreen} />
-      <AuthStack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
-      <AuthStack.Screen name="VerifyEmail" component={VerifyEmailScreen} />
+      {/* Add more auth screens as needed */}
     </AuthStack.Navigator>
   );
 }
 
-// Tab Navigator
-function MainTabNavigator() {
+/**
+ * Loading Screen
+ * Shown while checking auth state
+ */
+function LoadingScreen() {
   return (
-    <Tab.Navigator
-      screenOptions={({ route }) => ({
-        headerShown: false,
-        tabBarActiveTintColor: Colors.primary,
-        tabBarInactiveTintColor: Colors.textSecondary,
-        tabBarStyle: {
-          backgroundColor: Colors.surface,
-          borderTopColor: Colors.border,
-          paddingBottom: Platform.OS === 'ios' ? Spacing.lg : Spacing.sm,
-          paddingTop: Spacing.sm,
-          height: Platform.OS === 'ios' ? 84 : 64,
-        },
-        tabBarLabelStyle: {
-          fontSize: 11,
-          fontWeight: '500',
-        },
-        tabBarIcon: ({ focused, color }) => {
-          let iconName: keyof typeof Ionicons.glyphMap = 'home';
-
-          switch (route.name) {
-            case 'Home':
-              iconName = focused ? 'home' : 'home-outline';
-              break;
-            case 'Discover':
-              iconName = focused ? 'compass' : 'compass-outline';
-              break;
-            case 'Messages':
-              iconName = focused ? 'chatbubbles' : 'chatbubbles-outline';
-              break;
-            case 'Profile':
-              iconName = focused ? 'person' : 'person-outline';
-              break;
-          }
-
-          return <Ionicons name={iconName} size={24} color={color} />;
-        },
-      })}
-    >
-      <Tab.Screen 
-        name="Home" 
-        component={HomeScreen}
-        options={{ tabBarLabel: 'Feed' }}
-      />
-      <Tab.Screen 
-        name="Discover" 
-        component={DealsScreen}
-        options={{ tabBarLabel: 'Deals' }}
-      />
-      <Tab.Screen 
-        name="Messages" 
-        component={MessagesScreen}
-        options={{ tabBarLabel: 'Messages' }}
-      />
-      <Tab.Screen 
-        name="Profile" 
-        component={ProfileScreen}
-        options={{ tabBarLabel: 'Profile' }}
-      />
-    </Tab.Navigator>
+    <View style={styles.loadingContainer}>
+      <ActivityIndicator size="large" color={colors.primary.main} />
+    </View>
   );
 }
 
-// Root Navigator
+/**
+ * Root Navigator
+ * Handles auth state and routes to appropriate navigator
+ */
 export default function RootNavigator() {
   const { isAuthenticated, isLoading } = useAuth();
 
+  // Show loading while checking auth state
   if (isLoading) {
-    return (
-      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: Colors.surface }}>
-        <ActivityIndicator size="large" color={Colors.primary} />
-      </View>
-    );
+    return <LoadingScreen />;
   }
 
   return (
-    <NavigationContainer linking={linkingConfig}>
-      <Stack.Navigator
+    <NavigationContainer>
+      <RootStack.Navigator
         screenOptions={{
           headerShown: false,
-          animation: 'slide_from_right',
         }}
       >
-        {!isAuthenticated ? (
-          <Stack.Screen name="Auth" component={AuthNavigator} />
-        ) : (
+        {isAuthenticated ? (
+          // Authenticated routes
           <>
-            <Stack.Screen name="Main" component={MainTabNavigator} />
-            
-            {/* Modal Screens */}
-            <Stack.Screen
-              name="CreatePost"
-              component={CreatePostScreen}
+            <RootStack.Screen
+              name="Main"
+              component={MainTabNavigator}
               options={{
-                presentation: 'modal',
-                animation: 'slide_from_bottom',
+                animation: 'fade',
               }}
             />
             
-            {/* Push Screens */}
-            <Stack.Screen name="PostDetail" component={PostDetailScreen} />
-            <Stack.Screen name="UserProfile" component={UserProfileScreen} />
-            <Stack.Screen name="EditProfile" component={EditProfileScreen} />
-            <Stack.Screen name="RoomDetail" component={RoomDetailScreen} />
-            <Stack.Screen name="Conversation" component={ConversationScreen} />
-            <Stack.Screen name="NewConversation" component={NewConversationScreen} />
-            <Stack.Screen name="Notifications" component={NotificationsScreen} />
-            <Stack.Screen name="Search" component={SearchScreen} />
-            <Stack.Screen name="Hashtag" component={HashtagScreen} />
-            <Stack.Screen name="Followers" component={FollowersScreen} />
-            <Stack.Screen name="Bookmarks" component={BookmarksScreen} />
-            <Stack.Screen name="Leaderboard" component={LeaderboardScreen} />
-            <Stack.Screen name="Achievements" component={AchievementsScreen} />
-            <Stack.Screen name="Settings" component={SettingsScreen} />
-            <Stack.Screen 
-              name="Premium" 
-              component={PremiumScreen}
-              options={{
-                presentation: 'modal',
-                animation: 'slide_from_bottom',
-              }}
-            />
-            
-            {/* Account Management */}
-            <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} />
-            <Stack.Screen name="BlockedUsers" component={BlockedUsersScreen} />
-            <Stack.Screen name="DeleteAccount" component={DeleteAccountScreen} />
-            
-            {/* Content Detail Screens */}
-            <Stack.Screen name="AMADetail" component={AMADetailScreen} />
-            <Stack.Screen name="CourseDetail" component={CourseDetailScreen} />
-            <Stack.Screen name="EventDetail" component={EventDetailScreen} />
-            <Stack.Screen name="DealDetail" component={DealDetailScreen} />
-            <Stack.Screen 
-              name="LessonPlayer" 
-              component={LessonPlayerScreen}
+            {/* Investment Detail - Full screen */}
+            <RootStack.Screen
+              name="InvestmentDetail"
+              component={InvestmentDetailScreen}
               options={{
                 animation: 'slide_from_right',
               }}
             />
-            
-            {/* AI Chat */}
-            <Stack.Screen 
-              name="AIChat" 
-              component={AIChatScreen}
+
+            {/* Invest Modal - Modal presentation */}
+            <RootStack.Screen
+              name="InvestModal"
+              component={InvestModalScreen}
               options={{
                 presentation: 'modal',
                 animation: 'slide_from_bottom',
               }}
             />
+
+            {/* Settings screens */}
+            <RootStack.Screen
+              name="Settings"
+              component={SettingsScreen}
+              options={{
+                animation: 'slide_from_right',
+              }}
+            />
+            <RootStack.Screen
+              name="Documents"
+              component={DocumentsScreen}
+              options={{
+                animation: 'slide_from_right',
+              }}
+            />
+            <RootStack.Screen
+              name="PaymentMethods"
+              component={PaymentMethodsScreen}
+              options={{
+                animation: 'slide_from_right',
+              }}
+            />
+            <RootStack.Screen
+              name="Support"
+              component={SupportScreen}
+              options={{
+                animation: 'slide_from_right',
+              }}
+            />
+            <RootStack.Screen
+              name="Legal"
+              component={LegalScreen}
+              options={{
+                animation: 'slide_from_right',
+              }}
+            />
           </>
+        ) : (
+          // Unauthenticated routes
+          <RootStack.Screen
+            name="Auth"
+            component={AuthNavigator}
+            options={{
+              animation: 'fade',
+            }}
+          />
         )}
-      </Stack.Navigator>
+      </RootStack.Navigator>
     </NavigationContainer>
   );
 }
+
+const styles = StyleSheet.create({
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: colors.background.primary,
+  },
+});
