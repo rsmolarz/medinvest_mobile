@@ -1,0 +1,347 @@
+/**
+ * Notifications Screen
+ * Shows all user notifications with filtering
+ */
+
+import React, { useCallback, useState } from 'react';
+import {
+  View,
+  StyleSheet,
+  FlatList,
+  TouchableOpacity,
+  RefreshControl,
+  Image,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+
+import { ThemedText } from '@/components/ThemedText';
+import { Colors, Spacing, BorderRadius, Typography } from '@/constants/theme';
+import { notificationsApi } from '@/lib/api';
+import { Notification, NotificationType } from '@/types';
+import { formatRelativeTime } from '@/lib/utils';
+
+const NOTIFICATION_ICONS: Record<NotificationType, { name: string; color: string }> = {
+  like: { name: 'heart', color: '#EF4444' },
+  comment: { name: 'chatbubble', color: '#3B82F6' },
+  follow: { name: 'person-add', color: '#8B5CF6' },
+  mention: { name: 'at', color: '#10B981' },
+  reply: { name: 'arrow-undo', color: '#F59E0B' },
+  message: { name: 'mail', color: '#06B6D4' },
+  ama_live: { name: 'mic', color: '#EC4899' },
+  deal_update: { name: 'trending-up', color: '#22C55E' },
+  achievement: { name: 'trophy', color: '#F97316' },
+};
+
+type FilterType = 'all' | 'unread' | 'mentions';
+
+export default function NotificationsScreen() {
+  const navigation = useNavigation<any>();
+  const queryClient = useQueryClient();
+  const [filter, setFilter] = useState<FilterType>('all');
+
+  const {
+    data: notificationsData,
+    isLoading,
+    isRefetching,
+    refetch,
+  } = useQuery({
+    queryKey: ['notifications'],
+    queryFn: async () => {
+      const response = await notificationsApi.getNotifications();
+      return response.data;
+    },
+  });
+
+  const notifications = notificationsData?.notifications || [];
+  const unreadCount = notificationsData?.unread_count || 0;
+
+  // Filter notifications
+  const filteredNotifications = notifications.filter(n => {
+    if (filter === 'unread') return !n.is_read;
+    if (filter === 'mentions') return n.type === 'mention';
+    return true;
+  });
+
+  // Mark as read mutation
+  const markAsReadMutation = useMutation({
+    mutationFn: (id: number) => notificationsApi.markAsRead(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+    },
+  });
+
+  // Mark all as read mutation
+  const markAllAsReadMutation = useMutation({
+    mutationFn: () => notificationsApi.markAllAsRead(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+    },
+  });
+
+  const handleNotificationPress = useCallback((notification: Notification) => {
+    // Mark as read
+    if (!notification.is_read) {
+      markAsReadMutation.mutate(notification.id);
+    }
+
+    // Navigate based on type
+    const { data } = notification;
+    switch (notification.type) {
+      case 'like':
+      case 'comment':
+      case 'mention':
+      case 'reply':
+        if (data?.post_id) {
+          navigation.navigate('PostDetail', { postId: data.post_id });
+        }
+        break;
+      case 'follow':
+        if (data?.user_id) {
+          navigation.navigate('UserProfile', { userId: data.user_id });
+        }
+        break;
+      case 'message':
+        if (data?.user_id) {
+          navigation.navigate('Conversation', { userId: data.user_id });
+        }
+        break;
+      case 'ama_live':
+        if (data?.ama_id) {
+          navigation.navigate('AMADetail', { amaId: data.ama_id });
+        }
+        break;
+      case 'deal_update':
+        if (data?.deal_id) {
+          navigation.navigate('DealDetail', { dealId: data.deal_id });
+        }
+        break;
+      case 'achievement':
+        navigation.navigate('Achievements');
+        break;
+    }
+  }, [navigation, markAsReadMutation]);
+
+  const getNotificationIcon = (type: NotificationType) => {
+    const config = NOTIFICATION_ICONS[type] || { name: 'notifications', color: Colors.primary };
+    return (
+      <View style={[styles.iconContainer, { backgroundColor: config.color + '20' }]}>
+        <Ionicons name={config.name as any} size={20} color={config.color} />
+      </View>
+    );
+  };
+
+  const renderNotification = ({ item }: { item: Notification }) => (
+    <TouchableOpacity
+      style={[styles.notificationItem, !item.is_read && styles.notificationUnread]}
+      onPress={() => handleNotificationPress(item)}
+    >
+      {getNotificationIcon(item.type)}
+      <View style={styles.notificationContent}>
+        <ThemedText style={styles.notificationTitle} numberOfLines={2}>
+          {item.title}
+        </ThemedText>
+        <ThemedText style={styles.notificationBody} numberOfLines={2}>
+          {item.body}
+        </ThemedText>
+        <ThemedText style={styles.notificationTime}>
+          {formatRelativeTime(item.created_at)}
+        </ThemedText>
+      </View>
+      {!item.is_read && <View style={styles.unreadDot} />}
+    </TouchableOpacity>
+  );
+
+  const renderHeader = () => (
+    <View style={styles.filterContainer}>
+      {(['all', 'unread', 'mentions'] as FilterType[]).map((f) => (
+        <TouchableOpacity
+          key={f}
+          style={[styles.filterButton, filter === f && styles.filterButtonActive]}
+          onPress={() => setFilter(f)}
+        >
+          <ThemedText style={[styles.filterText, filter === f && styles.filterTextActive]}>
+            {f.charAt(0).toUpperCase() + f.slice(1)}
+            {f === 'unread' && unreadCount > 0 && ` (${unreadCount})`}
+          </ThemedText>
+        </TouchableOpacity>
+      ))}
+    </View>
+  );
+
+  const renderEmpty = () => (
+    <View style={styles.emptyContainer}>
+      <Ionicons name="notifications-off-outline" size={64} color={Colors.textSecondary} />
+      <ThemedText style={styles.emptyTitle}>No notifications</ThemedText>
+      <ThemedText style={styles.emptySubtitle}>
+        {filter === 'unread' 
+          ? "You're all caught up!"
+          : filter === 'mentions'
+          ? "No one has mentioned you yet"
+          : "When you get notifications, they'll appear here"}
+      </ThemedText>
+    </View>
+  );
+
+  return (
+    <SafeAreaView style={styles.container} edges={['top']}>
+      {/* Header */}
+      <View style={styles.header}>
+        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+          <Ionicons name="chevron-back" size={24} color={Colors.textPrimary} />
+        </TouchableOpacity>
+        <ThemedText style={styles.headerTitle}>Notifications</ThemedText>
+        {unreadCount > 0 && (
+          <TouchableOpacity 
+            style={styles.markAllButton}
+            onPress={() => markAllAsReadMutation.mutate()}
+          >
+            <ThemedText style={styles.markAllText}>Mark all read</ThemedText>
+          </TouchableOpacity>
+        )}
+      </View>
+
+      {/* Notifications List */}
+      <FlatList
+        data={filteredNotifications}
+        renderItem={renderNotification}
+        keyExtractor={(item) => item.id.toString()}
+        ListHeaderComponent={renderHeader}
+        ListEmptyComponent={renderEmpty}
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefetching}
+            onRefresh={refetch}
+            tintColor={Colors.primary}
+          />
+        }
+        contentContainerStyle={filteredNotifications.length === 0 ? styles.emptyList : undefined}
+        showsVerticalScrollIndicator={false}
+      />
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: Colors.background,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.md,
+    backgroundColor: Colors.surface,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border,
+  },
+  backButton: {
+    padding: Spacing.sm,
+    marginRight: Spacing.sm,
+  },
+  headerTitle: {
+    ...Typography.title,
+    color: Colors.textPrimary,
+    flex: 1,
+  },
+  markAllButton: {
+    padding: Spacing.sm,
+  },
+  markAllText: {
+    ...Typography.caption,
+    color: Colors.primary,
+    fontWeight: '600',
+  },
+  filterContainer: {
+    flexDirection: 'row',
+    padding: Spacing.md,
+    backgroundColor: Colors.surface,
+    gap: Spacing.sm,
+  },
+  filterButton: {
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    borderRadius: BorderRadius.full,
+    backgroundColor: Colors.light.backgroundSecondary,
+  },
+  filterButtonActive: {
+    backgroundColor: Colors.primary + '15',
+  },
+  filterText: {
+    ...Typography.caption,
+    color: Colors.textSecondary,
+  },
+  filterTextActive: {
+    color: Colors.primary,
+    fontWeight: '600',
+  },
+  notificationItem: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    padding: Spacing.lg,
+    backgroundColor: Colors.surface,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border,
+  },
+  notificationUnread: {
+    backgroundColor: Colors.primary + '05',
+  },
+  iconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: Spacing.md,
+  },
+  notificationContent: {
+    flex: 1,
+  },
+  notificationTitle: {
+    ...Typography.body,
+    fontWeight: '600',
+    color: Colors.textPrimary,
+  },
+  notificationBody: {
+    ...Typography.caption,
+    color: Colors.textSecondary,
+    marginTop: 2,
+  },
+  notificationTime: {
+    ...Typography.small,
+    color: Colors.textSecondary,
+    marginTop: Spacing.xs,
+  },
+  unreadDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: Colors.primary,
+    marginLeft: Spacing.sm,
+    marginTop: Spacing.xs,
+  },
+  emptyList: {
+    flex: 1,
+  },
+  emptyContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: Spacing.xl,
+    paddingVertical: Spacing['5xl'],
+  },
+  emptyTitle: {
+    ...Typography.heading,
+    color: Colors.textPrimary,
+    marginTop: Spacing.lg,
+  },
+  emptySubtitle: {
+    ...Typography.body,
+    color: Colors.textSecondary,
+    textAlign: 'center',
+    marginTop: Spacing.sm,
+  },
+});
