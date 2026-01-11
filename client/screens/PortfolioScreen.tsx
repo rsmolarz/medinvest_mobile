@@ -40,7 +40,14 @@ export default function PortfolioScreen() {
         const opportunity = investmentOpportunities.find(
           (opp) => opp.id === inv.opportunityId
         );
-        const gainLossPercent = Math.random() * 30 - 5;
+        const roiMatch = opportunity?.expectedROI?.match(/(\d+)/);
+        const baseROI = roiMatch ? parseInt(roiMatch[1], 10) : 10;
+        const investmentDate = new Date(inv.date);
+        const daysSinceInvestment = Math.floor(
+          (Date.now() - investmentDate.getTime()) / (1000 * 60 * 60 * 24)
+        );
+        const dailyGrowth = baseROI / 365;
+        const gainLossPercent = Math.min(daysSinceInvestment * dailyGrowth, baseROI * 0.8);
         const currentValue = inv.amount * (1 + gainLossPercent / 100);
         return {
           ...inv,
