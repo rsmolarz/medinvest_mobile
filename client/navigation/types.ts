@@ -20,6 +20,9 @@ export type RootStackParamList = {
   PaymentMethods: undefined;
   Support: undefined;
   Legal: undefined;
+  EditProfile: undefined;
+  NotificationsSettings: undefined;
+  BookmarkedArticles: undefined;
 };
 
 /**

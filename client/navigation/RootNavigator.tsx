@@ -23,6 +23,9 @@ import DocumentsScreen from '@/screens/settings/DocumentsScreen';
 import PaymentMethodsScreen from '@/screens/settings/PaymentMethodsScreen';
 import SupportScreen from '@/screens/settings/SupportScreen';
 import LegalScreen from '@/screens/settings/LegalScreen';
+import EditProfileScreen from '@/screens/settings/EditProfileScreen';
+import NotificationsSettingsScreen from '@/screens/settings/NotificationsSettingsScreen';
+import BookmarkedArticlesScreen from '@/screens/main/BookmarkedArticlesScreen';
 
 const RootStack = createNativeStackNavigator<RootStackParamList>();
 const AuthStack = createNativeStackNavigator<AuthStackParamList>();
@@ -138,6 +141,27 @@ export default function RootNavigator() {
             <RootStack.Screen
               name="Legal"
               component={LegalScreen}
+              options={{
+                animation: 'slide_from_right',
+              }}
+            />
+            <RootStack.Screen
+              name="EditProfile"
+              component={EditProfileScreen}
+              options={{
+                animation: 'slide_from_right',
+              }}
+            />
+            <RootStack.Screen
+              name="NotificationsSettings"
+              component={NotificationsSettingsScreen}
+              options={{
+                animation: 'slide_from_right',
+              }}
+            />
+            <RootStack.Screen
+              name="BookmarkedArticles"
+              component={BookmarkedArticlesScreen}
               options={{
                 animation: 'slide_from_right',
               }}
