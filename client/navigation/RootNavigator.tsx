@@ -1,245 +1,260 @@
+/**
+ * Navigation Configuration
+ * Main app navigation with auth flow
+ */
+
 import React, { useState, useEffect } from 'react';
-import { ActivityIndicator, View, StyleSheet } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { Ionicons } from '@expo/vector-icons';
+import { View, ActivityIndicator, Platform } from 'react-native';
 
+import { Colors, Spacing } from '@/constants/theme';
 import { useAuth } from '@/contexts/AuthContext';
-import { colors } from '@/theme';
-import type { RootStackParamList, AuthStackParamList } from './types';
-
-const ONBOARDING_COMPLETE_KEY = '@medinvest/onboarding_complete';
-
-// Navigators
-import MainTabNavigator from './MainTabNavigator';
+import { linkingConfig } from '@/lib/deep-linking';
 
 // Auth Screens
-import LoginScreen from '@/screens/auth/LoginScreen';
-import OnboardingScreen from '@/screens/auth/OnboardingScreen';
+import LoginScreen from '@/screens/LoginScreenNew';
+import RegisterScreen from '@/screens/RegisterScreen';
+import ForgotPasswordScreen from '@/screens/ForgotPasswordScreen';
+import VerifyEmailScreen from '@/screens/VerifyEmailScreen';
+import OnboardingScreen, { hasCompletedOnboarding } from '@/screens/OnboardingScreen';
 
-// Modal Screens
-import InvestModalScreen from '@/screens/modals/InvestModalScreen';
-import InvestmentDetailScreen from '@/screens/main/InvestmentDetailScreen';
+// Main Screens
+import HomeScreen from '@/screens/HomeScreen';
+import MessagesScreen from '@/screens/MessagesScreen';
+import ProfileScreen from '@/screens/ProfileScreen';
+import DealsScreen from '@/screens/DealsScreen';
 
-// Other Screens
-import SettingsScreen from '@/screens/settings/SettingsScreen';
-import DocumentsScreen from '@/screens/settings/DocumentsScreen';
-import PaymentMethodsScreen from '@/screens/settings/PaymentMethodsScreen';
-import SupportScreen from '@/screens/settings/SupportScreen';
-import LegalScreen from '@/screens/settings/LegalScreen';
-import EditProfileScreen from '@/screens/settings/EditProfileScreen';
-import NotificationsSettingsScreen from '@/screens/settings/NotificationsSettingsScreen';
-import BookmarkedArticlesScreen from '@/screens/main/BookmarkedArticlesScreen';
-import TransactionHistoryScreen from '@/screens/main/TransactionHistoryScreen';
-import ArticleDetailScreen from '@/screens/main/ArticleDetailScreen';
+// Stack Screens
+import CreatePostScreen from '@/screens/CreatePostScreen';
+import PostDetailScreen from '@/screens/PostDetailScreen';
+import ConversationScreen from '@/screens/ConversationScreen';
+import NewConversationScreen from '@/screens/NewConversationScreen';
+import NotificationsScreen from '@/screens/NotificationsScreen';
+import SearchScreen from '@/screens/SearchScreen';
+import EditProfileScreen from '@/screens/EditProfileScreen';
+import UserProfileScreen from '@/screens/UserProfileScreen';
+import RoomDetailScreen from '@/screens/RoomDetailScreen';
+import HashtagScreen from '@/screens/HashtagScreen';
+import FollowersScreen from '@/screens/FollowersScreen';
+import BookmarksScreen from '@/screens/BookmarksScreen';
+import LeaderboardScreen from '@/screens/LeaderboardScreen';
+import AchievementsScreen from '@/screens/AchievementsScreen';
+import SettingsScreen from '@/screens/SettingsScreen';
+import PremiumScreen from '@/screens/PremiumScreen';
+import AMADetailScreen from '@/screens/AMADetailScreen';
+import CourseDetailScreen from '@/screens/CourseDetailScreen';
+import EventDetailScreen from '@/screens/EventDetailScreen';
+import DealDetailScreen from '@/screens/DealDetailScreen';
+import AIChatScreen from '@/screens/AIChatScreen';
+import LessonPlayerScreen from '@/screens/LessonPlayerScreen';
+import ChangePasswordScreen from '@/screens/ChangePasswordScreen';
+import BlockedUsersScreen from '@/screens/BlockedUsersScreen';
+import DeleteAccountScreen from '@/screens/DeleteAccountScreen';
+import BiometricSettingsScreen from '@/screens/BiometricSettingsScreen';
+import PrivacyPolicyScreen from '@/screens/PrivacyPolicyScreen';
+import TermsOfServiceScreen from '@/screens/TermsOfServiceScreen';
 
-const RootStack = createNativeStackNavigator<RootStackParamList>();
+// Types
+import { RootStackParamList, MainTabParamList, AuthStackParamList } from '@/types';
+
+const Stack = createNativeStackNavigator<RootStackParamList>();
+const Tab = createBottomTabNavigator<MainTabParamList>();
 const AuthStack = createNativeStackNavigator<AuthStackParamList>();
 
-/**
- * Auth Navigator
- * Handles login/signup flow
- */
+// Auth Navigator
 function AuthNavigator() {
   return (
     <AuthStack.Navigator
       screenOptions={{
         headerShown: false,
-        animation: 'fade',
+        animation: 'slide_from_right',
       }}
     >
       <AuthStack.Screen name="Login" component={LoginScreen} />
-      {/* Add more auth screens as needed */}
+      <AuthStack.Screen name="Register" component={RegisterScreen} />
+      <AuthStack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
+      <AuthStack.Screen name="VerifyEmail" component={VerifyEmailScreen} />
     </AuthStack.Navigator>
   );
 }
 
-/**
- * Loading Screen
- * Shown while checking auth state
- */
-function LoadingScreen() {
+// Tab Navigator
+function MainTabNavigator() {
   return (
-    <View style={styles.loadingContainer}>
-      <ActivityIndicator size="large" color={colors.primary.main} />
-    </View>
+    <Tab.Navigator
+      screenOptions={({ route }) => ({
+        headerShown: false,
+        tabBarActiveTintColor: Colors.primary,
+        tabBarInactiveTintColor: Colors.textSecondary,
+        tabBarStyle: {
+          backgroundColor: Colors.surface,
+          borderTopColor: Colors.border,
+          paddingBottom: Platform.OS === 'ios' ? Spacing.lg : Spacing.sm,
+          paddingTop: Spacing.sm,
+          height: Platform.OS === 'ios' ? 84 : 64,
+        },
+        tabBarLabelStyle: {
+          fontSize: 11,
+          fontWeight: '500',
+        },
+        tabBarIcon: ({ focused, color }) => {
+          let iconName: keyof typeof Ionicons.glyphMap = 'home';
+
+          switch (route.name) {
+            case 'Home':
+              iconName = focused ? 'home' : 'home-outline';
+              break;
+            case 'Discover':
+              iconName = focused ? 'compass' : 'compass-outline';
+              break;
+            case 'Messages':
+              iconName = focused ? 'chatbubbles' : 'chatbubbles-outline';
+              break;
+            case 'Profile':
+              iconName = focused ? 'person' : 'person-outline';
+              break;
+          }
+
+          return <Ionicons name={iconName} size={24} color={color} />;
+        },
+      })}
+    >
+      <Tab.Screen 
+        name="Home" 
+        component={HomeScreen}
+        options={{ tabBarLabel: 'Feed' }}
+      />
+      <Tab.Screen 
+        name="Discover" 
+        component={DealsScreen}
+        options={{ tabBarLabel: 'Deals' }}
+      />
+      <Tab.Screen 
+        name="Messages" 
+        component={MessagesScreen}
+        options={{ tabBarLabel: 'Messages' }}
+      />
+      <Tab.Screen 
+        name="Profile" 
+        component={ProfileScreen}
+        options={{ tabBarLabel: 'Profile' }}
+      />
+    </Tab.Navigator>
   );
 }
 
-/**
- * Root Navigator
- * Handles auth state and routes to appropriate navigator
- */
+// Root Navigator
 export default function RootNavigator() {
   const { isAuthenticated, isLoading } = useAuth();
-  const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState<boolean | null>(null);
+  const [hasOnboarded, setHasOnboarded] = useState<boolean | null>(null);
 
+  // Check onboarding status on mount
   useEffect(() => {
-    async function checkOnboarding() {
-      try {
-        const value = await AsyncStorage.getItem(ONBOARDING_COMPLETE_KEY);
-        setHasCompletedOnboarding(value === 'true');
-      } catch {
-        setHasCompletedOnboarding(true);
-      }
-    }
-    if (!isAuthenticated) {
-      checkOnboarding();
-    }
-  }, [isAuthenticated]);
+    checkOnboarding();
+  }, []);
 
-  // Show loading while checking auth state or onboarding status
-  if (isLoading || (!isAuthenticated && hasCompletedOnboarding === null)) {
-    return <LoadingScreen />;
+  const checkOnboarding = async () => {
+    const completed = await hasCompletedOnboarding();
+    setHasOnboarded(completed);
+  };
+
+  if (isLoading || hasOnboarded === null) {
+    return (
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: Colors.surface }}>
+        <ActivityIndicator size="large" color={Colors.primary} />
+      </View>
+    );
   }
 
   return (
-    <NavigationContainer>
-      <RootStack.Navigator
+    <NavigationContainer linking={linkingConfig}>
+      <Stack.Navigator
         screenOptions={{
           headerShown: false,
+          animation: 'slide_from_right',
         }}
       >
-        {isAuthenticated ? (
-          // Authenticated routes
+        {/* Onboarding for first-time users */}
+        {!hasOnboarded && !isAuthenticated && (
+          <Stack.Screen name="Onboarding" component={OnboardingScreen} />
+        )}
+        
+        {!isAuthenticated ? (
+          <Stack.Screen name="Auth" component={AuthNavigator} />
+        ) : (
           <>
-            <RootStack.Screen
-              name="Main"
-              component={MainTabNavigator}
-              options={{
-                animation: 'fade',
-              }}
-            />
+            <Stack.Screen name="Main" component={MainTabNavigator} />
             
-            {/* Investment Detail - Full screen */}
-            <RootStack.Screen
-              name="InvestmentDetail"
-              component={InvestmentDetailScreen}
-              options={{
-                animation: 'slide_from_right',
-              }}
-            />
-
-            {/* Invest Modal - Modal presentation */}
-            <RootStack.Screen
-              name="InvestModal"
-              component={InvestModalScreen}
+            {/* Modal Screens */}
+            <Stack.Screen
+              name="CreatePost"
+              component={CreatePostScreen}
               options={{
                 presentation: 'modal',
                 animation: 'slide_from_bottom',
               }}
             />
-
-            {/* Settings screens */}
-            <RootStack.Screen
-              name="Settings"
-              component={SettingsScreen}
+            
+            {/* Push Screens */}
+            <Stack.Screen name="PostDetail" component={PostDetailScreen} />
+            <Stack.Screen name="UserProfile" component={UserProfileScreen} />
+            <Stack.Screen name="EditProfile" component={EditProfileScreen} />
+            <Stack.Screen name="RoomDetail" component={RoomDetailScreen} />
+            <Stack.Screen name="Conversation" component={ConversationScreen} />
+            <Stack.Screen name="NewConversation" component={NewConversationScreen} />
+            <Stack.Screen name="Notifications" component={NotificationsScreen} />
+            <Stack.Screen name="Search" component={SearchScreen} />
+            <Stack.Screen name="Hashtag" component={HashtagScreen} />
+            <Stack.Screen name="Followers" component={FollowersScreen} />
+            <Stack.Screen name="Bookmarks" component={BookmarksScreen} />
+            <Stack.Screen name="Leaderboard" component={LeaderboardScreen} />
+            <Stack.Screen name="Achievements" component={AchievementsScreen} />
+            <Stack.Screen name="Settings" component={SettingsScreen} />
+            <Stack.Screen 
+              name="Premium" 
+              component={PremiumScreen}
+              options={{
+                presentation: 'modal',
+                animation: 'slide_from_bottom',
+              }}
+            />
+            
+            {/* Account Management */}
+            <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} />
+            <Stack.Screen name="BlockedUsers" component={BlockedUsersScreen} />
+            <Stack.Screen name="DeleteAccount" component={DeleteAccountScreen} />
+            <Stack.Screen name="BiometricSettings" component={BiometricSettingsScreen} />
+            <Stack.Screen name="PrivacyPolicy" component={PrivacyPolicyScreen} />
+            <Stack.Screen name="TermsOfService" component={TermsOfServiceScreen} />
+            
+            {/* Content Detail Screens */}
+            <Stack.Screen name="AMADetail" component={AMADetailScreen} />
+            <Stack.Screen name="CourseDetail" component={CourseDetailScreen} />
+            <Stack.Screen name="EventDetail" component={EventDetailScreen} />
+            <Stack.Screen name="DealDetail" component={DealDetailScreen} />
+            <Stack.Screen 
+              name="LessonPlayer" 
+              component={LessonPlayerScreen}
               options={{
                 animation: 'slide_from_right',
               }}
             />
-            <RootStack.Screen
-              name="Documents"
-              component={DocumentsScreen}
+            
+            {/* AI Chat */}
+            <Stack.Screen 
+              name="AIChat" 
+              component={AIChatScreen}
               options={{
-                animation: 'slide_from_right',
-              }}
-            />
-            <RootStack.Screen
-              name="PaymentMethods"
-              component={PaymentMethodsScreen}
-              options={{
-                animation: 'slide_from_right',
-              }}
-            />
-            <RootStack.Screen
-              name="Support"
-              component={SupportScreen}
-              options={{
-                animation: 'slide_from_right',
-              }}
-            />
-            <RootStack.Screen
-              name="Legal"
-              component={LegalScreen}
-              options={{
-                animation: 'slide_from_right',
-              }}
-            />
-            <RootStack.Screen
-              name="EditProfile"
-              component={EditProfileScreen}
-              options={{
-                animation: 'slide_from_right',
-              }}
-            />
-            <RootStack.Screen
-              name="NotificationsSettings"
-              component={NotificationsSettingsScreen}
-              options={{
-                animation: 'slide_from_right',
-              }}
-            />
-            <RootStack.Screen
-              name="BookmarkedArticles"
-              component={BookmarkedArticlesScreen}
-              options={{
-                animation: 'slide_from_right',
-              }}
-            />
-            <RootStack.Screen
-              name="TransactionHistory"
-              component={TransactionHistoryScreen}
-              options={{
-                animation: 'slide_from_right',
-              }}
-            />
-            <RootStack.Screen
-              name="ArticleDetail"
-              component={ArticleDetailScreen}
-              options={{
-                animation: 'slide_from_right',
-              }}
-            />
-          </>
-        ) : hasCompletedOnboarding ? (
-          // User has completed onboarding - show auth
-          <RootStack.Screen
-            name="Auth"
-            component={AuthNavigator}
-            options={{
-              animation: 'fade',
-            }}
-          />
-        ) : (
-          // First time user - show onboarding
-          <>
-            <RootStack.Screen
-              name="Onboarding"
-              component={OnboardingScreen}
-              options={{
-                animation: 'fade',
-              }}
-            />
-            <RootStack.Screen
-              name="Auth"
-              component={AuthNavigator}
-              options={{
-                animation: 'fade',
+                presentation: 'modal',
+                animation: 'slide_from_bottom',
               }}
             />
           </>
         )}
-      </RootStack.Navigator>
+      </Stack.Navigator>
     </NavigationContainer>
   );
 }
-
-const styles = StyleSheet.create({
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: colors.background.primary,
-  },
-});

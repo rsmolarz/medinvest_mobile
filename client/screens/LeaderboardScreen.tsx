@@ -1,210 +1,471 @@
-import React, { useState } from "react";
-import { View, StyleSheet, FlatList, Pressable } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Feather } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
-import Animated, { FadeInDown, FadeInUp } from "react-native-reanimated";
+/**
+ * Leaderboard Screen
+ * Points leaderboard rankings
+ */
 
-import { ThemedText } from "@/components/ThemedText";
-import { useTheme } from "@/hooks/useTheme";
-import { Colors, Spacing, BorderRadius, Shadows } from "@/constants/theme";
-import { leaderboardUsers, LeaderboardUser } from "@/lib/mockData";
+import React, { useState } from 'react';
+import {
+  View,
+  StyleSheet,
+  FlatList,
+  TouchableOpacity,
+  Image,
+  RefreshControl,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { useQuery } from '@tanstack/react-query';
+import { LinearGradient } from 'expo-linear-gradient';
 
-type TimeFilter = "weekly" | "monthly" | "allTime";
+import { ThemedText } from '@/components/ThemedText';
+import { Colors, Spacing, BorderRadius, Typography, Shadows } from '@/constants/theme';
+import { gamificationApi } from '@/lib/api';
+import { LeaderboardEntry } from '@/types';
+import { useAuth } from '@/contexts/AuthContext';
+import { formatNumber } from '@/lib/utils';
+
+type Period = 'weekly' | 'monthly' | 'all_time';
 
 export default function LeaderboardScreen() {
-  const insets = useSafeAreaInsets();
-  const { theme } = useTheme();
-  const [timeFilter, setTimeFilter] = useState<TimeFilter>("weekly");
+  const navigation = useNavigation<any>();
+  const { user: currentUser } = useAuth();
+  const [period, setPeriod] = useState<Period>('weekly');
 
-  const topThree = leaderboardUsers.slice(0, 3);
-  const restOfList = leaderboardUsers.slice(3);
+  const {
+    data: leaderboard,
+    isLoading,
+    isRefetching,
+    refetch,
+  } = useQuery({
+    queryKey: ['leaderboard', period],
+    queryFn: async () => {
+      const response = await gamificationApi.getLeaderboard(period);
+      return response.data?.leaderboard || [];
+    },
+  });
 
-  const renderPodiumUser = (user: LeaderboardUser, position: 1 | 2 | 3) => {
-    const heights = { 1: 120, 2: 100, 3: 80 };
-    const colors = {
-      1: ["#FFD700", "#FFA500"] as const,
-      2: ["#C0C0C0", "#A8A8A8"] as const,
-      3: ["#CD7F32", "#8B4513"] as const,
-    };
+  const { data: myStats } = useQuery({
+    queryKey: ['myStats'],
+    queryFn: async () => {
+      const response = await gamificationApi.getMyStats();
+      return response.data;
+    },
+  });
+
+  const getRankColor = (rank: number) => {
+    switch (rank) {
+      case 1: return '#FFD700';
+      case 2: return '#C0C0C0';
+      case 3: return '#CD7F32';
+      default: return Colors.textSecondary;
+    }
+  };
+
+  const getRankIcon = (rank: number) => {
+    if (rank <= 3) {
+      return <MaterialCommunityIcons name="trophy" size={24} color={getRankColor(rank)} />;
+    }
+    return <ThemedText style={styles.rankNumber}>{rank}</ThemedText>;
+  };
+
+  const renderTopThree = () => {
+    if (!leaderboard || leaderboard.length < 3) return null;
+
+    const top3 = leaderboard.slice(0, 3);
+    const [first, second, third] = top3;
 
     return (
-      <Animated.View
-        entering={FadeInUp.delay(position * 100).springify()}
-        style={styles.podiumColumn}
-      >
-        <LinearGradient
-          colors={[Colors.gradient.start, Colors.gradient.end]}
-          style={styles.podiumAvatar}
-        >
-          <ThemedText type="heading" style={{ color: "#FFFFFF" }}>
-            {user.name.charAt(0)}
+      <View style={styles.topThreeContainer}>
+        {/* Second Place */}
+        <View style={styles.topThreeItem}>
+          <View style={[styles.topThreeAvatar, styles.secondPlace]}>
+            {second.user.avatar_url ? (
+              <Image source={{ uri: second.user.avatar_url }} style={styles.topThreeImage} />
+            ) : (
+              <ThemedText style={styles.topThreeInitials}>
+                {second.user.first_name[0]}{second.user.last_name[0]}
+              </ThemedText>
+            )}
+            <View style={[styles.topThreeBadge, { backgroundColor: '#C0C0C0' }]}>
+              <ThemedText style={styles.topThreeBadgeText}>2</ThemedText>
+            </View>
+          </View>
+          <ThemedText style={styles.topThreeName} numberOfLines={1}>
+            {second.user.first_name}
           </ThemedText>
-        </LinearGradient>
-        <ThemedText type="body" style={{ fontWeight: "600", marginTop: Spacing.sm }} numberOfLines={1}>
-          {user.name.split(" ")[0]}
-        </ThemedText>
-        <ThemedText type="small" style={{ color: Colors.primary }}>
-          {user.points.toLocaleString()} pts
-        </ThemedText>
-        <LinearGradient
-          colors={colors[position]}
-          style={[styles.podiumBase, { height: heights[position] }]}
-        >
-          <ThemedText type="title" style={{ color: "#FFFFFF" }}>
-            {position}
+          <ThemedText style={styles.topThreePoints}>{formatNumber(second.points)}</ThemedText>
+        </View>
+
+        {/* First Place */}
+        <View style={styles.topThreeItem}>
+          <View style={[styles.topThreeAvatar, styles.firstPlace]}>
+            {first.user.avatar_url ? (
+              <Image source={{ uri: first.user.avatar_url }} style={styles.topThreeImage} />
+            ) : (
+              <ThemedText style={styles.topThreeInitials}>
+                {first.user.first_name[0]}{first.user.last_name[0]}
+              </ThemedText>
+            )}
+            <View style={[styles.topThreeBadge, { backgroundColor: '#FFD700' }]}>
+              <MaterialCommunityIcons name="crown" size={14} color="white" />
+            </View>
+          </View>
+          <ThemedText style={styles.topThreeName} numberOfLines={1}>
+            {first.user.first_name}
           </ThemedText>
-        </LinearGradient>
-      </Animated.View>
+          <ThemedText style={styles.topThreePoints}>{formatNumber(first.points)}</ThemedText>
+        </View>
+
+        {/* Third Place */}
+        <View style={styles.topThreeItem}>
+          <View style={[styles.topThreeAvatar, styles.thirdPlace]}>
+            {third.user.avatar_url ? (
+              <Image source={{ uri: third.user.avatar_url }} style={styles.topThreeImage} />
+            ) : (
+              <ThemedText style={styles.topThreeInitials}>
+                {third.user.first_name[0]}{third.user.last_name[0]}
+              </ThemedText>
+            )}
+            <View style={[styles.topThreeBadge, { backgroundColor: '#CD7F32' }]}>
+              <ThemedText style={styles.topThreeBadgeText}>3</ThemedText>
+            </View>
+          </View>
+          <ThemedText style={styles.topThreeName} numberOfLines={1}>
+            {third.user.first_name}
+          </ThemedText>
+          <ThemedText style={styles.topThreePoints}>{formatNumber(third.points)}</ThemedText>
+        </View>
+      </View>
     );
   };
 
-  const renderUser = ({ item, index }: { item: LeaderboardUser; index: number }) => (
-    <Animated.View entering={FadeInDown.delay(index * 50).springify()}>
-      <View style={[styles.userRow, { backgroundColor: theme.backgroundDefault }, Shadows.card]}>
-        <ThemedText type="heading" style={styles.rank}>
-          {item.rank}
-        </ThemedText>
-        <LinearGradient
-          colors={[Colors.gradient.start, Colors.gradient.end]}
-          style={styles.smallAvatar}
-        >
-          <ThemedText type="body" style={{ color: "#FFFFFF", fontWeight: "600" }}>
-            {item.name.charAt(0)}
-          </ThemedText>
-        </LinearGradient>
-        <View style={styles.userInfo}>
-          <ThemedText type="body" style={{ fontWeight: "600" }}>
-            {item.name}
-          </ThemedText>
-          <ThemedText type="small" style={{ color: theme.textSecondary }}>
-            Level {item.level}
-          </ThemedText>
-        </View>
-        <ThemedText type="heading" style={{ color: Colors.primary }}>
-          {item.points.toLocaleString()}
-        </ThemedText>
-      </View>
-    </Animated.View>
-  );
+  const renderEntry = ({ item }: { item: LeaderboardEntry }) => {
+    const isCurrentUser = item.user.id === currentUser?.id;
 
-  return (
-    <View style={[styles.container, { backgroundColor: theme.backgroundRoot }]}>
-      <View style={[styles.header, { paddingTop: insets.top + Spacing.lg }]}>
-        <ThemedText type="title">Leaderboard</ThemedText>
-      </View>
-
-      <View style={styles.filterContainer}>
-        {(["weekly", "monthly", "allTime"] as TimeFilter[]).map((filter) => (
-          <Pressable
-            key={filter}
-            onPress={() => setTimeFilter(filter)}
-            style={[
-              styles.filterButton,
-              timeFilter === filter && { backgroundColor: Colors.primary },
-            ]}
-          >
-            <ThemedText
-              type="body"
-              style={{
-                color: timeFilter === filter ? "#FFFFFF" : theme.textSecondary,
-                fontWeight: timeFilter === filter ? "600" : "400",
-              }}
-            >
-              {filter === "allTime" ? "All Time" : filter.charAt(0).toUpperCase() + filter.slice(1)}
+    return (
+      <TouchableOpacity
+        style={[styles.entryItem, isCurrentUser && styles.entryItemCurrent]}
+        onPress={() => navigation.navigate('UserProfile', { userId: item.user.id })}
+      >
+        <View style={styles.entryRank}>{getRankIcon(item.rank)}</View>
+        {item.user.avatar_url ? (
+          <Image source={{ uri: item.user.avatar_url }} style={styles.entryAvatar} />
+        ) : (
+          <View style={[styles.entryAvatar, styles.entryAvatarPlaceholder]}>
+            <ThemedText style={styles.entryAvatarText}>
+              {item.user.first_name[0]}{item.user.last_name[0]}
             </ThemedText>
-          </Pressable>
+          </View>
+        )}
+        <View style={styles.entryInfo}>
+          <ThemedText style={styles.entryName}>{item.user.full_name}</ThemedText>
+          <ThemedText style={styles.entryLevel}>Level {item.user.level}</ThemedText>
+        </View>
+        <View style={styles.entryPoints}>
+          <ThemedText style={styles.entryPointsValue}>{formatNumber(item.points)}</ThemedText>
+          <ThemedText style={styles.entryPointsLabel}>pts</ThemedText>
+        </View>
+      </TouchableOpacity>
+    );
+  };
+
+  const renderHeader = () => (
+    <View>
+      {/* Period Selector */}
+      <View style={styles.periodContainer}>
+        {(['weekly', 'monthly', 'all_time'] as Period[]).map((p) => (
+          <TouchableOpacity
+            key={p}
+            style={[styles.periodButton, period === p && styles.periodButtonActive]}
+            onPress={() => setPeriod(p)}
+          >
+            <ThemedText style={[styles.periodText, period === p && styles.periodTextActive]}>
+              {p === 'all_time' ? 'All Time' : p.charAt(0).toUpperCase() + p.slice(1)}
+            </ThemedText>
+          </TouchableOpacity>
         ))}
       </View>
 
-      <View style={styles.podiumContainer}>
-        {topThree[1] ? renderPodiumUser(topThree[1], 2) : null}
-        {topThree[0] ? renderPodiumUser(topThree[0], 1) : null}
-        {topThree[2] ? renderPodiumUser(topThree[2], 3) : null}
+      {/* Top 3 */}
+      {renderTopThree()}
+
+      {/* Your Stats */}
+      {myStats && (
+        <View style={styles.myStatsContainer}>
+          <ThemedText style={styles.myStatsTitle}>Your Stats</ThemedText>
+          <View style={styles.myStatsRow}>
+            <View style={styles.myStatItem}>
+              <ThemedText style={styles.myStatValue}>#{myStats.rank}</ThemedText>
+              <ThemedText style={styles.myStatLabel}>Rank</ThemedText>
+            </View>
+            <View style={styles.myStatItem}>
+              <ThemedText style={styles.myStatValue}>{formatNumber(myStats.points)}</ThemedText>
+              <ThemedText style={styles.myStatLabel}>Points</ThemedText>
+            </View>
+            <View style={styles.myStatItem}>
+              <ThemedText style={styles.myStatValue}>{myStats.streak}</ThemedText>
+              <ThemedText style={styles.myStatLabel}>Streak</ThemedText>
+            </View>
+          </View>
+        </View>
+      )}
+
+      {/* Rankings Header */}
+      <View style={styles.rankingsHeader}>
+        <ThemedText style={styles.rankingsTitle}>Rankings</ThemedText>
+      </View>
+    </View>
+  );
+
+  return (
+    <SafeAreaView style={styles.container} edges={['top']}>
+      {/* Header */}
+      <View style={styles.header}>
+        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+          <Ionicons name="chevron-back" size={24} color={Colors.textPrimary} />
+        </TouchableOpacity>
+        <ThemedText style={styles.headerTitle}>Leaderboard</ThemedText>
+        <View style={styles.backButton} />
       </View>
 
+      {/* Leaderboard List */}
       <FlatList
-        data={restOfList}
-        renderItem={renderUser}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.list}
+        data={leaderboard?.slice(3)}
+        renderItem={renderEntry}
+        keyExtractor={(item) => item.user.id.toString()}
+        ListHeaderComponent={renderHeader}
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefetching}
+            onRefresh={refetch}
+            tintColor={Colors.primary}
+          />
+        }
+        contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
       />
-    </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: Colors.background,
   },
   header: {
-    paddingHorizontal: Spacing.xl,
-    paddingBottom: Spacing.lg,
-  },
-  filterContainer: {
-    flexDirection: "row",
-    paddingHorizontal: Spacing.xl,
-    gap: Spacing.sm,
-    marginBottom: Spacing.lg,
-  },
-  filterButton: {
-    paddingHorizontal: Spacing.lg,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.sm,
-    borderRadius: BorderRadius.full,
-    backgroundColor: "transparent",
+    backgroundColor: Colors.surface,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border,
   },
-  podiumContainer: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "flex-end",
-    paddingHorizontal: Spacing.xl,
-    marginBottom: Spacing.xl,
-    gap: Spacing.md,
+  backButton: {
+    width: 40,
+    padding: Spacing.sm,
   },
-  podiumColumn: {
-    alignItems: "center",
-    width: 90,
+  headerTitle: {
+    ...Typography.heading,
+    color: Colors.textPrimary,
   },
-  podiumAvatar: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  podiumBase: {
-    width: 80,
-    borderTopLeftRadius: BorderRadius.md,
-    borderTopRightRadius: BorderRadius.md,
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: Spacing.sm,
-  },
-  list: {
-    paddingHorizontal: Spacing.xl,
-    gap: Spacing.sm,
+  listContent: {
     paddingBottom: Spacing.xl,
   },
-  userRow: {
-    flexDirection: "row",
-    alignItems: "center",
+  periodContainer: {
+    flexDirection: 'row',
     padding: Spacing.md,
-    borderRadius: BorderRadius.lg,
-    gap: Spacing.md,
+    backgroundColor: Colors.surface,
+    gap: Spacing.sm,
   },
-  rank: {
-    width: 30,
-    textAlign: "center",
-  },
-  smallAvatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  userInfo: {
+  periodButton: {
     flex: 1,
+    paddingVertical: Spacing.sm,
+    borderRadius: BorderRadius.full,
+    backgroundColor: Colors.light.backgroundSecondary,
+    alignItems: 'center',
+  },
+  periodButtonActive: {
+    backgroundColor: Colors.primary,
+  },
+  periodText: {
+    ...Typography.caption,
+    color: Colors.textSecondary,
+    fontWeight: '500',
+  },
+  periodTextActive: {
+    color: 'white',
+    fontWeight: '600',
+  },
+  topThreeContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'flex-end',
+    padding: Spacing.xl,
+    backgroundColor: Colors.surface,
+  },
+  topThreeItem: {
+    alignItems: 'center',
+    marginHorizontal: Spacing.md,
+  },
+  topThreeAvatar: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: Colors.primary + '20',
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative',
+    borderWidth: 3,
+  },
+  firstPlace: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    borderColor: '#FFD700',
+    marginBottom: Spacing.md,
+  },
+  secondPlace: {
+    borderColor: '#C0C0C0',
+  },
+  thirdPlace: {
+    borderColor: '#CD7F32',
+  },
+  topThreeImage: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 40,
+  },
+  topThreeInitials: {
+    ...Typography.heading,
+    color: Colors.primary,
+  },
+  topThreeBadge: {
+    position: 'absolute',
+    bottom: -8,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: Colors.surface,
+  },
+  topThreeBadgeText: {
+    ...Typography.small,
+    color: 'white',
+    fontWeight: '700',
+  },
+  topThreeName: {
+    ...Typography.caption,
+    fontWeight: '600',
+    color: Colors.textPrimary,
+    marginTop: Spacing.sm,
+  },
+  topThreePoints: {
+    ...Typography.small,
+    color: Colors.textSecondary,
+  },
+  myStatsContainer: {
+    margin: Spacing.md,
+    padding: Spacing.lg,
+    backgroundColor: Colors.primary + '10',
+    borderRadius: BorderRadius.md,
+  },
+  myStatsTitle: {
+    ...Typography.caption,
+    fontWeight: '600',
+    color: Colors.primary,
+    marginBottom: Spacing.md,
+  },
+  myStatsRow: {
+    flexDirection: 'row',
+  },
+  myStatItem: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  myStatValue: {
+    ...Typography.heading,
+    color: Colors.textPrimary,
+  },
+  myStatLabel: {
+    ...Typography.small,
+    color: Colors.textSecondary,
+  },
+  rankingsHeader: {
+    padding: Spacing.lg,
+    paddingBottom: Spacing.sm,
+  },
+  rankingsTitle: {
+    ...Typography.caption,
+    fontWeight: '600',
+    color: Colors.textSecondary,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  entryItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: Spacing.lg,
+    backgroundColor: Colors.surface,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border,
+  },
+  entryItemCurrent: {
+    backgroundColor: Colors.primary + '08',
+  },
+  entryRank: {
+    width: 32,
+    alignItems: 'center',
+    marginRight: Spacing.md,
+  },
+  rankNumber: {
+    ...Typography.body,
+    fontWeight: '600',
+    color: Colors.textSecondary,
+  },
+  entryAvatar: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    marginRight: Spacing.md,
+  },
+  entryAvatarPlaceholder: {
+    backgroundColor: Colors.primary + '20',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  entryAvatarText: {
+    ...Typography.caption,
+    color: Colors.primary,
+    fontWeight: '600',
+  },
+  entryInfo: {
+    flex: 1,
+  },
+  entryName: {
+    ...Typography.body,
+    fontWeight: '600',
+    color: Colors.textPrimary,
+  },
+  entryLevel: {
+    ...Typography.small,
+    color: Colors.textSecondary,
+  },
+  entryPoints: {
+    alignItems: 'flex-end',
+  },
+  entryPointsValue: {
+    ...Typography.body,
+    fontWeight: '700',
+    color: Colors.primary,
+  },
+  entryPointsLabel: {
+    ...Typography.small,
+    color: Colors.textSecondary,
   },
 });

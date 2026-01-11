@@ -20,6 +20,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
+import { Video, ResizeMode } from 'expo-av';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { ThemedText } from '@/components/ThemedText';
@@ -183,7 +184,7 @@ export default function CreatePostScreen() {
       const newVideo: MediaItem = {
         uri: asset.uri,
         type: 'video',
-        duration: asset.duration ?? undefined,
+        duration: asset.duration,
       };
       setMedia([...media, newVideo]);
     }
@@ -208,7 +209,7 @@ export default function CreatePostScreen() {
       const newMedia: MediaItem = {
         uri: asset.uri,
         type: asset.type === 'video' ? 'video' : 'image',
-        duration: asset.duration ?? undefined,
+        duration: asset.duration,
       };
       
       if (newMedia.type === 'video' && videos.length >= MAX_VIDEOS) {
@@ -335,17 +336,17 @@ export default function CreatePostScreen() {
               <View style={[styles.avatar, styles.anonymousAvatar]}>
                 <Ionicons name="person" size={20} color={Colors.textSecondary} />
               </View>
-            ) : user?.avatarUrl ? (
-              <Image source={{ uri: user.avatarUrl }} style={styles.avatar} />
+            ) : user?.avatar_url ? (
+              <Image source={{ uri: user.avatar_url }} style={styles.avatar} />
             ) : (
               <View style={[styles.avatar, styles.avatarPlaceholder]}>
                 <ThemedText style={styles.avatarText}>
-                  {user?.name?.[0]}
+                  {user?.first_name?.[0]}{user?.last_name?.[0]}
                 </ThemedText>
               </View>
             )}
             <ThemedText style={styles.authorName}>
-              {isAnonymous ? 'Anonymous' : user?.name}
+              {isAnonymous ? 'Anonymous' : user?.full_name}
             </ThemedText>
           </View>
 
@@ -410,16 +411,20 @@ export default function CreatePostScreen() {
                 <View key={index} style={styles.imageWrapper}>
                   {item.type === 'video' ? (
                     <View style={styles.videoPreviewContainer}>
-                      <View style={[styles.previewImage, styles.videoPlaceholder]}>
-                        <Ionicons name="videocam" size={40} color={Colors.textSecondary} />
-                      </View>
+                      <Video
+                        source={{ uri: item.uri }}
+                        style={styles.previewImage}
+                        resizeMode={ResizeMode.COVER}
+                        shouldPlay={false}
+                        isMuted
+                      />
                       <View style={styles.videoOverlay}>
                         <Ionicons name="play-circle" size={32} color="white" />
-                        {item.duration ? (
+                        {item.duration && (
                           <ThemedText style={styles.videoDuration}>
                             {Math.floor(item.duration / 1000)}s
                           </ThemedText>
-                        ) : null}
+                        )}
                       </View>
                     </View>
                   ) : (
@@ -657,11 +662,6 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     borderRadius: BorderRadius.sm,
-  },
-  videoPlaceholder: {
-    backgroundColor: Colors.light.backgroundTertiary,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   videoPreviewContainer: {
     width: 100,

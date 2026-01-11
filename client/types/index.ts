@@ -229,3 +229,55 @@ export interface ApiError {
   message: string;
   errors?: Record<string, string[]>;
 }
+
+// ============================================
+// Navigation Types
+// ============================================
+
+export type RootStackParamList = {
+  Onboarding: undefined;
+  Auth: undefined;
+  Main: undefined;
+  CreatePost: { roomId?: string };
+  PostDetail: { postId: string };
+  UserProfile: { userId: string };
+  EditProfile: undefined;
+  RoomDetail: { roomId: string };
+  Conversation: { userId: string; userName: string };
+  NewConversation: undefined;
+  Notifications: undefined;
+  Search: undefined;
+  Hashtag: { hashtag: string };
+  Followers: { userId: string; type: 'followers' | 'following' };
+  Bookmarks: undefined;
+  Leaderboard: undefined;
+  Achievements: undefined;
+  Settings: undefined;
+  Premium: undefined;
+  ChangePassword: undefined;
+  BlockedUsers: undefined;
+  DeleteAccount: undefined;
+  BiometricSettings: undefined;
+  PrivacyPolicy: undefined;
+  TermsOfService: undefined;
+  AMADetail: { amaId: string };
+  CourseDetail: { courseId: string };
+  EventDetail: { eventId: string };
+  DealDetail: { dealId: string };
+  AIChat: undefined;
+  LessonPlayer: { courseId: string; lessonId: string };
+};
+
+export type MainTabParamList = {
+  Home: undefined;
+  Discover: undefined;
+  Messages: undefined;
+  Profile: undefined;
+};
+
+export type AuthStackParamList = {
+  Login: undefined;
+  Register: undefined;
+  ForgotPassword: undefined;
+  VerifyEmail: { email: string };
+};

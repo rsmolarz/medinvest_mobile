@@ -58,7 +58,7 @@ export function ErrorFallback({ error, resetError }: ErrorFallbackProps) {
       ) : null}
 
       <View style={styles.content}>
-        <ThemedText type="title" style={styles.title}>
+        <ThemedText type="h1" style={styles.title}>
           Something went wrong
         </ThemedText>
 
@@ -96,7 +96,7 @@ export function ErrorFallback({ error, resetError }: ErrorFallbackProps) {
           <View style={styles.modalOverlay}>
             <ThemedView style={styles.modalContainer}>
               <View style={styles.modalHeader}>
-                <ThemedText type="heading" style={styles.modalTitle}>
+                <ThemedText type="h2" style={styles.modalTitle}>
                   Error Details
                 </ThemedText>
                 <Pressable

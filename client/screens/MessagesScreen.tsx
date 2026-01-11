@@ -1,157 +1,284 @@
-import React from "react";
-import { View, StyleSheet, FlatList, Pressable } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
-import { Feather } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
-import Animated, { FadeInDown } from "react-native-reanimated";
+/**
+ * Messages Screen
+ * Direct messaging inbox showing all conversations
+ */
 
-import { ThemedText } from "@/components/ThemedText";
-import { useTheme } from "@/hooks/useTheme";
-import { Colors, Spacing, BorderRadius, Shadows } from "@/constants/theme";
-import { conversations, Conversation } from "@/lib/mockData";
+import React, { useCallback } from 'react';
+import {
+  View,
+  StyleSheet,
+  FlatList,
+  TouchableOpacity,
+  Image,
+  RefreshControl,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons';
+import { useQuery } from '@tanstack/react-query';
+
+import { ThemedText } from '@/components/ThemedText';
+import { Colors, Spacing, BorderRadius, Typography, Shadows } from '@/constants/theme';
+import { messagesApi } from '@/lib/api';
+import { Conversation } from '@/types';
+import { formatRelativeTime } from '@/lib/utils';
 
 export default function MessagesScreen() {
-  const insets = useSafeAreaInsets();
-  const tabBarHeight = useBottomTabBarHeight();
-  const { theme } = useTheme();
+  const navigation = useNavigation<any>();
 
-  const renderConversation = ({ item, index }: { item: Conversation; index: number }) => (
-    <Animated.View entering={FadeInDown.delay(index * 60).springify()}>
-      <Pressable
-        style={({ pressed }) => [
-          styles.conversationItem,
-          { backgroundColor: theme.backgroundDefault },
-          Shadows.card,
-          pressed && { opacity: 0.9 },
-        ]}
-      >
-        <LinearGradient
-          colors={[Colors.gradient.start, Colors.gradient.end]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.avatar}
-        >
-          <ThemedText type="heading" style={{ color: "#FFFFFF" }}>
-            {item.name.charAt(0)}
-          </ThemedText>
-        </LinearGradient>
+  const {
+    data: conversationsData,
+    isLoading,
+    isRefetching,
+    refetch,
+  } = useQuery({
+    queryKey: ['conversations'],
+    queryFn: async () => {
+      const response = await messagesApi.getConversations();
+      return response.data?.conversations || [];
+    },
+    refetchInterval: 30000, // Refresh every 30 seconds
+  });
 
-        <View style={styles.conversationContent}>
-          <View style={styles.conversationHeader}>
-            <ThemedText type="heading" numberOfLines={1} style={{ flex: 1 }}>
-              {item.name}
-            </ThemedText>
-            <ThemedText type="small" style={{ color: theme.textSecondary }}>
-              {item.timestamp}
-            </ThemedText>
-          </View>
-          <ThemedText
-            type="body"
-            numberOfLines={1}
-            style={{ color: theme.textSecondary }}
-          >
-            {item.lastMessage}
+  const conversations = conversationsData || [];
+
+  const handleConversationPress = useCallback((userId: number) => {
+    navigation.navigate('Conversation', { userId });
+  }, [navigation]);
+
+  const handleNewMessage = useCallback(() => {
+    navigation.navigate('NewConversation');
+  }, [navigation]);
+
+  const renderConversation = ({ item }: { item: Conversation }) => (
+    <TouchableOpacity
+      style={styles.conversationItem}
+      onPress={() => handleConversationPress(item.other_user.id)}
+    >
+      {/* Avatar */}
+      {item.other_user.avatar_url ? (
+        <Image source={{ uri: item.other_user.avatar_url }} style={styles.avatar} />
+      ) : (
+        <View style={[styles.avatar, styles.avatarPlaceholder]}>
+          <ThemedText style={styles.avatarText}>
+            {item.other_user.first_name[0]}{item.other_user.last_name[0]}
           </ThemedText>
         </View>
+      )}
 
-        {item.unreadCount > 0 ? (
-          <View style={styles.unreadBadge}>
-            <ThemedText type="small" style={{ color: "#FFFFFF", fontWeight: "600" }}>
-              {item.unreadCount}
+      {/* Content */}
+      <View style={styles.conversationContent}>
+        <View style={styles.conversationHeader}>
+          <View style={styles.nameContainer}>
+            <ThemedText style={styles.userName} numberOfLines={1}>
+              {item.other_user.full_name}
             </ThemedText>
+            {item.other_user.is_verified && (
+              <Ionicons name="checkmark-circle" size={14} color={Colors.primary} />
+            )}
           </View>
-        ) : null}
-      </Pressable>
-    </Animated.View>
+          {item.last_message_at && (
+            <ThemedText style={styles.timestamp}>
+              {formatRelativeTime(item.last_message_at)}
+            </ThemedText>
+          )}
+        </View>
+        <View style={styles.messageRow}>
+          <ThemedText
+            style={[
+              styles.lastMessage,
+              item.unread_count > 0 && styles.lastMessageUnread,
+            ]}
+            numberOfLines={1}
+          >
+            {item.last_message || 'Start a conversation'}
+          </ThemedText>
+          {item.unread_count > 0 && (
+            <View style={styles.unreadBadge}>
+              <ThemedText style={styles.unreadCount}>
+                {item.unread_count > 99 ? '99+' : item.unread_count}
+              </ThemedText>
+            </View>
+          )}
+        </View>
+      </View>
+    </TouchableOpacity>
+  );
+
+  const renderEmpty = () => (
+    <View style={styles.emptyContainer}>
+      <Ionicons name="chatbubbles-outline" size={64} color={Colors.textSecondary} />
+      <ThemedText style={styles.emptyTitle}>No messages yet</ThemedText>
+      <ThemedText style={styles.emptySubtitle}>
+        Start a conversation with someone!
+      </ThemedText>
+      <TouchableOpacity style={styles.emptyButton} onPress={handleNewMessage}>
+        <ThemedText style={styles.emptyButtonText}>New Message</ThemedText>
+      </TouchableOpacity>
+    </View>
   );
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.backgroundRoot }]}>
-      <View style={[styles.header, { paddingTop: insets.top + Spacing.lg }]}>
-        <ThemedText type="title">Messages</ThemedText>
-        <Pressable hitSlop={8} style={styles.composeButton}>
-          <Feather name="edit" size={22} color={Colors.primary} />
-        </Pressable>
+    <SafeAreaView style={styles.container} edges={['top']}>
+      {/* Header */}
+      <View style={styles.header}>
+        <ThemedText style={styles.headerTitle}>Messages</ThemedText>
+        <TouchableOpacity style={styles.newMessageButton} onPress={handleNewMessage}>
+          <Ionicons name="create-outline" size={24} color={Colors.primary} />
+        </TouchableOpacity>
       </View>
 
+      {/* Conversations List */}
       <FlatList
         data={conversations}
         renderItem={renderConversation}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={[
-          styles.list,
-          { paddingBottom: tabBarHeight + Spacing.xl },
-        ]}
-        showsVerticalScrollIndicator={false}
-        ListEmptyComponent={
-          <View style={styles.emptyState}>
-            <Feather name="message-circle" size={48} color={theme.textSecondary} />
-            <ThemedText type="heading" style={{ marginTop: Spacing.lg }}>
-              No Messages Yet
-            </ThemedText>
-            <ThemedText type="body" style={{ color: theme.textSecondary, textAlign: "center" }}>
-              Start a conversation with other investors
-            </ThemedText>
-          </View>
+        keyExtractor={(item) => item.id.toString()}
+        ListEmptyComponent={renderEmpty}
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefetching}
+            onRefresh={refetch}
+            tintColor={Colors.primary}
+          />
         }
+        contentContainerStyle={conversations.length === 0 ? styles.emptyList : undefined}
+        showsVerticalScrollIndicator={false}
       />
-    </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: Colors.background,
   },
   header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: Spacing.xl,
-    paddingBottom: Spacing.lg,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.md,
+    backgroundColor: Colors.surface,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border,
   },
-  composeButton: {
+  headerTitle: {
+    ...Typography.title,
+    color: Colors.textPrimary,
+  },
+  newMessageButton: {
     padding: Spacing.sm,
   },
-  list: {
-    paddingHorizontal: Spacing.xl,
-    gap: Spacing.md,
-  },
   conversationItem: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     padding: Spacing.lg,
-    borderRadius: BorderRadius.lg,
-    gap: Spacing.md,
+    backgroundColor: Colors.surface,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border,
   },
   avatar: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    alignItems: "center",
-    justifyContent: "center",
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    marginRight: Spacing.md,
+  },
+  avatarPlaceholder: {
+    backgroundColor: Colors.primary + '20',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  avatarText: {
+    ...Typography.body,
+    color: Colors.primary,
+    fontWeight: '600',
   },
   conversationContent: {
     flex: 1,
-    gap: Spacing.xs,
   },
   conversationHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: Spacing.sm,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: Spacing.xs,
+  },
+  nameContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.xs,
+    flex: 1,
+  },
+  userName: {
+    ...Typography.body,
+    fontWeight: '600',
+    color: Colors.textPrimary,
+    flex: 1,
+  },
+  timestamp: {
+    ...Typography.small,
+    color: Colors.textSecondary,
+  },
+  messageRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  lastMessage: {
+    ...Typography.caption,
+    color: Colors.textSecondary,
+    flex: 1,
+  },
+  lastMessageUnread: {
+    color: Colors.textPrimary,
+    fontWeight: '500',
   },
   unreadBadge: {
     backgroundColor: Colors.primary,
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: 2,
-    borderRadius: 10,
+    borderRadius: BorderRadius.full,
     minWidth: 20,
-    alignItems: "center",
+    height: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: Spacing.xs,
+    marginLeft: Spacing.sm,
   },
-  emptyState: {
-    alignItems: "center",
-    paddingTop: 100,
+  unreadCount: {
+    ...Typography.small,
+    color: 'white',
+    fontWeight: '600',
+    fontSize: 11,
+  },
+  emptyList: {
+    flex: 1,
+  },
+  emptyContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
     paddingHorizontal: Spacing.xl,
+  },
+  emptyTitle: {
+    ...Typography.heading,
+    color: Colors.textPrimary,
+    marginTop: Spacing.lg,
+  },
+  emptySubtitle: {
+    ...Typography.body,
+    color: Colors.textSecondary,
+    textAlign: 'center',
+    marginTop: Spacing.sm,
+  },
+  emptyButton: {
+    marginTop: Spacing.xl,
+    backgroundColor: Colors.primary,
+    paddingHorizontal: Spacing.xl,
+    paddingVertical: Spacing.md,
+    borderRadius: BorderRadius.md,
+  },
+  emptyButtonText: {
+    ...Typography.body,
+    color: 'white',
+    fontWeight: '600',
   },
 });

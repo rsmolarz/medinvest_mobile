@@ -1,45 +1,45 @@
-import React from 'react';
-import { StatusBar } from 'expo-status-bar';
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { KeyboardProvider } from 'react-native-keyboard-controller';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { StyleSheet } from 'react-native';
+/**
+ * MedInvest Mobile App
+ * Healthcare Investment Community Platform
+ */
 
-import { QueryProvider } from '@/providers/QueryProvider';
-import { NetworkProvider } from '@/providers/NetworkProvider';
-import { ToastProvider } from '@/components/Toast';
-import { ErrorBoundary } from '@/components/ErrorBoundary';
-import { AuthProvider } from '@/contexts/AuthContext';
+import React from "react";
+import { StyleSheet } from "react-native";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { KeyboardProvider } from "react-native-keyboard-controller";
+import { SafeAreaProvider } from "react-native-safe-area-context";
+import { StatusBar } from "expo-status-bar";
+import { QueryClientProvider } from "@tanstack/react-query";
 
-import RootNavigator from '@/navigation/RootNavigator';
-
-import { colors } from '@/theme';
+import { queryClient } from "@/lib/query-client";
+import RootNavigator from "@/navigation/RootNavigator";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { AuthProvider } from "@/contexts/AuthContext";
+import { NetworkProvider } from "@/components/NetworkStatus";
 
 export default function App() {
   return (
-    <GestureHandlerRootView style={styles.container}>
-      <ErrorBoundary>
-        <SafeAreaProvider>
-          <QueryProvider enablePersistence>
-            <NetworkProvider>
-              <AuthProvider>
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
+          <NetworkProvider>
+            <SafeAreaProvider>
+              <GestureHandlerRootView style={styles.root}>
                 <KeyboardProvider>
-                  <ToastProvider>
-                    <StatusBar style="dark" backgroundColor={colors.background.primary} />
-                    <RootNavigator />
-                  </ToastProvider>
+                  <RootNavigator />
+                  <StatusBar style="auto" />
                 </KeyboardProvider>
-              </AuthProvider>
-            </NetworkProvider>
-          </QueryProvider>
-        </SafeAreaProvider>
-      </ErrorBoundary>
-    </GestureHandlerRootView>
+              </GestureHandlerRootView>
+            </SafeAreaProvider>
+          </NetworkProvider>
+        </AuthProvider>
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  root: {
     flex: 1,
   },
 });

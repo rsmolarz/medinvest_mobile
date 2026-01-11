@@ -1,289 +1,177 @@
-import React, { useCallback } from 'react';
-import {
-  View,
-  StyleSheet,
-  Pressable,
-  Platform,
-} from 'react-native';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
-import { Feather } from '@expo/vector-icons';
+import React from "react";
+import { View, StyleSheet, Pressable } from "react-native";
+import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import { Feather } from "@expo/vector-icons";
+import { BlurView } from "expo-blur";
+import { Platform } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useNavigation } from "@react-navigation/native";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { LinearGradient } from "expo-linear-gradient";
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withSpring,
-  withTiming,
-  interpolate,
-} from 'react-native-reanimated';
-import { useNavigation } from '@react-navigation/native';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+} from "react-native-reanimated";
 
-import { colors, spacing, layout, shadows } from '@/theme';
-import type { RootStackParamList, MainTabParamList } from '@/navigation/types';
+import DiscoverStackNavigator from "@/navigation/DiscoverStackNavigator";
+import PortfolioStackNavigator from "@/navigation/PortfolioStackNavigator";
+import ResearchStackNavigator from "@/navigation/ResearchStackNavigator";
+import ProfileStackNavigator from "@/navigation/ProfileStackNavigator";
+import { useTheme } from "@/hooks/useTheme";
+import { Colors, Shadows, Spacing } from "@/constants/theme";
+import { RootStackParamList } from "@/navigation/RootStackNavigator";
 
-// Screens
-import DiscoverScreen from '@/screens/main/DiscoverScreen';
-import PortfolioScreen from '@/screens/main/PortfolioScreen';
-import ResearchScreen from '@/screens/main/ResearchScreen';
-import ProfileScreen from '@/screens/main/ProfileScreen';
+export type MainTabParamList = {
+  DiscoverTab: undefined;
+  PortfolioTab: undefined;
+  ResearchTab: undefined;
+  ProfileTab: undefined;
+};
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
-// Animated pressable for tab bar items
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
-/**
- * Tab Bar Icon with animation
- */
-interface TabIconProps {
-  name: keyof typeof Feather.glyphMap;
-  focused: boolean;
-  color: string;
-}
-
-function TabIcon({ name, focused, color }: TabIconProps) {
+function FloatingActionButton() {
+  const navigation =
+    useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const insets = useSafeAreaInsets();
   const scale = useSharedValue(1);
-
-  React.useEffect(() => {
-    scale.value = withSpring(focused ? 1.1 : 1, {
-      damping: 15,
-      stiffness: 200,
-    });
-  }, [focused, scale]);
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
   }));
 
+  const handlePressIn = () => {
+    scale.value = withSpring(0.92, { damping: 15, stiffness: 150 });
+  };
+
+  const handlePressOut = () => {
+    scale.value = withSpring(1, { damping: 15, stiffness: 150 });
+  };
+
+  const handlePress = () => {
+    navigation.navigate("InvestModal", { opportunityId: undefined });
+  };
+
+  const tabBarHeight = 49 + insets.bottom;
+
   return (
-    <Animated.View style={animatedStyle}>
-      <Feather name={name} size={24} color={color} />
-    </Animated.View>
+    <AnimatedPressable
+      onPress={handlePress}
+      onPressIn={handlePressIn}
+      onPressOut={handlePressOut}
+      style={[
+        styles.fab,
+        { bottom: tabBarHeight + Spacing.lg },
+        Shadows.fab,
+        animatedStyle,
+      ]}
+    >
+      <LinearGradient
+        colors={[Colors.gradient.start, Colors.gradient.end]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.fabGradient}
+      >
+        <Feather name="plus" size={28} color="#FFFFFF" />
+      </LinearGradient>
+    </AnimatedPressable>
   );
 }
 
-/**
- * Custom Tab Bar with FAB
- */
-function CustomTabBar({ state, descriptors, navigation }: any) {
-  const insets = useSafeAreaInsets();
-  const rootNavigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  
-  // FAB animation
-  const fabScale = useSharedValue(1);
-  const fabRotation = useSharedValue(0);
-
-  const handleFabPress = useCallback(() => {
-    // Animate FAB
-    fabScale.value = withSpring(0.9, {}, () => {
-      fabScale.value = withSpring(1);
-    });
-    fabRotation.value = withTiming(fabRotation.value + 360, { duration: 300 });
-
-    // Navigate to invest modal
-    rootNavigation.navigate('InvestModal');
-  }, [fabScale, fabRotation, rootNavigation]);
-
-  const fabAnimatedStyle = useAnimatedStyle(() => ({
-    transform: [
-      { scale: fabScale.value },
-      { rotate: `${fabRotation.value}deg` },
-    ],
-  }));
+export default function MainTabNavigator() {
+  const { theme, isDark } = useTheme();
 
   return (
-    <View style={[styles.tabBarContainer, { paddingBottom: insets.bottom }]}>
-      {/* Tab Bar Background */}
-      <View style={styles.tabBarBackground}>
-        {state.routes.map((route: any, index: number) => {
-          const { options } = descriptors[route.key];
-          const isFocused = state.index === index;
-
-          // Skip middle position for FAB
-          const isLeftSide = index < 2;
-          
-          const onPress = () => {
-            const event = navigation.emit({
-              type: 'tabPress',
-              target: route.key,
-              canPreventDefault: true,
-            });
-
-            if (!isFocused && !event.defaultPrevented) {
-              navigation.navigate(route.name);
-            }
-          };
-
-          const onLongPress = () => {
-            navigation.emit({
-              type: 'tabLongPress',
-              target: route.key,
-            });
-          };
-
-          // Get icon name
-          const iconName = getTabIcon(route.name);
-
-          return (
-            <AnimatedPressable
-              key={route.key}
-              accessibilityRole="button"
-              accessibilityState={isFocused ? { selected: true } : {}}
-              accessibilityLabel={options.tabBarAccessibilityLabel}
-              testID={options.tabBarTestID}
-              onPress={onPress}
-              onLongPress={onLongPress}
-              style={[
-                styles.tabButton,
-                isLeftSide ? styles.tabButtonLeft : styles.tabButtonRight,
-              ]}
-            >
-              <TabIcon
-                name={iconName}
-                focused={isFocused}
-                color={isFocused ? colors.primary.main : colors.text.secondary}
+    <View style={styles.container}>
+      <Tab.Navigator
+        initialRouteName="DiscoverTab"
+        screenOptions={{
+          tabBarActiveTintColor: Colors.primary,
+          tabBarInactiveTintColor: theme.tabIconDefault,
+          tabBarStyle: {
+            position: "absolute",
+            backgroundColor: Platform.select({
+              ios: "transparent",
+              android: theme.backgroundDefault,
+            }),
+            borderTopWidth: 0,
+            elevation: 0,
+          },
+          tabBarBackground: () =>
+            Platform.OS === "ios" ? (
+              <BlurView
+                intensity={100}
+                tint={isDark ? "dark" : "light"}
+                style={StyleSheet.absoluteFill}
               />
-              {isFocused && <View style={styles.activeIndicator} />}
-            </AnimatedPressable>
-          );
-        })}
-
-        {/* FAB - Centered */}
-        <Animated.View style={[styles.fabContainer, fabAnimatedStyle]}>
-          <Pressable onPress={handleFabPress} style={styles.fabPressable}>
-            <LinearGradient
-              colors={['#0066CC', '#00A86B'] as const}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.fab}
-            >
-              <Feather name="plus" size={28} color={colors.text.inverse} />
-            </LinearGradient>
-          </Pressable>
-        </Animated.View>
-      </View>
+            ) : null,
+          headerShown: false,
+        }}
+      >
+        <Tab.Screen
+          name="DiscoverTab"
+          component={DiscoverStackNavigator}
+          options={{
+            title: "Discover",
+            tabBarIcon: ({ color, size }) => (
+              <Feather name="compass" size={size} color={color} />
+            ),
+          }}
+        />
+        <Tab.Screen
+          name="PortfolioTab"
+          component={PortfolioStackNavigator}
+          options={{
+            title: "Portfolio",
+            tabBarIcon: ({ color, size }) => (
+              <Feather name="pie-chart" size={size} color={color} />
+            ),
+          }}
+        />
+        <Tab.Screen
+          name="ResearchTab"
+          component={ResearchStackNavigator}
+          options={{
+            title: "Research",
+            tabBarIcon: ({ color, size }) => (
+              <Feather name="book-open" size={size} color={color} />
+            ),
+          }}
+        />
+        <Tab.Screen
+          name="ProfileTab"
+          component={ProfileStackNavigator}
+          options={{
+            title: "Profile",
+            tabBarIcon: ({ color, size }) => (
+              <Feather name="user" size={size} color={color} />
+            ),
+          }}
+        />
+      </Tab.Navigator>
+      <FloatingActionButton />
     </View>
   );
 }
 
-/**
- * Get icon name for tab
- */
-function getTabIcon(routeName: string): keyof typeof Feather.glyphMap {
-  switch (routeName) {
-    case 'Discover':
-      return 'compass';
-    case 'Portfolio':
-      return 'pie-chart';
-    case 'Research':
-      return 'book-open';
-    case 'Profile':
-      return 'user';
-    default:
-      return 'circle';
-  }
-}
-
-/**
- * Main Tab Navigator
- */
-export default function MainTabNavigator() {
-  return (
-    <Tab.Navigator
-      tabBar={(props) => <CustomTabBar {...props} />}
-      screenOptions={{
-        headerShown: false,
-      }}
-    >
-      <Tab.Screen
-        name="Discover"
-        component={DiscoverScreen}
-        options={{
-          tabBarLabel: 'Discover',
-        }}
-      />
-      <Tab.Screen
-        name="Portfolio"
-        component={PortfolioScreen}
-        options={{
-          tabBarLabel: 'Portfolio',
-        }}
-      />
-      <Tab.Screen
-        name="Research"
-        component={ResearchScreen}
-        options={{
-          tabBarLabel: 'Research',
-        }}
-      />
-      <Tab.Screen
-        name="Profile"
-        component={ProfileScreen}
-        options={{
-          tabBarLabel: 'Profile',
-        }}
-      />
-    </Tab.Navigator>
-  );
-}
-
 const styles = StyleSheet.create({
-  tabBarContainer: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: colors.surface.primary,
-    borderTopWidth: 1,
-    borderTopColor: colors.border.light,
-  },
-  tabBarBackground: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    height: 56,
-    paddingHorizontal: spacing.lg,
-  },
-  
-  // Tab buttons
-  tabButton: {
+  container: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    height: '100%',
-    position: 'relative',
-  },
-  tabButtonLeft: {
-    marginRight: layout.fabSize / 2 + spacing.sm,
-  },
-  tabButtonRight: {
-    marginLeft: layout.fabSize / 2 + spacing.sm,
-  },
-  activeIndicator: {
-    position: 'absolute',
-    bottom: 8,
-    width: 4,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: colors.primary.main,
-  },
-
-  // FAB
-  fabContainer: {
-    position: 'absolute',
-    left: '50%',
-    marginLeft: -layout.fabSize / 2,
-    bottom: 12,
-  },
-  fabPressable: {
-    ...shadows.fab,
   },
   fab: {
-    width: layout.fabSize,
-    height: layout.fabSize,
-    borderRadius: layout.fabSize / 2,
-    justifyContent: 'center',
-    alignItems: 'center',
-    ...shadows.fab,
+    position: "absolute",
+    right: Spacing.xl,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    overflow: "hidden",
+  },
+  fabGradient: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
   },
 });

@@ -210,32 +210,6 @@ export const menuItems = [
   { id: "legal", title: "Legal", icon: "shield" as const },
 ];
 
-export interface HealthcareRoom {
-  id: string;
-  name: string;
-  specialty: string;
-  memberCount: number;
-  icon: string;
-  color: string;
-}
-
-export const healthcareRooms: HealthcareRoom[] = [
-  { id: "cardiology", name: "Cardiology", specialty: "Heart & Cardiovascular", memberCount: 2847, icon: "heart", color: "#DC2626" },
-  { id: "oncology", name: "Oncology", specialty: "Cancer Research", memberCount: 3251, icon: "activity", color: "#7C3AED" },
-  { id: "neurology", name: "Neurology", specialty: "Brain & Nervous System", memberCount: 1893, icon: "cpu", color: "#2563EB" },
-  { id: "orthopedics", name: "Orthopedics", specialty: "Bones & Joints", memberCount: 1567, icon: "maximize", color: "#059669" },
-  { id: "dermatology", name: "Dermatology", specialty: "Skin Health", memberCount: 1234, icon: "sun", color: "#D97706" },
-  { id: "pediatrics", name: "Pediatrics", specialty: "Child Health", memberCount: 2156, icon: "smile", color: "#EC4899" },
-  { id: "psychiatry", name: "Psychiatry", specialty: "Mental Health", memberCount: 1789, icon: "message-circle", color: "#6366F1" },
-  { id: "radiology", name: "Radiology", specialty: "Medical Imaging", memberCount: 987, icon: "monitor", color: "#0891B2" },
-  { id: "surgery", name: "Surgery", specialty: "Surgical Procedures", memberCount: 1456, icon: "scissors", color: "#4F46E5" },
-  { id: "genetics", name: "Genetics", specialty: "Gene Therapy", memberCount: 876, icon: "git-branch", color: "#8B5CF6" },
-  { id: "immunology", name: "Immunology", specialty: "Immune System", memberCount: 1123, icon: "shield", color: "#10B981" },
-  { id: "endocrinology", name: "Endocrinology", specialty: "Hormones & Metabolism", memberCount: 789, icon: "zap", color: "#F59E0B" },
-  { id: "pulmonology", name: "Pulmonology", specialty: "Respiratory Health", memberCount: 1045, icon: "wind", color: "#3B82F6" },
-  { id: "nephrology", name: "Nephrology", specialty: "Kidney Health", memberCount: 654, icon: "droplet", color: "#14B8A6" },
-];
-
 export interface Achievement {
   id: string;
   name: string;
@@ -247,50 +221,71 @@ export interface Achievement {
 }
 
 export const achievements: Achievement[] = [
-  { id: "first-investment", name: "First Steps", description: "Made your first investment", icon: "trending-up", points: 100, earned: true, earnedAt: "2024-01-15" },
-  { id: "portfolio-5k", name: "Growing Portfolio", description: "Portfolio value reached $5,000", icon: "pie-chart", points: 250, earned: true, earnedAt: "2024-02-20" },
-  { id: "diversified", name: "Diversified Investor", description: "Invested in 3 different categories", icon: "grid", points: 150, earned: false },
-  { id: "research-pro", name: "Research Pro", description: "Read 50 research articles", icon: "book-open", points: 200, earned: false },
-  { id: "community-contributor", name: "Community Contributor", description: "Started 10 discussions", icon: "message-square", points: 150, earned: false },
-  { id: "early-adopter", name: "Early Adopter", description: "Invested in a startup pre-Series A", icon: "star", points: 300, earned: true, earnedAt: "2024-03-10" },
-  { id: "streak-7", name: "Week Warrior", description: "7-day activity streak", icon: "calendar", points: 75, earned: false },
-  { id: "streak-30", name: "Monthly Master", description: "30-day activity streak", icon: "award", points: 300, earned: false },
-];
-
-export interface LeaderboardUser {
-  id: string;
-  name: string;
-  points: number;
-  level: number;
-  rank: number;
-  avatar?: string;
-}
-
-export const leaderboardUsers: LeaderboardUser[] = [
-  { id: "u1", name: "Sarah Chen", points: 12500, level: 15, rank: 1 },
-  { id: "u2", name: "Michael Park", points: 11200, level: 14, rank: 2 },
-  { id: "u3", name: "Emily Watson", points: 10800, level: 13, rank: 3 },
-  { id: "u4", name: "David Kim", points: 9500, level: 12, rank: 4 },
-  { id: "u5", name: "Jessica Liu", points: 8900, level: 11, rank: 5 },
-  { id: "u6", name: "Robert Johnson", points: 8200, level: 10, rank: 6 },
-  { id: "u7", name: "Amanda Torres", points: 7800, level: 10, rank: 7 },
-  { id: "u8", name: "James Wilson", points: 7200, level: 9, rank: 8 },
-  { id: "u9", name: "Lisa Chang", points: 6900, level: 9, rank: 9 },
-  { id: "u10", name: "Daniel Martinez", points: 6500, level: 8, rank: 10 },
-];
-
-export interface Conversation {
-  id: string;
-  name: string;
-  lastMessage: string;
-  timestamp: string;
-  unreadCount: number;
-  avatar?: string;
-}
-
-export const conversations: Conversation[] = [
-  { id: "c1", name: "Dr. Sarah Miller", lastMessage: "I'd love to discuss the OncoDetect opportunity", timestamp: "2 min ago", unreadCount: 2 },
-  { id: "c2", name: "Investment Team", lastMessage: "New deal alert: Check out HeartSync Medical", timestamp: "1 hour ago", unreadCount: 0 },
-  { id: "c3", name: "John Smith", lastMessage: "Thanks for the research article recommendation!", timestamp: "3 hours ago", unreadCount: 0 },
-  { id: "c4", name: "MedInvest Support", lastMessage: "Your verification is complete. Welcome!", timestamp: "1 day ago", unreadCount: 1 },
+  {
+    id: "first-investment",
+    name: "First Steps",
+    description: "Make your first investment",
+    icon: "award",
+    points: 100,
+    earned: true,
+    earnedAt: "2025-01-15T10:30:00Z",
+  },
+  {
+    id: "diversified-portfolio",
+    name: "Diversified",
+    description: "Invest in 5 different categories",
+    icon: "pie-chart",
+    points: 250,
+    earned: true,
+    earnedAt: "2025-02-20T14:45:00Z",
+  },
+  {
+    id: "research-pro",
+    name: "Research Pro",
+    description: "Read 50 research articles",
+    icon: "book-open",
+    points: 150,
+    earned: false,
+  },
+  {
+    id: "early-bird",
+    name: "Early Bird",
+    description: "Be among the first 100 investors in a deal",
+    icon: "sunrise",
+    points: 200,
+    earned: true,
+    earnedAt: "2025-03-10T08:15:00Z",
+  },
+  {
+    id: "community-star",
+    name: "Community Star",
+    description: "Get 100 likes on your posts",
+    icon: "star",
+    points: 300,
+    earned: false,
+  },
+  {
+    id: "knowledge-seeker",
+    name: "Knowledge Seeker",
+    description: "Complete 10 courses",
+    icon: "book",
+    points: 500,
+    earned: false,
+  },
+  {
+    id: "ai-explorer",
+    name: "AI Explorer",
+    description: "Have 25 conversations with AI assistant",
+    icon: "cpu",
+    points: 150,
+    earned: false,
+  },
+  {
+    id: "big-investor",
+    name: "Big Investor",
+    description: "Invest over $10,000 total",
+    icon: "trending-up",
+    points: 1000,
+    earned: false,
+  },
 ];

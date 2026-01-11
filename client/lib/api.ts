@@ -546,6 +546,46 @@ export const usersApi = {
   getUserComments: (id: number) => api.get<{ posts: Post[] }>(`/users/${id}/comments`),
   
   getUserLikes: (id: number) => api.get<{ posts: Post[] }>(`/users/${id}/likes`),
+  
+  // Suggested Users (People You May Know)
+  getSuggestedUsers: (limit: number = 6) => 
+    api.get<{ users: Array<{
+      id: number;
+      first_name: string;
+      last_name: string;
+      full_name: string;
+      avatar_url?: string;
+      specialty?: string;
+      location?: string;
+      mutual_connections?: number;
+      reason?: string;
+    }> }>(`/users/suggestions?limit=${limit}`),
+};
+
+// =============================================================================
+// NEWS API
+// =============================================================================
+
+export interface NewsArticle {
+  id: number;
+  title: string;
+  source: string;
+  source_icon?: string;
+  url: string;
+  published_at: string;
+  category?: string;
+  image_url?: string;
+}
+
+export const newsApi = {
+  getLatestNews: (limit: number = 10) => 
+    api.get<{ articles: NewsArticle[] }>(`/news?limit=${limit}`),
+  
+  getNewsByCategory: (category: string, limit: number = 10) =>
+    api.get<{ articles: NewsArticle[] }>(`/news?category=${category}&limit=${limit}`),
+  
+  getFeaturedNews: () =>
+    api.get<{ articles: NewsArticle[] }>('/news/featured'),
 };
 
 // =============================================================================

@@ -22,12 +22,15 @@ import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from '@tansta
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { Colors, Spacing, BorderRadius, Typography, Shadows } from '@/constants/theme';
-import { feedApi, postsApi, roomsApi } from '@/lib/api';
+import { feedApi, postsApi, roomsApi, notificationsApi } from '@/lib/api';
 import { Post, Room, FeedStyle, TrendingTopic } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
 import PostCard from '@/components/PostCard';
 import TrendingSidebar from '@/components/TrendingSidebar';
 import RoomFilter from '@/components/RoomFilter';
+import { NotificationBell } from '@/components/NotificationsDropdown';
+import NotificationsDropdown from '@/components/NotificationsDropdown';
+import PeopleYouMayKnow from '@/components/PeopleYouMayKnow';
 
 const { width } = Dimensions.get('window');
 
@@ -40,6 +43,17 @@ export default function HomeScreen() {
   const [feedStyle, setFeedStyle] = useState<FeedStyle>('algorithmic');
   const [selectedRoom, setSelectedRoom] = useState<string | null>(null);
   const [showTrending, setShowTrending] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
+
+  // Fetch unread count
+  const { data: notificationData } = useQuery({
+    queryKey: ['notifications', 'unread'],
+    queryFn: async () => {
+      const response = await notificationsApi.getNotifications(1);
+      return { unread_count: response.data?.unread_count || 0 };
+    },
+    refetchInterval: 30000, // Check every 30 seconds
+  });
 
   // Fetch rooms
   const { data: roomsData } = useQuery({
@@ -273,15 +287,20 @@ export default function HomeScreen() {
             >
               <Ionicons name="search" size={24} color={Colors.textPrimary} />
             </TouchableOpacity>
-            <TouchableOpacity 
-              style={styles.headerButton}
-              onPress={() => navigation.navigate('Notifications')}
-            >
-              <Ionicons name="notifications-outline" size={24} color={Colors.textPrimary} />
-            </TouchableOpacity>
+            <NotificationBell 
+              unreadCount={notificationData?.unread_count || 0}
+              onPress={() => setShowNotifications(true)}
+            />
           </View>
         </View>
       </Animated.View>
+
+      {/* Notifications Dropdown */}
+      <NotificationsDropdown
+        visible={showNotifications}
+        onClose={() => setShowNotifications(false)}
+        anchorPosition={{ top: 100, right: 16 }}
+      />
 
       {/* Main Content */}
       <View style={styles.content}>

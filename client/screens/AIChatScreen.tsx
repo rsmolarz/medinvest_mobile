@@ -1,414 +1,647 @@
-import React, { useState, useRef, useCallback, useEffect } from "react";
+/**
+ * AI Chat Screen
+ * AI-powered healthcare investment assistant
+ */
+
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import {
   View,
   StyleSheet,
-  TextInput,
-  Pressable,
   FlatList,
-  ActivityIndicator,
+  TouchableOpacity,
+  TextInput,
+  KeyboardAvoidingView,
   Platform,
-} from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Feather } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
-import Animated, { FadeInDown, FadeInUp } from "react-native-reanimated";
-import * as Haptics from "expo-haptics";
+  ActivityIndicator,
+  Image,
+  Animated,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { useMutation } from '@tanstack/react-query';
+import { LinearGradient } from 'expo-linear-gradient';
 
-import { ThemedText } from "@/components/ThemedText";
-import { useTheme } from "@/hooks/useTheme";
-import { Colors, Spacing, BorderRadius, Shadows, Typography } from "@/constants/theme";
-
-function getApiUrl() {
-  const domain = process.env.EXPO_PUBLIC_DOMAIN;
-  if (domain) {
-    return `https://${domain}`;
-  }
-  return "http://localhost:5000";
-}
+import { ThemedText } from '@/components/ThemedText';
+import { Colors, Spacing, BorderRadius, Typography, Shadows } from '@/constants/theme';
+import { aiApi } from '@/lib/api';
+import { useAuth } from '@/contexts/AuthContext';
+import { formatRelativeTime } from '@/lib/utils';
 
 interface Message {
   id: string;
-  role: "user" | "assistant";
+  role: 'user' | 'assistant';
   content: string;
-  isStreaming?: boolean;
+  timestamp: Date;
+  isTyping?: boolean;
 }
 
-const SUGGESTED_PROMPTS = [
-  "What are the key trends in healthcare investment?",
-  "How do I evaluate a biotech startup?",
-  "Explain clinical trial phases for investors",
-  "What makes a good healthcare investment opportunity?",
+interface SuggestedPrompt {
+  icon: string;
+  text: string;
+  query: string;
+}
+
+const SUGGESTED_PROMPTS: SuggestedPrompt[] = [
+  {
+    icon: '📊',
+    text: 'Market Analysis',
+    query: 'What are the current trends in healthcare investment?',
+  },
+  {
+    icon: '💊',
+    text: 'Drug Pipeline',
+    query: 'Explain how to evaluate a biotech company\'s drug pipeline',
+  },
+  {
+    icon: '🏥',
+    text: 'MedTech',
+    query: 'What makes a medical device startup investment-worthy?',
+  },
+  {
+    icon: '📈',
+    text: 'Due Diligence',
+    query: 'What are the key factors for healthcare startup due diligence?',
+  },
+  {
+    icon: '🧬',
+    text: 'Genomics',
+    query: 'What\'s the investment outlook for genomics companies?',
+  },
+  {
+    icon: '💡',
+    text: 'Digital Health',
+    query: 'How do I evaluate digital health investments?',
+  },
 ];
 
 export default function AIChatScreen() {
-  const insets = useSafeAreaInsets();
-  const { theme } = useTheme();
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [inputText, setInputText] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [conversationId, setConversationId] = useState<number | null>(null);
+  const navigation = useNavigation<any>();
+  const { user } = useAuth();
   const flatListRef = useRef<FlatList>(null);
+  const inputRef = useRef<TextInput>(null);
 
-  const createConversation = useCallback(async () => {
-    try {
-      const response = await fetch(`${getApiUrl()}/api/conversations`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title: "New Chat" }),
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [inputText, setInputText] = useState('');
+  const [isTypingAnimation] = useState(new Animated.Value(0));
+
+  // Send message mutation
+  const sendMessageMutation = useMutation({
+    mutationFn: async (content: string) => {
+      // Add user message
+      const userMessage: Message = {
+        id: Date.now().toString(),
+        role: 'user',
+        content,
+        timestamp: new Date(),
+      };
+      setMessages((prev) => [...prev, userMessage]);
+
+      // Add typing indicator
+      const typingMessage: Message = {
+        id: 'typing',
+        role: 'assistant',
+        content: '',
+        timestamp: new Date(),
+        isTyping: true,
+      };
+      setMessages((prev) => [...prev, typingMessage]);
+
+      // Call AI API
+      const response = await aiApi.chat(content, messages.map(m => ({
+        role: m.role,
+        content: m.content,
+      })));
+
+      if (!response.success) {
+        throw new Error(response.error?.message || 'Failed to get response');
+      }
+
+      return response.data?.response || 'I apologize, but I couldn\'t generate a response.';
+    },
+    onSuccess: (responseText) => {
+      // Remove typing indicator and add response
+      setMessages((prev) => {
+        const filtered = prev.filter((m) => m.id !== 'typing');
+        return [
+          ...filtered,
+          {
+            id: Date.now().toString(),
+            role: 'assistant',
+            content: responseText,
+            timestamp: new Date(),
+          },
+        ];
       });
-      const data = await response.json();
-      setConversationId(data.id);
-      return data.id;
-    } catch (error) {
-      console.error("Failed to create conversation:", error);
-      return null;
+    },
+    onError: (error) => {
+      // Remove typing indicator and show error
+      setMessages((prev) => {
+        const filtered = prev.filter((m) => m.id !== 'typing');
+        return [
+          ...filtered,
+          {
+            id: Date.now().toString(),
+            role: 'assistant',
+            content: 'I apologize, but I encountered an error. Please try again.',
+            timestamp: new Date(),
+          },
+        ];
+      });
+    },
+  });
+
+  // Typing animation
+  useEffect(() => {
+    if (sendMessageMutation.isPending) {
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(isTypingAnimation, {
+            toValue: 1,
+            duration: 500,
+            useNativeDriver: true,
+          }),
+          Animated.timing(isTypingAnimation, {
+            toValue: 0,
+            duration: 500,
+            useNativeDriver: true,
+          }),
+        ])
+      ).start();
+    } else {
+      isTypingAnimation.setValue(0);
     }
+  }, [sendMessageMutation.isPending]);
+
+  // Scroll to bottom when new messages
+  useEffect(() => {
+    if (messages.length > 0) {
+      setTimeout(() => {
+        flatListRef.current?.scrollToEnd({ animated: true });
+      }, 100);
+    }
+  }, [messages.length]);
+
+  const handleSend = useCallback(() => {
+    const trimmed = inputText.trim();
+    if (!trimmed || sendMessageMutation.isPending) return;
+    setInputText('');
+    sendMessageMutation.mutate(trimmed);
+  }, [inputText, sendMessageMutation]);
+
+  const handlePromptPress = useCallback((query: string) => {
+    setInputText(query);
+    inputRef.current?.focus();
   }, []);
 
-  const sendMessage = useCallback(async (text: string) => {
-    if (!text.trim() || isLoading) return;
+  const handleClearChat = useCallback(() => {
+    setMessages([]);
+  }, []);
 
-    Platform.OS !== "web" && Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+  const renderMessage = ({ item }: { item: Message }) => {
+    const isUser = item.role === 'user';
 
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      role: "user",
-      content: text.trim(),
-    };
-    setMessages((prev) => [...prev, userMessage]);
-    setInputText("");
-    setIsLoading(true);
-
-    let currentConversationId = conversationId;
-    if (!currentConversationId) {
-      currentConversationId = await createConversation();
-      if (!currentConversationId) {
-        setIsLoading(false);
-        return;
-      }
-    }
-
-    const assistantMessage: Message = {
-      id: (Date.now() + 1).toString(),
-      role: "assistant",
-      content: "",
-      isStreaming: true,
-    };
-    setMessages((prev) => [...prev, assistantMessage]);
-
-    try {
-      const response = await fetch(
-        `${getApiUrl()}/api/conversations/${currentConversationId}/messages`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ content: text.trim() }),
-        }
-      );
-
-      const reader = response.body?.getReader();
-      const decoder = new TextDecoder();
-      let fullContent = "";
-
-      if (reader) {
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-
-          const chunk = decoder.decode(value);
-          const lines = chunk.split("\n");
-
-          for (const line of lines) {
-            if (line.startsWith("data: ")) {
-              try {
-                const data = JSON.parse(line.slice(6));
-                if (data.content) {
-                  fullContent += data.content;
-                  setMessages((prev) =>
-                    prev.map((msg) =>
-                      msg.id === assistantMessage.id
-                        ? { ...msg, content: fullContent }
-                        : msg
-                    )
-                  );
-                }
-                if (data.done) {
-                  setMessages((prev) =>
-                    prev.map((msg) =>
-                      msg.id === assistantMessage.id
-                        ? { ...msg, isStreaming: false }
-                        : msg
-                    )
-                  );
-                }
-              } catch {
-                // Skip invalid JSON
-              }
-            }
-          }
-        }
-      }
-    } catch (error) {
-      console.error("Failed to send message:", error);
-      setMessages((prev) =>
-        prev.map((msg) =>
-          msg.id === assistantMessage.id
-            ? { ...msg, content: "Sorry, I encountered an error. Please try again.", isStreaming: false }
-            : msg
-        )
-      );
-    } finally {
-      setIsLoading(false);
-    }
-  }, [conversationId, isLoading, createConversation]);
-
-  const handleSuggestedPrompt = useCallback((prompt: string) => {
-    sendMessage(prompt);
-  }, [sendMessage]);
-
-  const renderMessage = useCallback(
-    ({ item, index }: { item: Message; index: number }) => {
-      const isUser = item.role === "user";
+    if (item.isTyping) {
       return (
-        <Animated.View
-          entering={FadeInUp.delay(index * 50).springify()}
-          style={[
-            styles.messageContainer,
-            isUser ? styles.userMessageContainer : styles.assistantMessageContainer,
-          ]}
-        >
-          {isUser ? (
-            <LinearGradient
-              colors={[Colors.primary, Colors.secondary]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.userMessageBubble}
-            >
-              <ThemedText type="body" style={styles.userMessageText}>
-                {item.content}
-              </ThemedText>
-            </LinearGradient>
+        <View style={[styles.messageContainer, styles.assistantMessage]}>
+          <View style={styles.assistantAvatar}>
+            <MaterialCommunityIcons name="robot" size={20} color={Colors.primary} />
+          </View>
+          <View style={styles.typingIndicator}>
+            <Animated.View
+              style={[
+                styles.typingDot,
+                {
+                  opacity: isTypingAnimation.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [0.3, 1],
+                  }),
+                },
+              ]}
+            />
+            <Animated.View
+              style={[
+                styles.typingDot,
+                {
+                  opacity: isTypingAnimation.interpolate({
+                    inputRange: [0, 0.5, 1],
+                    outputRange: [0.3, 1, 0.3],
+                  }),
+                },
+              ]}
+            />
+            <Animated.View
+              style={[
+                styles.typingDot,
+                {
+                  opacity: isTypingAnimation.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [1, 0.3],
+                  }),
+                },
+              ]}
+            />
+          </View>
+        </View>
+      );
+    }
+
+    return (
+      <View style={[styles.messageContainer, isUser ? styles.userMessage : styles.assistantMessage]}>
+        {!isUser && (
+          <View style={styles.assistantAvatar}>
+            <MaterialCommunityIcons name="robot" size={20} color={Colors.primary} />
+          </View>
+        )}
+        <View style={[styles.messageBubble, isUser ? styles.userBubble : styles.assistantBubble]}>
+          <ThemedText style={[styles.messageText, isUser && styles.userMessageText]}>
+            {item.content}
+          </ThemedText>
+          <ThemedText style={[styles.messageTime, isUser && styles.userMessageTime]}>
+            {formatRelativeTime(item.timestamp.toISOString())}
+          </ThemedText>
+        </View>
+        {isUser && (
+          user?.avatar_url ? (
+            <Image source={{ uri: user.avatar_url }} style={styles.userAvatar} />
           ) : (
-            <View style={[styles.assistantMessageBubble, { backgroundColor: theme.backgroundSecondary }]}>
-              <View style={styles.assistantHeader}>
-                <View style={styles.aiIcon}>
-                  <Feather name="cpu" size={14} color={Colors.primary} />
-                </View>
-                <ThemedText type="small" style={{ color: Colors.primary, fontWeight: "600" }}>
-                  MedInvest AI
-                </ThemedText>
-              </View>
-              <ThemedText type="body" style={{ color: theme.text }}>
-                {item.content}
-                {item.isStreaming ? "▋" : ""}
+            <View style={[styles.userAvatar, styles.userAvatarPlaceholder]}>
+              <ThemedText style={styles.userAvatarText}>
+                {user?.first_name?.[0]}{user?.last_name?.[0]}
               </ThemedText>
             </View>
-          )}
-        </Animated.View>
-      );
-    },
-    [theme]
-  );
-
-  const renderEmptyState = () => (
-    <View style={styles.emptyState}>
-      <View style={[styles.aiIconLarge, { backgroundColor: Colors.primary + "15" }]}>
-        <Feather name="cpu" size={40} color={Colors.primary} />
+          )
+        )}
       </View>
-      <ThemedText type="title" style={{ textAlign: "center", marginTop: Spacing.lg }}>
-        MedInvest AI Assistant
-      </ThemedText>
-      <ThemedText
-        type="body"
-        style={{ color: theme.textSecondary, textAlign: "center", marginTop: Spacing.sm }}
+    );
+  };
+
+  const renderEmpty = () => (
+    <View style={styles.emptyContainer}>
+      {/* AI Avatar */}
+      <LinearGradient
+        colors={[Colors.primary, Colors.secondary]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.aiAvatarLarge}
       >
-        Your personal guide to healthcare investments. Ask me anything about medical innovations,
-        due diligence, or investment strategies.
+        <MaterialCommunityIcons name="robot" size={48} color="white" />
+      </LinearGradient>
+
+      <ThemedText style={styles.emptyTitle}>MedInvest AI Assistant</ThemedText>
+      <ThemedText style={styles.emptySubtitle}>
+        I'm here to help you with healthcare investment insights, market analysis, and due diligence questions.
       </ThemedText>
 
-      <View style={styles.suggestedPromptsContainer}>
-        <ThemedText type="caption" style={{ color: theme.textSecondary, marginBottom: Spacing.sm }}>
-          Try asking:
+      {/* Suggested Prompts */}
+      <View style={styles.promptsContainer}>
+        <ThemedText style={styles.promptsTitle}>Try asking about:</ThemedText>
+        <View style={styles.promptsGrid}>
+          {SUGGESTED_PROMPTS.map((prompt, index) => (
+            <TouchableOpacity
+              key={index}
+              style={styles.promptCard}
+              onPress={() => handlePromptPress(prompt.query)}
+            >
+              <ThemedText style={styles.promptIcon}>{prompt.icon}</ThemedText>
+              <ThemedText style={styles.promptText}>{prompt.text}</ThemedText>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </View>
+
+      {/* Disclaimer */}
+      <View style={styles.disclaimerContainer}>
+        <Ionicons name="information-circle-outline" size={16} color={Colors.textSecondary} />
+        <ThemedText style={styles.disclaimerText}>
+          AI responses are for informational purposes only. Always consult with qualified professionals for investment decisions.
         </ThemedText>
-        {SUGGESTED_PROMPTS.map((prompt, index) => (
-          <Pressable
-            key={index}
-            style={[styles.suggestedPrompt, { backgroundColor: theme.backgroundSecondary }]}
-            onPress={() => handleSuggestedPrompt(prompt)}
-          >
-            <Feather name="message-circle" size={16} color={Colors.primary} />
-            <ThemedText type="body" style={{ flex: 1, marginLeft: Spacing.sm }}>
-              {prompt}
-            </ThemedText>
-            <Feather name="arrow-right" size={16} color={theme.textSecondary} />
-          </Pressable>
-        ))}
       </View>
     </View>
   );
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.backgroundDefault }]}>
-      <FlatList
-        ref={flatListRef}
-        data={messages}
-        renderItem={renderMessage}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={[
-          styles.messagesList,
-          { paddingTop: insets.top + Spacing.lg, paddingBottom: 100 },
-        ]}
-        ListEmptyComponent={renderEmptyState}
-        onContentSizeChange={() => {
-          if (messages.length > 0) {
-            flatListRef.current?.scrollToEnd({ animated: true });
-          }
-        }}
-      />
-
-      <View
-        style={[
-          styles.inputContainer,
-          {
-            backgroundColor: theme.backgroundDefault,
-            paddingBottom: insets.bottom + Spacing.sm,
-            borderTopColor: Colors.border,
-          },
-        ]}
+    <SafeAreaView style={styles.container} edges={['top']}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.keyboardView}
+        keyboardVerticalOffset={0}
       >
-        <View style={[styles.inputWrapper, { backgroundColor: theme.backgroundSecondary }]}>
-          <TextInput
-            style={[styles.textInput, { color: theme.text }]}
-            placeholder="Ask about healthcare investments..."
-            placeholderTextColor={theme.textSecondary}
-            value={inputText}
-            onChangeText={setInputText}
-            multiline
-            maxLength={1000}
-            editable={!isLoading}
-          />
-          <Pressable
-            style={[
-              styles.sendButton,
-              {
-                backgroundColor: inputText.trim() && !isLoading ? Colors.primary : theme.textSecondary + "40",
-              },
-            ]}
-            onPress={() => sendMessage(inputText)}
-            disabled={!inputText.trim() || isLoading}
-          >
-            {isLoading ? (
-              <ActivityIndicator size="small" color="#fff" />
-            ) : (
-              <Feather name="send" size={18} color="#fff" />
-            )}
-          </Pressable>
+        {/* Header */}
+        <View style={styles.header}>
+          <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+            <Ionicons name="chevron-back" size={24} color={Colors.textPrimary} />
+          </TouchableOpacity>
+          <View style={styles.headerCenter}>
+            <View style={styles.headerAvatar}>
+              <MaterialCommunityIcons name="robot" size={20} color={Colors.primary} />
+            </View>
+            <View>
+              <ThemedText style={styles.headerTitle}>AI Assistant</ThemedText>
+              <ThemedText style={styles.headerSubtitle}>Powered by MedInvest AI</ThemedText>
+            </View>
+          </View>
+          {messages.length > 0 && (
+            <TouchableOpacity style={styles.clearButton} onPress={handleClearChat}>
+              <Ionicons name="trash-outline" size={20} color={Colors.textSecondary} />
+            </TouchableOpacity>
+          )}
         </View>
-      </View>
-    </View>
+
+        {/* Messages */}
+        <FlatList
+          ref={flatListRef}
+          data={messages}
+          renderItem={renderMessage}
+          keyExtractor={(item) => item.id}
+          ListEmptyComponent={renderEmpty}
+          contentContainerStyle={[
+            styles.messagesList,
+            messages.length === 0 && styles.messagesListEmpty,
+          ]}
+          showsVerticalScrollIndicator={false}
+        />
+
+        {/* Input */}
+        <View style={styles.inputContainer}>
+          <View style={styles.inputWrapper}>
+            <TextInput
+              ref={inputRef}
+              style={styles.input}
+              placeholder="Ask about healthcare investments..."
+              placeholderTextColor={Colors.textSecondary}
+              value={inputText}
+              onChangeText={setInputText}
+              multiline
+              maxLength={2000}
+              editable={!sendMessageMutation.isPending}
+            />
+          </View>
+          <TouchableOpacity
+            style={[styles.sendButton, (!inputText.trim() || sendMessageMutation.isPending) && styles.sendButtonDisabled]}
+            onPress={handleSend}
+            disabled={!inputText.trim() || sendMessageMutation.isPending}
+          >
+            <LinearGradient
+              colors={inputText.trim() && !sendMessageMutation.isPending ? [Colors.primary, Colors.secondary] : [Colors.border, Colors.border]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.sendButtonGradient}
+            >
+              <Ionicons name="send" size={20} color="white" />
+            </LinearGradient>
+          </TouchableOpacity>
+        </View>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: Colors.background,
   },
-  messagesList: {
-    paddingHorizontal: Spacing.md,
-    flexGrow: 1,
-  },
-  emptyState: {
+  keyboardView: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    paddingHorizontal: Spacing.xl,
-    paddingTop: 60,
   },
-  aiIconLarge: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  suggestedPromptsContainer: {
-    width: "100%",
-    marginTop: Spacing.xl,
-  },
-  suggestedPrompt: {
-    flexDirection: "row",
-    alignItems: "center",
-    padding: Spacing.md,
-    borderRadius: BorderRadius.lg,
-    marginBottom: Spacing.sm,
-  },
-  messageContainer: {
-    marginBottom: Spacing.md,
-    maxWidth: "85%",
-  },
-  userMessageContainer: {
-    alignSelf: "flex-end",
-  },
-  assistantMessageContainer: {
-    alignSelf: "flex-start",
-  },
-  userMessageBubble: {
-    padding: Spacing.md,
-    borderRadius: BorderRadius.lg,
-    borderBottomRightRadius: BorderRadius.sm,
-  },
-  userMessageText: {
-    color: "#fff",
-  },
-  assistantMessageBubble: {
-    padding: Spacing.md,
-    borderRadius: BorderRadius.lg,
-    borderBottomLeftRadius: BorderRadius.sm,
-  },
-  assistantHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: Spacing.xs,
-  },
-  aiIcon: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: Colors.primary + "15",
-    justifyContent: "center",
-    alignItems: "center",
-    marginRight: Spacing.xs,
-  },
-  inputContainer: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingHorizontal: Spacing.md,
-    paddingTop: Spacing.sm,
-    borderTopWidth: 1,
+    paddingVertical: Spacing.sm,
+    backgroundColor: Colors.surface,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border,
   },
-  inputWrapper: {
-    flexDirection: "row",
-    alignItems: "flex-end",
-    borderRadius: BorderRadius.xl,
-    paddingLeft: Spacing.md,
-    paddingRight: Spacing.xs,
-    paddingVertical: Spacing.xs,
-    minHeight: 48,
+  backButton: {
+    padding: Spacing.sm,
   },
-  textInput: {
+  headerCenter: {
     flex: 1,
-    fontSize: Typography.body.fontSize,
-    maxHeight: 100,
-    paddingVertical: Platform.OS === "ios" ? Spacing.sm : Spacing.xs,
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginLeft: Spacing.sm,
   },
-  sendButton: {
+  headerAvatar: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    justifyContent: "center",
-    alignItems: "center",
-    marginLeft: Spacing.xs,
+    backgroundColor: Colors.primary + '15',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: Spacing.sm,
+  },
+  headerTitle: {
+    ...Typography.body,
+    fontWeight: '600',
+    color: Colors.textPrimary,
+  },
+  headerSubtitle: {
+    ...Typography.small,
+    color: Colors.textSecondary,
+  },
+  clearButton: {
+    padding: Spacing.sm,
+  },
+  messagesList: {
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.lg,
+  },
+  messagesListEmpty: {
+    flex: 1,
+  },
+  messageContainer: {
+    flexDirection: 'row',
+    marginBottom: Spacing.lg,
+    alignItems: 'flex-end',
+  },
+  userMessage: {
+    justifyContent: 'flex-end',
+  },
+  assistantMessage: {
+    justifyContent: 'flex-start',
+  },
+  assistantAvatar: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: Colors.primary + '15',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: Spacing.sm,
+  },
+  userAvatar: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    marginLeft: Spacing.sm,
+  },
+  userAvatarPlaceholder: {
+    backgroundColor: Colors.secondary + '20',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  userAvatarText: {
+    ...Typography.small,
+    color: Colors.secondary,
+    fontWeight: '600',
+  },
+  messageBubble: {
+    maxWidth: '75%',
+    padding: Spacing.md,
+    borderRadius: BorderRadius.lg,
+  },
+  userBubble: {
+    backgroundColor: Colors.primary,
+    borderBottomRightRadius: 4,
+  },
+  assistantBubble: {
+    backgroundColor: Colors.surface,
+    borderBottomLeftRadius: 4,
+    ...Shadows.card,
+  },
+  messageText: {
+    ...Typography.body,
+    color: Colors.textPrimary,
+    lineHeight: 22,
+  },
+  userMessageText: {
+    color: 'white',
+  },
+  messageTime: {
+    ...Typography.small,
+    color: Colors.textSecondary,
+    marginTop: Spacing.xs,
+  },
+  userMessageTime: {
+    color: 'rgba(255,255,255,0.7)',
+  },
+  typingIndicator: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.surface,
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.md,
+    borderRadius: BorderRadius.lg,
+    ...Shadows.card,
+    gap: 6,
+  },
+  typingDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: Colors.primary,
+  },
+  emptyContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: Spacing.xl,
+  },
+  aiAvatarLarge: {
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: Spacing.xl,
+  },
+  emptyTitle: {
+    ...Typography.title,
+    color: Colors.textPrimary,
+    marginBottom: Spacing.sm,
+  },
+  emptySubtitle: {
+    ...Typography.body,
+    color: Colors.textSecondary,
+    textAlign: 'center',
+    lineHeight: 22,
+    marginBottom: Spacing.xl,
+  },
+  promptsContainer: {
+    width: '100%',
+  },
+  promptsTitle: {
+    ...Typography.caption,
+    fontWeight: '600',
+    color: Colors.textSecondary,
+    marginBottom: Spacing.md,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  promptsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Spacing.sm,
+  },
+  promptCard: {
+    width: '48%',
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.surface,
+    padding: Spacing.md,
+    borderRadius: BorderRadius.md,
+    ...Shadows.card,
+    gap: Spacing.sm,
+  },
+  promptIcon: {
+    fontSize: 20,
+  },
+  promptText: {
+    ...Typography.caption,
+    color: Colors.textPrimary,
+    fontWeight: '500',
+    flex: 1,
+  },
+  disclaimerContainer: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    backgroundColor: Colors.light.backgroundSecondary,
+    padding: Spacing.md,
+    borderRadius: BorderRadius.md,
+    marginTop: Spacing.xl,
+    gap: Spacing.sm,
+  },
+  disclaimerText: {
+    ...Typography.small,
+    color: Colors.textSecondary,
+    flex: 1,
+    lineHeight: 18,
+  },
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    padding: Spacing.md,
+    backgroundColor: Colors.surface,
+    borderTopWidth: 1,
+    borderTopColor: Colors.border,
+    gap: Spacing.sm,
+  },
+  inputWrapper: {
+    flex: 1,
+    backgroundColor: Colors.light.backgroundSecondary,
+    borderRadius: BorderRadius.lg,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    maxHeight: 120,
+  },
+  input: {
+    ...Typography.body,
+    color: Colors.textPrimary,
+    maxHeight: 100,
+  },
+  sendButton: {
+    borderRadius: BorderRadius.full,
+    overflow: 'hidden',
+  },
+  sendButtonDisabled: {
+    opacity: 0.5,
+  },
+  sendButtonGradient: {
+    width: 44,
+    height: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

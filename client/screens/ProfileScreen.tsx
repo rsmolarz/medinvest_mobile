@@ -1,254 +1,103 @@
-import React from "react";
-import { View, StyleSheet, Pressable, Platform, Alert } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
-import { useNavigation } from "@react-navigation/native";
-import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { Feather } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
-import * as Haptics from "expo-haptics";
+import React from 'react';
+import { View, StyleSheet, ScrollView, Pressable } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Feather } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
-import { KeyboardAwareScrollViewCompat } from "@/components/KeyboardAwareScrollViewCompat";
-import { ThemedText } from "@/components/ThemedText";
-import { useTheme } from "@/hooks/useTheme";
-import { useAuth } from "@/contexts/AuthContext";
-import { Colors, Spacing, BorderRadius, Shadows } from "@/constants/theme";
-import { menuItems } from "@/lib/mockData";
-import { RootStackParamList } from "@/navigation/RootStackNavigator";
+import { ThemedText } from '@/components/ThemedText';
+import { ThemedView } from '@/components/ThemedView';
+import { useTheme } from '@/hooks/useTheme';
+import { useAuth } from '@/contexts/AuthContext';
+import { Colors, Spacing, BorderRadius, Shadows } from '@/constants/theme';
+import { RootStackParamList } from '@/types';
+
+type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
-  const tabBarHeight = useBottomTabBarHeight();
-  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const navigation = useNavigation<NavigationProp>();
   const { theme } = useTheme();
-  const { user, logout } = useAuth();
+  const { user, signOut } = useAuth();
 
-  const handleLogout = () => {
-    Alert.alert(
-      "Sign Out",
-      "Are you sure you want to sign out?",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Sign Out",
-          style: "destructive",
-          onPress: async () => {
-            if (Platform.OS !== "web") {
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-            }
-            await logout();
-          },
-        },
-      ],
-      { cancelable: true }
-    );
-  };
+  const menuItems = [
+    { icon: 'bookmark', label: 'Bookmarks', screen: 'Bookmarks' as const },
+    { icon: 'award', label: 'Achievements', screen: 'Achievements' as const },
+    { icon: 'bar-chart-2', label: 'Leaderboard', screen: 'Leaderboard' as const },
+    { icon: 'settings', label: 'Settings', screen: 'Settings' as const },
+  ];
 
-  const handleMenuPress = (id: string) => {
-    if (Platform.OS !== "web") {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    }
+  const handleLogout = async () => {
+    await signOut();
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.backgroundRoot }]}>
-      <View style={[styles.header, { paddingTop: insets.top + Spacing.lg }]}>
-        <ThemedText type="title">Profile</ThemedText>
-        <Pressable hitSlop={8}>
-          <Feather name="settings" size={22} color={theme.text} />
-        </Pressable>
-      </View>
-
-      <KeyboardAwareScrollViewCompat
-        style={styles.scrollView}
+    <ThemedView style={styles.container}>
+      <ScrollView
         contentContainerStyle={[
-          styles.content,
-          { paddingBottom: tabBarHeight + Spacing.xl },
+          styles.scrollContent,
+          { paddingTop: insets.top + Spacing.xl, paddingBottom: insets.bottom + Spacing.xl },
         ]}
-        scrollIndicatorInsets={{ bottom: insets.bottom }}
+        showsVerticalScrollIndicator={false}
       >
-        <View style={styles.profileSection}>
-          <LinearGradient
-            colors={[Colors.gradient.start, Colors.gradient.end]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.avatar}
+        <View style={styles.header}>
+          <ThemedText type="h1">Profile</ThemedText>
+          <Pressable
+            onPress={() => navigation.navigate('Settings')}
+            style={({ pressed }) => [
+              styles.headerButton,
+              { backgroundColor: theme.backgroundSecondary, opacity: pressed ? 0.7 : 1 },
+            ]}
           >
-            <ThemedText type="title" style={styles.avatarText}>
-              {user?.name
-                .split(" ")
-                .map((n) => n[0])
-                .join("")
-                .toUpperCase()}
-            </ThemedText>
-          </LinearGradient>
-
-          <View style={styles.profileInfo}>
-            <View style={styles.nameRow}>
-              <ThemedText type="title">{user?.name}</ThemedText>
-              {user?.verified ? (
-                <View style={styles.verifiedBadge}>
-                  <Feather name="check" size={12} color="#FFFFFF" />
-                </View>
-              ) : null}
-            </View>
-            <ThemedText type="body" style={{ color: theme.textSecondary }}>
-              {user?.email}
-            </ThemedText>
-          </View>
+            <Feather name="settings" size={20} color={theme.text} />
+          </Pressable>
         </View>
 
-        <View
-          style={[
-            styles.statsCard,
-            { backgroundColor: theme.backgroundDefault },
-            Shadows.card,
-          ]}
-        >
-          <View style={styles.statItem}>
-            <ThemedText type="heading" style={{ color: Colors.primary }}>
-              0
-            </ThemedText>
-            <ThemedText type="small" style={{ color: theme.textSecondary }}>
-              Investments
+        <View style={[styles.profileCard, { backgroundColor: theme.backgroundDefault }, Shadows.card]}>
+          <View style={[styles.avatar, { backgroundColor: Colors.primary + '20' }]}>
+            <ThemedText type="h1" style={{ color: Colors.primary }}>
+              {user?.firstName?.[0] || user?.email?.[0]?.toUpperCase() || 'U'}
             </ThemedText>
           </View>
-          <View style={[styles.statDivider, { backgroundColor: theme.backgroundSecondary }]} />
-          <View style={styles.statItem}>
-            <ThemedText type="heading" style={{ color: Colors.secondary }}>
-              $0
-            </ThemedText>
-            <ThemedText type="small" style={{ color: theme.textSecondary }}>
-              Total Value
-            </ThemedText>
-          </View>
-          <View style={[styles.statDivider, { backgroundColor: theme.backgroundSecondary }]} />
-          <View style={styles.statItem}>
-            <ThemedText type="heading" style={{ color: Colors.primary }}>
-              0%
-            </ThemedText>
-            <ThemedText type="small" style={{ color: theme.textSecondary }}>
-              Returns
-            </ThemedText>
-          </View>
-        </View>
-
-        <View style={styles.quickActionsGrid}>
+          <ThemedText type="h2" style={styles.userName}>
+            {user?.fullName || user?.email || 'User'}
+          </ThemedText>
+          <ThemedText type="body" style={{ color: theme.textSecondary }}>
+            {user?.email || ''}
+          </ThemedText>
           <Pressable
-            onPress={() => navigation.navigate("Leaderboard")}
+            onPress={() => navigation.navigate('EditProfile')}
             style={({ pressed }) => [
-              styles.quickActionButton,
-              { backgroundColor: theme.backgroundDefault },
-              Shadows.card,
-              pressed && { opacity: 0.9 },
+              styles.editButton,
+              { backgroundColor: Colors.primary, opacity: pressed ? 0.9 : 1 },
             ]}
           >
-            <View style={[styles.quickActionIcon, { backgroundColor: "#FFD700" + "20" }]}>
-              <Feather name="award" size={22} color="#FFD700" />
-            </View>
-            <ThemedText type="small" style={{ fontWeight: "600" }}>
-              Leaderboard
-            </ThemedText>
-          </Pressable>
-
-          <Pressable
-            onPress={() => navigation.navigate("Achievements")}
-            style={({ pressed }) => [
-              styles.quickActionButton,
-              { backgroundColor: theme.backgroundDefault },
-              Shadows.card,
-              pressed && { opacity: 0.9 },
-            ]}
-          >
-            <View style={[styles.quickActionIcon, { backgroundColor: Colors.secondary + "20" }]}>
-              <Feather name="star" size={22} color={Colors.secondary} />
-            </View>
-            <ThemedText type="small" style={{ fontWeight: "600" }}>
-              Achievements
-            </ThemedText>
-          </Pressable>
-
-          <Pressable
-            onPress={() => navigation.navigate("Messages")}
-            style={({ pressed }) => [
-              styles.quickActionButton,
-              { backgroundColor: theme.backgroundDefault },
-              Shadows.card,
-              pressed && { opacity: 0.9 },
-            ]}
-          >
-            <View style={[styles.quickActionIcon, { backgroundColor: Colors.primary + "20" }]}>
-              <Feather name="message-circle" size={22} color={Colors.primary} />
-            </View>
-            <ThemedText type="small" style={{ fontWeight: "600" }}>
-              Messages
-            </ThemedText>
-          </Pressable>
-
-          <Pressable
-            onPress={() => navigation.navigate("Rooms")}
-            style={({ pressed }) => [
-              styles.quickActionButton,
-              { backgroundColor: theme.backgroundDefault },
-              Shadows.card,
-              pressed && { opacity: 0.9 },
-            ]}
-          >
-            <View style={[styles.quickActionIcon, { backgroundColor: "#8B5CF6" + "20" }]}>
-              <Feather name="users" size={22} color="#8B5CF6" />
-            </View>
-            <ThemedText type="small" style={{ fontWeight: "600" }}>
-              Rooms
+            <Feather name="edit-2" size={16} color="#FFFFFF" />
+            <ThemedText type="body" style={{ color: '#FFFFFF', marginLeft: Spacing.xs }}>
+              Edit Profile
             </ThemedText>
           </Pressable>
         </View>
 
-        <Pressable
-          onPress={() => navigation.navigate("AIChat")}
-          style={({ pressed }) => [
-            styles.aiChatButton,
-            pressed && { opacity: 0.9 },
-          ]}
-        >
-          <LinearGradient
-            colors={[Colors.gradient.start, Colors.gradient.end]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.aiChatGradient}
-          >
-            <View style={styles.aiChatContent}>
-              <View style={styles.aiChatIcon}>
-                <Feather name="cpu" size={24} color="#FFFFFF" />
-              </View>
-              <View style={styles.aiChatText}>
-                <ThemedText type="heading" style={{ color: "#FFFFFF" }}>
-                  AI Assistant
-                </ThemedText>
-                <ThemedText type="small" style={{ color: "rgba(255,255,255,0.8)" }}>
-                  Get investment insights powered by AI
-                </ThemedText>
-              </View>
-              <Feather name="arrow-right" size={20} color="#FFFFFF" />
-            </View>
-          </LinearGradient>
-        </Pressable>
-
-        <View style={styles.menuSection}>
-          {menuItems.map((item) => (
+        <View style={[styles.menuSection, { backgroundColor: theme.backgroundDefault }, Shadows.card]}>
+          {menuItems.map((item, index) => (
             <Pressable
-              key={item.id}
-              onPress={() => handleMenuPress(item.id)}
+              key={item.screen}
+              onPress={() => navigation.navigate(item.screen)}
               style={({ pressed }) => [
                 styles.menuItem,
-                { backgroundColor: theme.backgroundDefault },
-                pressed && { opacity: 0.7 },
+                { opacity: pressed ? 0.7 : 1 },
+                index < menuItems.length - 1 && {
+                  borderBottomWidth: 1,
+                  borderBottomColor: theme.border,
+                },
               ]}
             >
-              <View style={[styles.menuIcon, { backgroundColor: Colors.primary + "15" }]}>
-                <Feather name={item.icon} size={20} color={Colors.primary} />
+              <View style={[styles.menuIcon, { backgroundColor: Colors.primary + '15' }]}>
+                <Feather name={item.icon as any} size={20} color={Colors.primary} />
               </View>
-              <ThemedText type="body" style={styles.menuTitle}>
-                {item.title}
+              <ThemedText type="heading" style={styles.menuLabel}>
+                {item.label}
               </ThemedText>
               <Feather name="chevron-right" size={20} color={theme.textSecondary} />
             </Pressable>
@@ -259,24 +108,16 @@ export default function ProfileScreen() {
           onPress={handleLogout}
           style={({ pressed }) => [
             styles.logoutButton,
-            { backgroundColor: Colors.error + "10" },
-            pressed && { opacity: 0.7 },
+            { backgroundColor: Colors.semantic.error + '15', opacity: pressed ? 0.7 : 1 },
           ]}
         >
-          <Feather name="log-out" size={20} color={Colors.error} />
-          <ThemedText type="body" style={{ color: Colors.error, fontWeight: "500" }}>
+          <Feather name="log-out" size={20} color={Colors.semantic.error} />
+          <ThemedText type="heading" style={{ color: Colors.semantic.error, marginLeft: Spacing.sm }}>
             Sign Out
           </ThemedText>
         </Pressable>
-
-        <ThemedText
-          type="small"
-          style={[styles.version, { color: theme.textSecondary }]}
-        >
-          MedInvest v1.0.0
-        </ThemedText>
-      </KeyboardAwareScrollViewCompat>
-    </View>
+      </ScrollView>
+    </ThemedView>
   );
 }
 
@@ -284,139 +125,71 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  scrollContent: {
+    paddingHorizontal: Spacing.lg,
+    gap: Spacing.lg,
+  },
   header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: Spacing.xl,
-    paddingBottom: Spacing.lg,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
-  scrollView: {
-    flex: 1,
+  headerButton: {
+    width: 40,
+    height: 40,
+    borderRadius: BorderRadius.md,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  content: {
-    paddingHorizontal: Spacing.xl,
-  },
-  profileSection: {
-    alignItems: "center",
-    marginBottom: Spacing.xl,
+  profileCard: {
+    padding: Spacing.xl,
+    borderRadius: BorderRadius.lg,
+    alignItems: 'center',
   },
   avatar: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: Spacing.lg,
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: Spacing.md,
   },
-  avatarText: {
-    color: "#FFFFFF",
-  },
-  profileInfo: {
-    alignItems: "center",
-  },
-  nameRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: Spacing.sm,
+  userName: {
     marginBottom: Spacing.xs,
   },
-  verifiedBadge: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    backgroundColor: Colors.secondary,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  statsCard: {
-    flexDirection: "row",
-    padding: Spacing.xl,
-    borderRadius: BorderRadius.sm,
-    marginBottom: Spacing.xl,
-  },
-  statItem: {
-    flex: 1,
-    alignItems: "center",
-  },
-  statDivider: {
-    width: 1,
-  },
-  quickActionsGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: Spacing.md,
-    marginBottom: Spacing.lg,
-  },
-  quickActionButton: {
-    width: "47%",
-    alignItems: "center",
-    padding: Spacing.md,
-    borderRadius: BorderRadius.lg,
-    gap: Spacing.xs,
-  },
-  quickActionIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  aiChatButton: {
-    marginBottom: Spacing.xl,
-    borderRadius: BorderRadius.lg,
-    overflow: "hidden",
-  },
-  aiChatGradient: {
-    padding: Spacing.lg,
-  },
-  aiChatContent: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  aiChatIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: "rgba(255,255,255,0.2)",
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: Spacing.md,
-  },
-  aiChatText: {
-    flex: 1,
+  editButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.sm,
+    borderRadius: BorderRadius.md,
+    marginTop: Spacing.lg,
   },
   menuSection: {
-    gap: Spacing.sm,
-    marginBottom: Spacing.xl,
+    borderRadius: BorderRadius.lg,
+    overflow: 'hidden',
   },
   menuItem: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     padding: Spacing.lg,
-    borderRadius: BorderRadius.sm,
-    gap: Spacing.md,
   },
   menuIcon: {
     width: 40,
     height: 40,
-    borderRadius: BorderRadius.xs,
-    alignItems: "center",
-    justifyContent: "center",
+    borderRadius: BorderRadius.md,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  menuTitle: {
+  menuLabel: {
     flex: 1,
+    marginLeft: Spacing.md,
   },
   logoutButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
     padding: Spacing.lg,
-    borderRadius: BorderRadius.sm,
-    gap: Spacing.sm,
-    marginBottom: Spacing.xl,
-  },
-  version: {
-    textAlign: "center",
+    borderRadius: BorderRadius.lg,
   },
 });

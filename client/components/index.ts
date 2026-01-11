@@ -1,100 +1,44 @@
-// Button
-export { Button, type ButtonProps, type ButtonVariant, type ButtonSize } from './Button';
-export { default as ButtonDefault } from './Button';
+/**
+ * Components Index
+ * Export all components for easy imports
+ */
 
-// Input
-export { Input, type InputProps } from './Input';
-export { default as InputDefault } from './Input';
+// Core Components
+export { ThemedText } from './ThemedText';
+export { ThemedView } from './ThemedView';
+export { default as Button } from './Button';
+export { default as Card } from './Card';
+export { default as Spacer } from './Spacer';
+export { ErrorBoundary } from './ErrorBoundary';
+export { ErrorFallback } from './ErrorFallback';
 
-// Card
-export {
-  Card,
-  CardHeader,
-  CardContent,
-  CardFooter,
-  type CardProps,
-  type CardVariant,
-} from './Card';
-export { default as CardDefault } from './Card';
+// Post Components
+export { default as PostCard } from './PostCard';
+export { default as RichTextContent } from './RichTextContent';
 
-// Avatar
-export {
-  Avatar,
-  AvatarGroup,
-  type AvatarProps,
-  type AvatarSize,
-  type AvatarGroupProps,
-} from './Avatar';
-export { default as AvatarDefault } from './Avatar';
+// Feed Components
+export { default as RoomFilter } from './RoomFilter';
+export { default as TrendingSidebar } from './TrendingSidebar';
 
-// Badge
-export {
-  Badge,
-  NotificationBadge,
-  StatusBadge,
-  type BadgeProps,
-  type BadgeVariant,
-  type BadgeSize,
-  type NotificationBadgeProps,
-  type StatusBadgeProps,
-} from './Badge';
-export { default as BadgeDefault } from './Badge';
+// Modal Components
+export { default as ReportModal } from './ReportModal';
+export { default as ImageViewer } from './ImageViewer';
 
-// ProgressBar
-export {
-  ProgressBar,
-  CircularProgress,
-  type ProgressBarProps,
-  type ProgressVariant,
-  type ProgressSize,
-  type CircularProgressProps,
-} from './ProgressBar';
-export { default as ProgressBarDefault } from './ProgressBar';
+// Media Components
+export { default as VideoPlayer, InlineVideoPlayer } from './VideoPlayer';
 
-// EmptyState
-export {
-  EmptyState,
-  EmptySearchState,
-  EmptyListState,
-  EmptyNetworkState,
-  EmptyErrorState,
-  type EmptyStateProps,
-} from './EmptyState';
-export { default as EmptyStateDefault } from './EmptyState';
+// Network & Error Components
+export { 
+  NetworkProvider, 
+  useNetwork, 
+  OfflinePlaceholder, 
+  ErrorState, 
+  RateLimitError 
+} from './NetworkStatus';
 
-// Skeleton
-export {
-  Skeleton,
-  SkeletonText,
-  SkeletonAvatar,
-  SkeletonCard,
-  SkeletonListItem,
-  SkeletonInvestmentCard,
-  SkeletonArticleCard,
-  type SkeletonProps,
-  type SkeletonTextProps,
-  type SkeletonAvatarProps,
-  type SkeletonCardProps,
-  type SkeletonListItemProps,
-} from './Skeleton';
-export { default as SkeletonDefault } from './Skeleton';
+// Discovery Components
+export { default as PeopleYouMayKnow, PeopleYouMayKnowCompact } from './PeopleYouMayKnow';
+export { default as DiscoverMoreNews, DiscoverNewsCompact, FeaturedNewsCard } from './DiscoverMoreNews';
 
-// Toast
-export {
-  ToastProvider,
-  useToast,
-  type ToastConfig,
-  type ToastType,
-  type ToastPosition,
-} from './Toast';
-export { default as ToastDefault } from './Toast';
-
-// FilterModal
-export { default as FilterModal } from './FilterModal';
-
-// ErrorBoundary
-export {
-  ErrorBoundary,
-  ScreenErrorBoundary,
-} from './ErrorBoundary';
-export { default as ErrorBoundaryDefault } from './ErrorBoundary';
+// Notifications
+export { default as NotificationsDropdown, NotificationBell } from './NotificationsDropdown';
