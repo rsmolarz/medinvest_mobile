@@ -12,6 +12,7 @@ import MainTabNavigator from './MainTabNavigator';
 
 // Auth Screens
 import LoginScreen from '@/screens/auth/LoginScreen';
+import OnboardingScreen from '@/screens/auth/OnboardingScreen';
 
 // Modal Screens
 import InvestModalScreen from '@/screens/modals/InvestModalScreen';
@@ -26,6 +27,8 @@ import LegalScreen from '@/screens/settings/LegalScreen';
 import EditProfileScreen from '@/screens/settings/EditProfileScreen';
 import NotificationsSettingsScreen from '@/screens/settings/NotificationsSettingsScreen';
 import BookmarkedArticlesScreen from '@/screens/main/BookmarkedArticlesScreen';
+import TransactionHistoryScreen from '@/screens/main/TransactionHistoryScreen';
+import ArticleDetailScreen from '@/screens/main/ArticleDetailScreen';
 
 const RootStack = createNativeStackNavigator<RootStackParamList>();
 const AuthStack = createNativeStackNavigator<AuthStackParamList>();
@@ -166,16 +169,39 @@ export default function RootNavigator() {
                 animation: 'slide_from_right',
               }}
             />
+            <RootStack.Screen
+              name="TransactionHistory"
+              component={TransactionHistoryScreen}
+              options={{
+                animation: 'slide_from_right',
+              }}
+            />
+            <RootStack.Screen
+              name="ArticleDetail"
+              component={ArticleDetailScreen}
+              options={{
+                animation: 'slide_from_right',
+              }}
+            />
           </>
         ) : (
           // Unauthenticated routes
-          <RootStack.Screen
-            name="Auth"
-            component={AuthNavigator}
-            options={{
-              animation: 'fade',
-            }}
-          />
+          <>
+            <RootStack.Screen
+              name="Onboarding"
+              component={OnboardingScreen}
+              options={{
+                animation: 'fade',
+              }}
+            />
+            <RootStack.Screen
+              name="Auth"
+              component={AuthNavigator}
+              options={{
+                animation: 'fade',
+              }}
+            />
+          </>
         )}
       </RootStack.Navigator>
     </NavigationContainer>

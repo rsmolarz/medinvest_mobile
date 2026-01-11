@@ -4,6 +4,9 @@ import type { NavigatorScreenParams } from '@react-navigation/native';
  * Root Stack Navigator Params
  */
 export type RootStackParamList = {
+  // Onboarding
+  Onboarding: undefined;
+  
   // Auth screens
   Auth: NavigatorScreenParams<AuthStackParamList>;
   
@@ -23,6 +26,8 @@ export type RootStackParamList = {
   EditProfile: undefined;
   NotificationsSettings: undefined;
   BookmarkedArticles: undefined;
+  TransactionHistory: { investmentId?: string } | undefined;
+  ArticleDetail: { articleId: string };
 };
 
 /**
