@@ -1,82 +1,100 @@
-/**
- * Components Index
- * Export all components for easy imports
- */
+// Button
+export { Button, type ButtonProps, type ButtonVariant, type ButtonSize } from './Button';
+export { default as ButtonDefault } from './Button';
 
-// Core Components
-export { ThemedText } from './ThemedText';
-export { ThemedView } from './ThemedView';
-export { default as Button } from './Button';
-export type { ButtonProps } from './Button';
-export { default as Card } from './Card';
-export type { CardProps } from './Card';
-export { default as Spacer } from './Spacer';
-export { ErrorBoundary } from './ErrorBoundary';
-export { ErrorFallback } from './ErrorFallback';
+// Input
+export { Input, type InputProps } from './Input';
+export { default as InputDefault } from './Input';
 
-// Input Components
-export { default as Input } from './Input';
-export type { InputProps } from './Input';
-
-// Display Components
-export { default as Avatar, AvatarGroup } from './Avatar';
-export type { AvatarProps, AvatarGroupProps } from './Avatar';
-export { default as Badge } from './Badge';
-export type { BadgeProps } from './Badge';
-export { 
-  default as ProgressBar,
-  CircularProgress,
-} from './ProgressBar';
-export type { ProgressBarProps, CircularProgressProps } from './ProgressBar';
-
-// Skeleton Components
+// Card
 export {
-  default as Skeleton,
+  Card,
+  CardHeader,
+  CardContent,
+  CardFooter,
+  type CardProps,
+  type CardVariant,
+} from './Card';
+export { default as CardDefault } from './Card';
+
+// Avatar
+export {
+  Avatar,
+  AvatarGroup,
+  type AvatarProps,
+  type AvatarSize,
+  type AvatarGroupProps,
+} from './Avatar';
+export { default as AvatarDefault } from './Avatar';
+
+// Badge
+export {
+  Badge,
+  NotificationBadge,
+  StatusBadge,
+  type BadgeProps,
+  type BadgeVariant,
+  type BadgeSize,
+  type NotificationBadgeProps,
+  type StatusBadgeProps,
+} from './Badge';
+export { default as BadgeDefault } from './Badge';
+
+// ProgressBar
+export {
+  ProgressBar,
+  CircularProgress,
+  type ProgressBarProps,
+  type ProgressVariant,
+  type ProgressSize,
+  type CircularProgressProps,
+} from './ProgressBar';
+export { default as ProgressBarDefault } from './ProgressBar';
+
+// EmptyState
+export {
+  EmptyState,
+  EmptySearchState,
+  EmptyListState,
+  EmptyNetworkState,
+  EmptyErrorState,
+  type EmptyStateProps,
+} from './EmptyState';
+export { default as EmptyStateDefault } from './EmptyState';
+
+// Skeleton
+export {
+  Skeleton,
   SkeletonText,
   SkeletonAvatar,
   SkeletonCard,
   SkeletonListItem,
   SkeletonInvestmentCard,
   SkeletonArticleCard,
+  type SkeletonProps,
+  type SkeletonTextProps,
+  type SkeletonAvatarProps,
+  type SkeletonCardProps,
+  type SkeletonListItemProps,
 } from './Skeleton';
-export type { 
-  SkeletonProps, 
-  SkeletonTextProps, 
-  SkeletonAvatarProps, 
-  SkeletonCardProps, 
-  SkeletonListItemProps 
-} from './Skeleton';
+export { default as SkeletonDefault } from './Skeleton';
 
-// Empty State Components
+// Toast
 export {
-  default as EmptyState,
-  EmptySearchState,
-  EmptyListState,
-  EmptyNetworkState,
-  EmptyErrorState,
-} from './EmptyState';
-export type { EmptyStateProps } from './EmptyState';
+  ToastProvider,
+  useToast,
+  type ToastConfig,
+  type ToastType,
+  type ToastPosition,
+} from './Toast';
+export { default as ToastDefault } from './Toast';
 
-// Toast Components
-export { ToastProvider, useToast } from './Toast';
-export type { ToastConfig, ToastType, ToastPosition } from './Toast';
-
-// Post Components
-export { default as PostCard } from './PostCard';
-export { default as RichTextContent } from './RichTextContent';
-
-// Feed Components
-export { default as RoomFilter } from './RoomFilter';
-export { default as TrendingSidebar } from './TrendingSidebar';
-
-// Modal Components
-export { default as ReportModal } from './ReportModal';
-export { default as ImageViewer } from './ImageViewer';
+// FilterModal
 export { default as FilterModal } from './FilterModal';
 
-// Media Components
-export { default as VideoPlayer } from './VideoPlayer';
-
-// Utility Components
-export { KeyboardAwareScrollViewCompat } from './KeyboardAwareScrollViewCompat';
-export { HeaderTitle } from './HeaderTitle';
+// ErrorBoundary
+export {
+  ErrorBoundary,
+  ScreenErrorBoundary,
+} from './ErrorBoundary';
+export { default as ErrorBoundaryDefault } from './ErrorBoundary';

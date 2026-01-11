@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import { db, users, userSessions, notificationPreferences } from '../db/index';
+import { db, users, userSessions, notificationPreferences } from '../db';
 import { eq } from 'drizzle-orm';
 import { authMiddleware, generateToken } from '../middleware/auth';
 import { verifyAppleToken, verifyGoogleToken } from '../services/socialAuth';

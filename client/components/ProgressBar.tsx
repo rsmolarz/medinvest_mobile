@@ -111,7 +111,7 @@ export function ProgressBar({
       return (
         <Animated.View style={[styles.fillWrapper, animatedFillStyle]}>
           <LinearGradient
-            colors={colors.gradient.colors as [string, string]}
+            colors={colors.gradient.colors as unknown as string[]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
             style={[
@@ -240,6 +240,13 @@ export function CircularProgress({
       progress.value = Math.min(value, 100);
     }
   }, [value, animated, progress]);
+
+  const animatedStrokeStyle = useAnimatedStyle(() => {
+    const strokeDashoffset = circumference - (progress.value / 100) * circumference;
+    return {
+      strokeDashoffset,
+    };
+  });
 
   return (
     <View style={[styles.circularContainer, { width: size, height: size }, style]}>

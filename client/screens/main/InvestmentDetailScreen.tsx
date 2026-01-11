@@ -128,7 +128,7 @@ export default function InvestmentDetailScreen() {
         {/* Hero Section */}
         <Animated.View entering={FadeIn.duration(400)}>
           <LinearGradient
-            colors={['#0066CC', '#00A86B'] as const}
+            colors={colors.gradient.colors as unknown as string[]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={[styles.hero, { paddingTop: insets.top }]}
@@ -313,7 +313,7 @@ export default function InvestmentDetailScreen() {
       <View style={[styles.floatingButton, { paddingBottom: insets.bottom + spacing.lg }]}>
         <Pressable onPress={handleInvest} style={styles.investButton}>
           <LinearGradient
-            colors={['#0066CC', '#00A86B'] as const}
+            colors={colors.gradient.colors as unknown as string[]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
             style={styles.investButtonGradient}

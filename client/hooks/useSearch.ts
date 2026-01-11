@@ -27,7 +27,7 @@ export function useDebouncedCallback<T extends (...args: any[]) => any>(
   callback: T,
   delay: number = 500
 ): T {
-  const timeoutRef = useRef<NodeJS.Timeout>(undefined);
+  const timeoutRef = useRef<NodeJS.Timeout>();
 
   const debouncedCallback = useCallback(
     (...args: Parameters<T>) => {
@@ -175,7 +175,7 @@ export function useInfiniteList<T>({
  * Previous value hook
  */
 export function usePrevious<T>(value: T): T | undefined {
-  const ref = useRef<T | undefined>(undefined);
+  const ref = useRef<T>();
 
   useEffect(() => {
     ref.current = value;

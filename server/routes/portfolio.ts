@@ -5,7 +5,7 @@ import {
   investments,
   transactions,
   paymentMethods,
-} from '../db/index';
+} from '../db';
 import { eq, and, desc, sql } from 'drizzle-orm';
 import { authMiddleware } from '../middleware/auth';
 

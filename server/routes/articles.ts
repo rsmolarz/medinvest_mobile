@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import { db, articles, articleBookmarks } from '../db/index';
+import { db, articles, articleBookmarks } from '../db';
 import { eq, and, desc, asc, sql, ilike, or } from 'drizzle-orm';
 import { authMiddleware, optionalAuthMiddleware } from '../middleware/auth';
 

@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import { db, users, pushTokens, notificationPreferences, paymentMethods } from '../db/index';
+import { db, users, pushTokens, notificationPreferences, paymentMethods } from '../db';
 import { eq, and } from 'drizzle-orm';
 import { authMiddleware } from '../middleware/auth';
 import multer from 'multer';

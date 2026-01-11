@@ -136,7 +136,7 @@ export default function PortfolioScreen() {
       {/* Total Value Card */}
       <Animated.View entering={FadeInDown.duration(600).delay(100)}>
         <LinearGradient
-          colors={['#0066CC', '#00A86B'] as const}
+          colors={colors.gradient.colors as unknown as string[]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.summaryCard}
@@ -280,7 +280,7 @@ export default function PortfolioScreen() {
       </Text>
       <Pressable style={styles.emptyButton}>
         <LinearGradient
-          colors={['#0066CC', '#00A86B'] as const}
+          colors={colors.gradient.colors as unknown as string[]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 0 }}
           style={styles.emptyButtonGradient}

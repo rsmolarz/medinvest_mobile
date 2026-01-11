@@ -21,8 +21,6 @@ import Animated, {
 import { useAuth } from '@/contexts/AuthContext';
 import { colors, typography, spacing, layout, shadows } from '@/theme';
 
-const GRADIENT_COLORS: readonly [string, string] = ['#0066CC', '#00A86B'];
-
 /**
  * Login Screen
  * Centered content with logo, SSO buttons, and legal links
@@ -32,7 +30,6 @@ export default function LoginScreen() {
   const {
     signInWithApple,
     signInWithGoogle,
-    mockSignIn,
     isLoading,
     error,
     clearError,
@@ -78,7 +75,7 @@ export default function LoginScreen() {
           {/* App Icon */}
           <View style={styles.logoContainer}>
             <LinearGradient
-              colors={GRADIENT_COLORS}
+              colors={colors.gradient.colors as unknown as string[]}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
               style={styles.logoGradient}
@@ -149,17 +146,18 @@ export default function LoginScreen() {
             <View style={styles.dividerLine} />
           </View>
 
-          {/* Demo Sign In Button */}
+          {/* Email Sign In (placeholder for future) */}
           <Pressable
             style={({ pressed }) => [
               styles.emailButton,
               pressed && styles.buttonPressed,
             ]}
-            onPress={mockSignIn}
-            disabled={isLoading}
+            onPress={() => {
+              // TODO: Navigate to email sign in
+            }}
           >
-            <Feather name="user" size={20} color={colors.primary.main} />
-            <Text style={styles.emailButtonText}>Continue as Demo User</Text>
+            <Feather name="mail" size={20} color={colors.primary.main} />
+            <Text style={styles.emailButtonText}>Continue with Email</Text>
           </Pressable>
         </Animated.View>
 

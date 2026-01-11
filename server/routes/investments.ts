@@ -5,7 +5,7 @@ import {
   investmentDocuments,
   investmentTeamMembers,
   investmentMilestones,
-} from '../db/index';
+} from '../db';
 import { eq, and, or, gte, lte, like, desc, asc, sql, ilike } from 'drizzle-orm';
 import { authMiddleware, optionalAuthMiddleware } from '../middleware/auth';
 

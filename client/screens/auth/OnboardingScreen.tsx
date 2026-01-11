@@ -15,13 +15,18 @@ import Animated, {
   FadeIn,
   FadeInDown,
   FadeInUp,
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+  interpolate,
+  Extrapolation,
 } from 'react-native-reanimated';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-import { colors, typography, spacing } from '@/theme';
+import { colors, typography, spacing, layout } from '@/theme';
 import { Button } from '@/components';
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 const ONBOARDING_COMPLETE_KEY = '@medinvest/onboarding_complete';
 
@@ -31,7 +36,7 @@ interface OnboardingSlide {
   iconColor: string;
   title: string;
   description: string;
-  gradient: readonly [string, string, ...string[]];
+  gradient: string[];
 }
 
 const SLIDES: OnboardingSlide[] = [
@@ -81,6 +86,7 @@ export default function OnboardingScreen({ navigation }: OnboardingScreenProps) 
   const insets = useSafeAreaInsets();
   const [currentIndex, setCurrentIndex] = useState(0);
   const flatListRef = useRef<FlatList>(null);
+  const scrollX = useSharedValue(0);
 
   const isLastSlide = currentIndex === SLIDES.length - 1;
 
@@ -121,9 +127,10 @@ export default function OnboardingScreen({ navigation }: OnboardingScreenProps) 
   }, [completeOnboarding]);
 
   const renderSlide = useCallback(
-    ({ item }: { item: OnboardingSlide }) => {
+    ({ item, index }: { item: OnboardingSlide; index: number }) => {
       return (
         <View style={styles.slide}>
+          {/* Icon Container */}
           <Animated.View
             entering={FadeInDown.delay(200).duration(600)}
             style={styles.iconWrapper}
@@ -140,6 +147,7 @@ export default function OnboardingScreen({ navigation }: OnboardingScreenProps) 
             </LinearGradient>
           </Animated.View>
 
+          {/* Text Content */}
           <Animated.View
             entering={FadeInUp.delay(400).duration(600)}
             style={styles.textContent}
@@ -162,7 +170,7 @@ export default function OnboardingScreen({ navigation }: OnboardingScreenProps) 
             key={index}
             style={[
               styles.dot,
-              isActive ? styles.dotActive : null,
+              isActive && styles.dotActive,
             ]}
           />
         );
@@ -172,7 +180,8 @@ export default function OnboardingScreen({ navigation }: OnboardingScreenProps) 
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
-      {!isLastSlide ? (
+      {/* Skip Button */}
+      {!isLastSlide && (
         <Animated.View
           entering={FadeIn.delay(600)}
           style={styles.skipContainer}
@@ -181,8 +190,9 @@ export default function OnboardingScreen({ navigation }: OnboardingScreenProps) 
             <Text style={styles.skipText}>Skip</Text>
           </Pressable>
         </Animated.View>
-      ) : null}
+      )}
 
+      {/* Slides */}
       <FlatList
         ref={flatListRef}
         data={SLIDES}
@@ -194,6 +204,9 @@ export default function OnboardingScreen({ navigation }: OnboardingScreenProps) 
         bounces={false}
         onViewableItemsChanged={handleViewableItemsChanged}
         viewabilityConfig={viewabilityConfig}
+        onScroll={(event) => {
+          scrollX.value = event.nativeEvent.contentOffset.x;
+        }}
         scrollEventThrottle={16}
         getItemLayout={(_, index) => ({
           length: SCREEN_WIDTH,
@@ -202,9 +215,12 @@ export default function OnboardingScreen({ navigation }: OnboardingScreenProps) 
         })}
       />
 
+      {/* Bottom Section */}
       <View style={[styles.bottomSection, { paddingBottom: insets.bottom + spacing.lg }]}>
+        {/* Dots */}
         {renderDots()}
 
+        {/* Action Buttons */}
         <View style={styles.actionsContainer}>
           {isLastSlide ? (
             <Button
@@ -233,6 +249,7 @@ export default function OnboardingScreen({ navigation }: OnboardingScreenProps) 
           )}
         </View>
 
+        {/* Terms Notice */}
         <Text style={styles.termsText}>
           By continuing, you agree to our{' '}
           <Text style={styles.termsLink}>Terms of Service</Text> and{' '}
@@ -243,6 +260,7 @@ export default function OnboardingScreen({ navigation }: OnboardingScreenProps) 
   );
 }
 
+// Helper to check if onboarding is complete
 export async function isOnboardingComplete(): Promise<boolean> {
   try {
     const value = await AsyncStorage.getItem(ONBOARDING_COMPLETE_KEY);
@@ -252,6 +270,7 @@ export async function isOnboardingComplete(): Promise<boolean> {
   }
 }
 
+// Helper to reset onboarding (for testing)
 export async function resetOnboarding(): Promise<void> {
   try {
     await AsyncStorage.removeItem(ONBOARDING_COMPLETE_KEY);
@@ -266,6 +285,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background.primary,
   },
 
+  // Skip
   skipContainer: {
     position: 'absolute',
     top: 0,
@@ -283,6 +303,7 @@ const styles = StyleSheet.create({
     color: colors.text.secondary,
   },
 
+  // Slide
   slide: {
     width: SCREEN_WIDTH,
     flex: 1,
@@ -291,6 +312,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.xl,
   },
 
+  // Icon
   iconWrapper: {
     marginBottom: spacing['3xl'],
   },
@@ -311,12 +333,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
 
+  // Text
   textContent: {
     alignItems: 'center',
     paddingHorizontal: spacing.md,
   },
   title: {
-    ...typography.title,
+    ...typography.largeTitle,
     color: colors.text.primary,
     textAlign: 'center',
     marginBottom: spacing.md,
@@ -329,11 +352,13 @@ const styles = StyleSheet.create({
     maxWidth: 320,
   },
 
+  // Bottom Section
   bottomSection: {
     paddingHorizontal: spacing.xl,
     paddingTop: spacing.xl,
   },
 
+  // Dots
   dotsContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
@@ -352,6 +377,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary.main,
   },
 
+  // Actions
   actionsContainer: {
     marginBottom: spacing.lg,
   },
@@ -363,6 +389,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
 
+  // Terms
   termsText: {
     ...typography.small,
     color: colors.text.tertiary,

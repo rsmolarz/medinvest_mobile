@@ -1,38 +1,47 @@
 import type { NavigatorScreenParams } from '@react-navigation/native';
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 
-/**
- * Root Stack Navigator Params
- */
+// ============================================
+// Root Stack
+// ============================================
+
 export type RootStackParamList = {
-  // Onboarding
+  // Pre-auth
   Onboarding: undefined;
-  
-  // Auth screens
   Auth: NavigatorScreenParams<AuthStackParamList>;
   
-  // Main app screens
+  // Main app
   Main: NavigatorScreenParams<MainTabParamList>;
   
-  // Modal screens
-  InvestModal: { investmentId?: string } | undefined;
+  // Investment screens
   InvestmentDetail: { investmentId: string };
+  InvestModal: { investmentId: string; investmentName: string; minimumInvestment: number };
   
-  // Other screens
+  // Article screens
+  ArticleDetail: { articleId: string };
+  BookmarkedArticles: undefined;
+  
+  // Portfolio screens
+  TransactionHistory: undefined;
+  
+  // Settings screens
   Settings: undefined;
+  EditProfile: undefined;
+  NotificationsSettings: undefined;
   Documents: undefined;
   PaymentMethods: undefined;
   Support: undefined;
   Legal: undefined;
-  EditProfile: undefined;
-  NotificationsSettings: undefined;
-  BookmarkedArticles: undefined;
-  TransactionHistory: { investmentId?: string } | undefined;
-  ArticleDetail: { articleId: string };
 };
 
-/**
- * Auth Stack Navigator Params
- */
+export type RootStackScreenProps<T extends keyof RootStackParamList> = 
+  NativeStackScreenProps<RootStackParamList, T>;
+
+// ============================================
+// Auth Stack
+// ============================================
+
 export type AuthStackParamList = {
   Login: undefined;
   Signup: undefined;
@@ -40,72 +49,93 @@ export type AuthStackParamList = {
   VerifyEmail: { email: string };
 };
 
-/**
- * Main Tab Navigator Params
- */
+export type AuthStackScreenProps<T extends keyof AuthStackParamList> = 
+  NativeStackScreenProps<AuthStackParamList, T>;
+
+// ============================================
+// Main Tab Navigator
+// ============================================
+
 export type MainTabParamList = {
-  Discover: undefined;
-  Portfolio: undefined;
-  Research: undefined;
-  Profile: undefined;
+  Discover: NavigatorScreenParams<DiscoverStackParamList>;
+  Portfolio: NavigatorScreenParams<PortfolioStackParamList>;
+  Research: NavigatorScreenParams<ResearchStackParamList>;
+  Profile: NavigatorScreenParams<ProfileStackParamList>;
 };
 
-/**
- * Discover Stack Params (nested in Discover tab)
- */
+export type MainTabScreenProps<T extends keyof MainTabParamList> = 
+  BottomTabScreenProps<MainTabParamList, T>;
+
+// ============================================
+// Discover Stack
+// ============================================
+
 export type DiscoverStackParamList = {
   DiscoverHome: undefined;
-  InvestmentDetail: { investmentId: string };
-  CategoryList: { categoryId: string; categoryName: string };
-  SearchResults: { query: string };
+  Category: { category: string };
+  Search: { query?: string };
 };
 
-/**
- * Portfolio Stack Params (nested in Portfolio tab)
- */
+export type DiscoverStackScreenProps<T extends keyof DiscoverStackParamList> = 
+  NativeStackScreenProps<DiscoverStackParamList, T>;
+
+// ============================================
+// Portfolio Stack
+// ============================================
+
 export type PortfolioStackParamList = {
   PortfolioHome: undefined;
-  InvestmentDetail: { investmentId: string };
-  TransactionHistory: { investmentId?: string };
+  PortfolioDetail: { investmentId: string };
 };
 
-/**
- * Research Stack Params (nested in Research tab)
- */
+export type PortfolioStackScreenProps<T extends keyof PortfolioStackParamList> = 
+  NativeStackScreenProps<PortfolioStackParamList, T>;
+
+// ============================================
+// Research Stack
+// ============================================
+
 export type ResearchStackParamList = {
   ResearchHome: undefined;
-  ArticleDetail: { articleId: string };
-  SavedArticles: undefined;
+  ArticleCategory: { category: string };
 };
 
-/**
- * Profile Stack Params (nested in Profile tab)
- */
+export type ResearchStackScreenProps<T extends keyof ResearchStackParamList> = 
+  NativeStackScreenProps<ResearchStackParamList, T>;
+
+// ============================================
+// Profile Stack
+// ============================================
+
 export type ProfileStackParamList = {
   ProfileHome: undefined;
-  EditProfile: undefined;
-  Notifications: undefined;
 };
 
-/**
- * Investment data for navigation
- */
+export type ProfileStackScreenProps<T extends keyof ProfileStackParamList> = 
+  NativeStackScreenProps<ProfileStackParamList, T>;
+
+// ============================================
+// Screen Params Helpers
+// ============================================
+
 export interface InvestmentParams {
   investmentId: string;
-  name?: string;
-  imageUrl?: string;
 }
 
-/**
- * Article data for navigation
- */
 export interface ArticleParams {
   articleId: string;
-  title?: string;
-  imageUrl?: string;
 }
 
-// Declare global types for useNavigation and useRoute
+export interface InvestModalParams {
+  investmentId: string;
+  investmentName: string;
+  minimumInvestment: number;
+}
+
+// ============================================
+// Global Type Declaration
+// ============================================
+
 declare global {
   namespace ReactNavigation {
     interface RootParamList extends RootStackParamList {}

@@ -131,6 +131,7 @@ export default function ArticleDetailScreen({
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
+      {/* Header */}
       <View style={styles.header}>
         <Pressable onPress={handleBack} style={styles.backButton} hitSlop={8}>
           <Feather name="arrow-left" size={24} color={colors.text.primary} />
@@ -146,6 +147,7 @@ export default function ArticleDetailScreen({
               name={article.isBookmarked ? 'bookmark' : 'bookmark'}
               size={22}
               color={article.isBookmarked ? colors.primary.main : colors.text.primary}
+              style={article.isBookmarked ? { fill: colors.primary.main } : undefined}
             />
           </Pressable>
           
@@ -160,7 +162,8 @@ export default function ArticleDetailScreen({
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: insets.bottom + spacing.xl }}
       >
-        {article.imageUrl ? (
+        {/* Hero Image */}
+        {article.imageUrl && (
           <Animated.View entering={FadeIn.duration(400)}>
             <Image
               source={{ uri: article.imageUrl }}
@@ -169,23 +172,26 @@ export default function ArticleDetailScreen({
               transition={300}
             />
           </Animated.View>
-        ) : null}
+        )}
 
         <Animated.View
           style={styles.articleContent}
           entering={FadeInDown.delay(200).duration(400)}
         >
+          {/* Category & Featured Badge */}
           <View style={styles.badgeRow}>
             <Badge variant="primary">{article.category}</Badge>
-            {article.isFeatured ? (
+            {article.isFeatured && (
               <Badge variant="warning" icon="star">
                 Featured
               </Badge>
-            ) : null}
+            )}
           </View>
 
+          {/* Title */}
           <Text style={styles.title}>{article.title}</Text>
 
+          {/* Meta Info */}
           <View style={styles.metaRow}>
             <View style={styles.metaItem}>
               <Feather name="calendar" size={14} color={colors.text.tertiary} />
@@ -207,20 +213,21 @@ export default function ArticleDetailScreen({
             </View>
           </View>
 
+          {/* Author & Source */}
           <View style={styles.sourceRow}>
             <View style={styles.sourceInfo}>
               <View style={styles.sourceIcon}>
                 <Feather name="edit-3" size={16} color={colors.primary.main} />
               </View>
               <View>
-                {article.author ? (
+                {article.author && (
                   <Text style={styles.authorName}>{article.author}</Text>
-                ) : null}
+                )}
                 <Text style={styles.sourceName}>{article.source}</Text>
               </View>
             </View>
             
-            {article.sourceUrl ? (
+            {article.sourceUrl && (
               <Pressable onPress={handleOpenSource} style={styles.sourceLink}>
                 <Text style={styles.sourceLinkText}>View Source</Text>
                 <Feather
@@ -229,18 +236,22 @@ export default function ArticleDetailScreen({
                   color={colors.primary.main}
                 />
               </Pressable>
-            ) : null}
+            )}
           </View>
 
+          {/* Divider */}
           <View style={styles.divider} />
 
+          {/* Summary */}
           <Text style={styles.summary}>{article.summary}</Text>
 
-          {article.content ? (
+          {/* Content */}
+          {article.content && (
             <Text style={styles.body}>{article.content}</Text>
-          ) : null}
+          )}
 
-          {article.tags && article.tags.length > 0 ? (
+          {/* Tags */}
+          {article.tags && article.tags.length > 0 && (
             <View style={styles.tagsSection}>
               <Text style={styles.tagsLabel}>Topics</Text>
               <View style={styles.tagsContainer}>
@@ -251,10 +262,11 @@ export default function ArticleDetailScreen({
                 ))}
               </View>
             </View>
-          ) : null}
+          )}
         </Animated.View>
       </ScrollView>
 
+      {/* Bottom CTA */}
       <View style={[styles.bottomBar, { paddingBottom: insets.bottom + spacing.md }]}>
         <Button
           variant="primary"
@@ -275,6 +287,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background.primary,
   },
   
+  // Header
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -296,6 +309,7 @@ const styles = StyleSheet.create({
     padding: spacing.xs,
   },
 
+  // Content
   content: {
     flex: 1,
   },
@@ -308,6 +322,7 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
   },
 
+  // Badges
   badgeRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -315,13 +330,15 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
 
+  // Title
   title: {
-    ...typography.title,
+    ...typography.largeTitle,
     color: colors.text.primary,
     marginBottom: spacing.md,
     lineHeight: 36,
   },
 
+  // Meta
   metaRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -339,6 +356,7 @@ const styles = StyleSheet.create({
     color: colors.text.tertiary,
   },
 
+  // Source
   sourceRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -379,12 +397,14 @@ const styles = StyleSheet.create({
     color: colors.primary.main,
   },
 
+  // Divider
   divider: {
     height: 1,
     backgroundColor: colors.border.light,
     marginBottom: spacing.lg,
   },
 
+  // Body
   summary: {
     ...typography.body,
     color: colors.text.primary,
@@ -398,6 +418,7 @@ const styles = StyleSheet.create({
     lineHeight: 26,
   },
 
+  // Tags
   tagsSection: {
     marginTop: spacing.xl,
     paddingTop: spacing.lg,
@@ -415,6 +436,7 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
 
+  // Bottom Bar
   bottomBar: {
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.md,
@@ -423,6 +445,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background.primary,
   },
 
+  // Skeleton
   categoryBadge: {
     marginBottom: spacing.md,
   },
@@ -433,6 +456,7 @@ const styles = StyleSheet.create({
     marginTop: spacing.lg,
   },
 
+  // Error
   errorContainer: {
     justifyContent: 'center',
     alignItems: 'center',

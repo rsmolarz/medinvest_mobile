@@ -133,6 +133,7 @@ export default function TransactionHistoryScreen({
             style={styles.transactionCard}
           >
             <View style={styles.transactionRow}>
+              {/* Icon */}
               <View
                 style={[
                   styles.iconContainer,
@@ -142,6 +143,7 @@ export default function TransactionHistoryScreen({
                 <Feather name={icon} size={20} color={iconColor} />
               </View>
 
+              {/* Details */}
               <View style={styles.transactionDetails}>
                 <View style={styles.transactionHeader}>
                   <Text style={styles.transactionType}>
@@ -150,17 +152,18 @@ export default function TransactionHistoryScreen({
                   {getStatusBadge(item.status)}
                 </View>
                 
-                {item.investmentName ? (
+                {item.investmentName && (
                   <Text style={styles.investmentName} numberOfLines={1}>
                     {item.investmentName}
                   </Text>
-                ) : null}
+                )}
                 
                 <Text style={styles.transactionDate}>
                   {formatDate(item.createdAt)} at {formatTime(item.createdAt)}
                 </Text>
               </View>
 
+              {/* Amount */}
               <Text
                 style={[
                   styles.amount,
@@ -217,13 +220,13 @@ export default function TransactionHistoryScreen({
             onPress={() => setFilter(item.key)}
             style={[
               styles.filterChip,
-              filter === item.key ? styles.filterChipActive : null,
+              filter === item.key && styles.filterChipActive,
             ]}
           >
             <Text
               style={[
                 styles.filterChipText,
-                filter === item.key ? styles.filterChipTextActive : null,
+                filter === item.key && styles.filterChipTextActive,
               ]}
             >
               {item.label}
@@ -246,6 +249,7 @@ export default function TransactionHistoryScreen({
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
+      {/* Header */}
       <View style={styles.header}>
         <Pressable onPress={handleBack} style={styles.backButton} hitSlop={8}>
           <Feather name="arrow-left" size={24} color={colors.text.primary} />
@@ -254,8 +258,10 @@ export default function TransactionHistoryScreen({
         <View style={styles.headerSpacer} />
       </View>
 
+      {/* Filters */}
       {renderHeader()}
 
+      {/* Transactions List */}
       {isLoading ? (
         renderSkeleton()
       ) : isEmpty ? (
@@ -292,6 +298,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background.primary,
   },
 
+  // Header
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -312,6 +319,7 @@ const styles = StyleSheet.create({
     width: 40,
   },
 
+  // Filters
   filtersContainer: {
     borderBottomWidth: 1,
     borderBottomColor: colors.border.light,
@@ -340,11 +348,13 @@ const styles = StyleSheet.create({
     color: colors.text.inverse,
   },
 
+  // List
   listContent: {
     padding: spacing.md,
     gap: spacing.sm,
   },
 
+  // Transaction Card
   transactionCard: {
     marginBottom: spacing.xs,
   },
@@ -394,6 +404,7 @@ const styles = StyleSheet.create({
     color: colors.text.primary,
   },
 
+  // Skeleton
   skeletonContainer: {
     padding: spacing.md,
   },
@@ -401,6 +412,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
 
+  // Footer
   footerLoader: {
     paddingVertical: spacing.md,
   },

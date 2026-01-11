@@ -221,7 +221,7 @@ export default function DiscoverScreen() {
           onPress={() => handleInvestmentPress(item)}
         >
           <LinearGradient
-            colors={['#0066CC', '#00A86B'] as const}
+            colors={colors.gradient.colors as unknown as string[]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={styles.cardGradient}
