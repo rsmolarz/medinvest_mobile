@@ -28,8 +28,10 @@ import {
   investmentOpportunities,
   categories,
   InvestmentOpportunity,
+  healthcareRooms,
 } from "@/lib/mockData";
 import { DiscoverStackParamList } from "@/navigation/DiscoverStackNavigator";
+import { RootStackParamList } from "@/navigation/RootStackNavigator";
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -37,7 +39,7 @@ export default function DiscoverScreen() {
   const insets = useSafeAreaInsets();
   const { theme, isDark } = useTheme();
   const navigation =
-    useNavigation<NativeStackNavigationProp<DiscoverStackParamList>>();
+    useNavigation<NativeStackNavigationProp<DiscoverStackParamList & RootStackParamList>>();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [refreshing, setRefreshing] = useState(false);
@@ -83,6 +85,40 @@ export default function DiscoverScreen() {
       >
         Try adjusting your search or filters to discover new investment
         opportunities
+      </ThemedText>
+    </View>
+  );
+
+  const renderListHeader = () => (
+    <View style={styles.listHeader}>
+      <View style={styles.sectionHeader}>
+        <ThemedText type="heading">Healthcare Rooms</ThemedText>
+        <Pressable onPress={() => navigation.navigate("Rooms")}>
+          <ThemedText type="body" style={{ color: Colors.primary }}>
+            See All
+          </ThemedText>
+        </Pressable>
+      </View>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.roomsScroll}
+      >
+        {healthcareRooms.slice(0, 5).map((room) => (
+          <Pressable
+            key={room.id}
+            onPress={() => navigation.navigate("Rooms")}
+            style={[styles.roomChip, { backgroundColor: room.color + "15" }]}
+          >
+            <Feather name={room.icon as any} size={16} color={room.color} />
+            <ThemedText type="small" style={{ color: room.color, fontWeight: "600" }}>
+              {room.name}
+            </ThemedText>
+          </Pressable>
+        ))}
+      </ScrollView>
+      <ThemedText type="heading" style={{ marginTop: Spacing.lg }}>
+        Investment Opportunities
       </ThemedText>
     </View>
   );
@@ -148,6 +184,7 @@ export default function DiscoverScreen() {
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
+        ListHeaderComponent={renderListHeader}
         ListEmptyComponent={renderEmptyState}
       />
     </View>
@@ -430,5 +467,25 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     textAlign: "center",
+  },
+  listHeader: {
+    marginBottom: Spacing.md,
+  },
+  sectionHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: Spacing.md,
+  },
+  roomsScroll: {
+    gap: Spacing.sm,
+  },
+  roomChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.xs,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    borderRadius: BorderRadius.full,
   },
 });

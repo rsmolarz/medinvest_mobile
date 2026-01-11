@@ -133,7 +133,7 @@ export default function ProfileScreen() {
           </View>
         </View>
 
-        <View style={styles.quickActions}>
+        <View style={styles.quickActionsGrid}>
           <Pressable
             onPress={() => navigation.navigate("Leaderboard")}
             style={({ pressed }) => [
@@ -146,7 +146,7 @@ export default function ProfileScreen() {
             <View style={[styles.quickActionIcon, { backgroundColor: "#FFD700" + "20" }]}>
               <Feather name="award" size={22} color="#FFD700" />
             </View>
-            <ThemedText type="body" style={{ fontWeight: "600" }}>
+            <ThemedText type="small" style={{ fontWeight: "600" }}>
               Leaderboard
             </ThemedText>
           </Pressable>
@@ -163,8 +163,42 @@ export default function ProfileScreen() {
             <View style={[styles.quickActionIcon, { backgroundColor: Colors.secondary + "20" }]}>
               <Feather name="star" size={22} color={Colors.secondary} />
             </View>
-            <ThemedText type="body" style={{ fontWeight: "600" }}>
+            <ThemedText type="small" style={{ fontWeight: "600" }}>
               Achievements
+            </ThemedText>
+          </Pressable>
+
+          <Pressable
+            onPress={() => navigation.navigate("Messages")}
+            style={({ pressed }) => [
+              styles.quickActionButton,
+              { backgroundColor: theme.backgroundDefault },
+              Shadows.card,
+              pressed && { opacity: 0.9 },
+            ]}
+          >
+            <View style={[styles.quickActionIcon, { backgroundColor: Colors.primary + "20" }]}>
+              <Feather name="message-circle" size={22} color={Colors.primary} />
+            </View>
+            <ThemedText type="small" style={{ fontWeight: "600" }}>
+              Messages
+            </ThemedText>
+          </Pressable>
+
+          <Pressable
+            onPress={() => navigation.navigate("Rooms")}
+            style={({ pressed }) => [
+              styles.quickActionButton,
+              { backgroundColor: theme.backgroundDefault },
+              Shadows.card,
+              pressed && { opacity: 0.9 },
+            ]}
+          >
+            <View style={[styles.quickActionIcon, { backgroundColor: "#8B5CF6" + "20" }]}>
+              <Feather name="users" size={22} color="#8B5CF6" />
+            </View>
+            <ThemedText type="small" style={{ fontWeight: "600" }}>
+              Rooms
             </ThemedText>
           </Pressable>
         </View>
@@ -308,17 +342,18 @@ const styles = StyleSheet.create({
   statDivider: {
     width: 1,
   },
-  quickActions: {
+  quickActionsGrid: {
     flexDirection: "row",
+    flexWrap: "wrap",
     gap: Spacing.md,
     marginBottom: Spacing.lg,
   },
   quickActionButton: {
-    flex: 1,
+    width: "47%",
     alignItems: "center",
-    padding: Spacing.lg,
+    padding: Spacing.md,
     borderRadius: BorderRadius.lg,
-    gap: Spacing.sm,
+    gap: Spacing.xs,
   },
   quickActionIcon: {
     width: 44,

@@ -7,6 +7,7 @@ import AIChatScreen from "@/screens/AIChatScreen";
 import MessagesScreen from "@/screens/MessagesScreen";
 import LeaderboardScreen from "@/screens/LeaderboardScreen";
 import AchievementsScreen from "@/screens/AchievementsScreen";
+import RoomsScreen from "@/screens/RoomsScreen";
 import { useScreenOptions } from "@/hooks/useScreenOptions";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -18,6 +19,7 @@ export type RootStackParamList = {
   Messages: undefined;
   Leaderboard: undefined;
   Achievements: undefined;
+  Rooms: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -71,6 +73,13 @@ export default function RootStackNavigator() {
           <Stack.Screen
             name="Achievements"
             component={AchievementsScreen}
+            options={{
+              headerShown: false,
+            }}
+          />
+          <Stack.Screen
+            name="Rooms"
+            component={RoomsScreen}
             options={{
               headerShown: false,
             }}
