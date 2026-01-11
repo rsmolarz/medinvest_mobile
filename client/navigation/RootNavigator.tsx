@@ -1,11 +1,14 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { ActivityIndicator, View, StyleSheet } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { useAuth } from '@/contexts/AuthContext';
 import { colors } from '@/theme';
 import type { RootStackParamList, AuthStackParamList } from './types';
+
+const ONBOARDING_COMPLETE_KEY = '@medinvest/onboarding_complete';
 
 // Navigators
 import MainTabNavigator from './MainTabNavigator';
@@ -69,9 +72,24 @@ function LoadingScreen() {
  */
 export default function RootNavigator() {
   const { isAuthenticated, isLoading } = useAuth();
+  const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState<boolean | null>(null);
 
-  // Show loading while checking auth state
-  if (isLoading) {
+  useEffect(() => {
+    async function checkOnboarding() {
+      try {
+        const value = await AsyncStorage.getItem(ONBOARDING_COMPLETE_KEY);
+        setHasCompletedOnboarding(value === 'true');
+      } catch {
+        setHasCompletedOnboarding(true);
+      }
+    }
+    if (!isAuthenticated) {
+      checkOnboarding();
+    }
+  }, [isAuthenticated]);
+
+  // Show loading while checking auth state or onboarding status
+  if (isLoading || (!isAuthenticated && hasCompletedOnboarding === null)) {
     return <LoadingScreen />;
   }
 
@@ -184,8 +202,17 @@ export default function RootNavigator() {
               }}
             />
           </>
+        ) : hasCompletedOnboarding ? (
+          // User has completed onboarding - show auth
+          <RootStack.Screen
+            name="Auth"
+            component={AuthNavigator}
+            options={{
+              animation: 'fade',
+            }}
+          />
         ) : (
-          // Unauthenticated routes
+          // First time user - show onboarding
           <>
             <RootStack.Screen
               name="Onboarding"
