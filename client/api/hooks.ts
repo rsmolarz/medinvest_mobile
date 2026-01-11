@@ -13,6 +13,7 @@ import type {
   PortfolioSummary,
   Article,
   User,
+  Transaction,
   PaginatedResponse,
   InvestmentFilters,
   ArticleFilters,
@@ -34,6 +35,7 @@ export const queryKeys = {
   portfolio: ['portfolio'] as const,
   portfolioSummary: () => [...queryKeys.portfolio, 'summary'] as const,
   portfolioInvestments: () => [...queryKeys.portfolio, 'investments'] as const,
+  transactions: (type?: string) => [...queryKeys.portfolio, 'transactions', type] as const,
   
   // Articles
   articles: ['articles'] as const,
@@ -199,6 +201,35 @@ export function useCreateInvestment() {
       // Invalidate investment detail to update funding progress
       queryClient.invalidateQueries({ queryKey: queryKeys.investments });
     },
+  });
+}
+
+/**
+ * Fetch transaction history with infinite scroll
+ */
+export function useTransactions(type?: string) {
+  return useInfiniteQuery({
+    queryKey: queryKeys.transactions(type),
+    queryFn: async ({ pageParam = 1 }) => {
+      const response = await apiClient.get<PaginatedResponse<Transaction>>(
+        '/portfolio/transactions',
+        {
+          params: {
+            page: pageParam,
+            limit: 20,
+            ...(type ? { type } : {}),
+          },
+        }
+      );
+      return response.data;
+    },
+    getNextPageParam: (lastPage) => {
+      if (lastPage.page < lastPage.totalPages) {
+        return lastPage.page + 1;
+      }
+      return undefined;
+    },
+    initialPageParam: 1,
   });
 }
 
