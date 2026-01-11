@@ -10,7 +10,7 @@ import { Feather } from '@expo/vector-icons';
 import { reloadAppAsync } from 'expo';
 
 import { colors, typography, spacing, layout } from '@/theme';
-import { Button } from '@/components';
+import { Button } from './Button';
 
 interface ErrorBoundaryProps {
   children: ReactNode;
