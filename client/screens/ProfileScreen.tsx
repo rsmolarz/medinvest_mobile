@@ -2,6 +2,8 @@ import React from "react";
 import { View, StyleSheet, Pressable, Platform, Alert } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
+import { useNavigation } from "@react-navigation/native";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Feather } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import * as Haptics from "expo-haptics";
@@ -12,10 +14,12 @@ import { useTheme } from "@/hooks/useTheme";
 import { useAuth } from "@/contexts/AuthContext";
 import { Colors, Spacing, BorderRadius, Shadows } from "@/constants/theme";
 import { menuItems } from "@/lib/mockData";
+import { RootStackParamList } from "@/navigation/RootStackNavigator";
 
 export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
   const tabBarHeight = useBottomTabBarHeight();
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { theme } = useTheme();
   const { user, logout } = useAuth();
 
@@ -129,6 +133,72 @@ export default function ProfileScreen() {
           </View>
         </View>
 
+        <View style={styles.quickActions}>
+          <Pressable
+            onPress={() => navigation.navigate("Leaderboard")}
+            style={({ pressed }) => [
+              styles.quickActionButton,
+              { backgroundColor: theme.backgroundDefault },
+              Shadows.card,
+              pressed && { opacity: 0.9 },
+            ]}
+          >
+            <View style={[styles.quickActionIcon, { backgroundColor: "#FFD700" + "20" }]}>
+              <Feather name="award" size={22} color="#FFD700" />
+            </View>
+            <ThemedText type="body" style={{ fontWeight: "600" }}>
+              Leaderboard
+            </ThemedText>
+          </Pressable>
+
+          <Pressable
+            onPress={() => navigation.navigate("Achievements")}
+            style={({ pressed }) => [
+              styles.quickActionButton,
+              { backgroundColor: theme.backgroundDefault },
+              Shadows.card,
+              pressed && { opacity: 0.9 },
+            ]}
+          >
+            <View style={[styles.quickActionIcon, { backgroundColor: Colors.secondary + "20" }]}>
+              <Feather name="star" size={22} color={Colors.secondary} />
+            </View>
+            <ThemedText type="body" style={{ fontWeight: "600" }}>
+              Achievements
+            </ThemedText>
+          </Pressable>
+        </View>
+
+        <Pressable
+          onPress={() => navigation.navigate("AIChat")}
+          style={({ pressed }) => [
+            styles.aiChatButton,
+            pressed && { opacity: 0.9 },
+          ]}
+        >
+          <LinearGradient
+            colors={[Colors.gradient.start, Colors.gradient.end]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.aiChatGradient}
+          >
+            <View style={styles.aiChatContent}>
+              <View style={styles.aiChatIcon}>
+                <Feather name="cpu" size={24} color="#FFFFFF" />
+              </View>
+              <View style={styles.aiChatText}>
+                <ThemedText type="heading" style={{ color: "#FFFFFF" }}>
+                  AI Assistant
+                </ThemedText>
+                <ThemedText type="small" style={{ color: "rgba(255,255,255,0.8)" }}>
+                  Get investment insights powered by AI
+                </ThemedText>
+              </View>
+              <Feather name="arrow-right" size={20} color="#FFFFFF" />
+            </View>
+          </LinearGradient>
+        </Pressable>
+
         <View style={styles.menuSection}>
           {menuItems.map((item) => (
             <Pressable
@@ -237,6 +307,49 @@ const styles = StyleSheet.create({
   },
   statDivider: {
     width: 1,
+  },
+  quickActions: {
+    flexDirection: "row",
+    gap: Spacing.md,
+    marginBottom: Spacing.lg,
+  },
+  quickActionButton: {
+    flex: 1,
+    alignItems: "center",
+    padding: Spacing.lg,
+    borderRadius: BorderRadius.lg,
+    gap: Spacing.sm,
+  },
+  quickActionIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  aiChatButton: {
+    marginBottom: Spacing.xl,
+    borderRadius: BorderRadius.lg,
+    overflow: "hidden",
+  },
+  aiChatGradient: {
+    padding: Spacing.lg,
+  },
+  aiChatContent: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  aiChatIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: "rgba(255,255,255,0.2)",
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: Spacing.md,
+  },
+  aiChatText: {
+    flex: 1,
   },
   menuSection: {
     gap: Spacing.sm,
