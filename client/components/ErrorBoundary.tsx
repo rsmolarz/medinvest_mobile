@@ -7,7 +7,7 @@ import {
   Pressable,
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import * as Updates from 'expo-updates';
+import { reloadAppAsync } from 'expo';
 
 import { colors, typography, spacing, layout } from '@/theme';
 import { Button } from '@/components';
@@ -68,9 +68,9 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 
   handleReload = async (): Promise<void> => {
     try {
-      await Updates.reloadAsync();
+      await reloadAppAsync();
     } catch {
-      // Fallback if Updates.reloadAsync fails
+      // Fallback if reloadAppAsync fails
       this.handleRetry();
     }
   };

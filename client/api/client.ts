@@ -2,7 +2,17 @@ import axios, { type AxiosError, type InternalAxiosRequestConfig } from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const AUTH_TOKEN_KEY = '@medinvest/auth_token';
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000/api';
+
+function getApiBaseUrl(): string {
+  const domain = process.env.EXPO_PUBLIC_DOMAIN;
+  if (domain) {
+    const protocol = domain.includes('localhost') ? 'http' : 'https';
+    return `${protocol}://${domain}/api`;
+  }
+  return 'http://localhost:5000/api';
+}
+
+const API_BASE_URL = getApiBaseUrl();
 
 /**
  * Axios instance with auth interceptors
