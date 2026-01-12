@@ -3,8 +3,188 @@ import { db, users, userSessions, notificationPreferences } from '../db';
 import { eq } from 'drizzle-orm';
 import { authMiddleware, generateToken } from '../middleware/auth';
 import { verifyAppleToken, verifyGoogleToken } from '../services/socialAuth';
+import bcrypt from 'bcrypt';
 
 const router = Router();
+
+/**
+ * POST /api/auth/register
+ * Email/password registration
+ */
+router.post('/register', async (req: Request, res: Response) => {
+  try {
+    const { email, password, first_name, last_name, specialty, referral_code } = req.body;
+
+    if (!email || !password) {
+      res.status(400).json({ message: 'Email and password are required' });
+      return;
+    }
+
+    if (!first_name || !last_name) {
+      res.status(400).json({ message: 'First and last name are required' });
+      return;
+    }
+
+    // Password validation
+    if (password.length < 8) {
+      res.status(400).json({ message: 'Password must be at least 8 characters' });
+      return;
+    }
+
+    const hasUppercase = /[A-Z]/.test(password);
+    const hasLowercase = /[a-z]/.test(password);
+    const hasNumber = /[0-9]/.test(password);
+
+    if (!hasUppercase || !hasLowercase || !hasNumber) {
+      res.status(400).json({ 
+        message: 'Password must contain uppercase, lowercase, and number' 
+      });
+      return;
+    }
+
+    // Check if user already exists
+    const [existingUser] = await db
+      .select()
+      .from(users)
+      .where(eq(users.email, email.toLowerCase()))
+      .limit(1);
+
+    if (existingUser) {
+      res.status(409).json({ message: 'An account with this email already exists' });
+      return;
+    }
+
+    // Hash password with bcrypt (10 salt rounds)
+    const SALT_ROUNDS = 10;
+    const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
+
+    // Create new user with hashed password
+    const [newUser] = await db
+      .insert(users)
+      .values({
+        email: email.toLowerCase(),
+        passwordHash,
+        firstName: first_name,
+        lastName: last_name,
+        specialty,
+        referralCode: referral_code,
+        provider: 'email',
+        isVerified: false,
+        lastLoginAt: new Date(),
+      })
+      .returning();
+
+    // Create default notification preferences
+    await db.insert(notificationPreferences).values({
+      userId: newUser.id,
+    });
+
+    // Create session
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 30);
+
+    const [session] = await db
+      .insert(userSessions)
+      .values({
+        userId: newUser.id,
+        token: crypto.randomUUID(),
+        expiresAt,
+      })
+      .returning();
+
+    // Generate JWT
+    const jwtToken = generateToken(newUser.id, session.id);
+
+    res.status(201).json({
+      token: jwtToken,
+      user: {
+        id: newUser.id,
+        email: newUser.email,
+        firstName: newUser.firstName,
+        lastName: newUser.lastName,
+        specialty: newUser.specialty,
+        isVerified: newUser.isVerified,
+        fullName: [newUser.firstName, newUser.lastName].filter(Boolean).join(' '),
+      },
+    });
+  } catch (error) {
+    console.error('Registration error:', error);
+    res.status(500).json({ message: 'Registration failed' });
+  }
+});
+
+/**
+ * POST /api/auth/login
+ * Email/password login
+ */
+router.post('/login', async (req: Request, res: Response) => {
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      res.status(400).json({ message: 'Email and password are required' });
+      return;
+    }
+
+    // Find user by email
+    const [user] = await db
+      .select()
+      .from(users)
+      .where(eq(users.email, email.toLowerCase()))
+      .limit(1);
+
+    if (!user || !user.passwordHash) {
+      res.status(401).json({ message: 'Invalid email or password' });
+      return;
+    }
+
+    // Verify password
+    const isValidPassword = await bcrypt.compare(password, user.passwordHash);
+    if (!isValidPassword) {
+      res.status(401).json({ message: 'Invalid email or password' });
+      return;
+    }
+
+    // Update last login
+    await db
+      .update(users)
+      .set({ lastLoginAt: new Date() })
+      .where(eq(users.id, user.id));
+
+    // Create session
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 30);
+
+    const [session] = await db
+      .insert(userSessions)
+      .values({
+        userId: user.id,
+        token: crypto.randomUUID(),
+        expiresAt,
+      })
+      .returning();
+
+    // Generate JWT
+    const jwtToken = generateToken(user.id, session.id);
+
+    res.json({
+      token: jwtToken,
+      user: {
+        id: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        avatarUrl: user.avatarUrl,
+        specialty: user.specialty,
+        isVerified: user.isVerified,
+        fullName: [user.firstName, user.lastName].filter(Boolean).join(' '),
+      },
+    });
+  } catch (error) {
+    console.error('Login error:', error);
+    res.status(500).json({ message: 'Login failed' });
+  }
+});
 
 /**
  * POST /api/auth/social

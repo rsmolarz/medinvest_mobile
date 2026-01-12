@@ -95,8 +95,22 @@ import { User, Post, loginSchema, formatRelativeTime } from '@medinvest/shared';
 - Migrations managed with `drizzle-kit push`
 
 ### Authentication
-- SSO integration planned for Apple Sign-In and Google Sign-In (per design guidelines)
-- Currently uses mock authentication with AsyncStorage persistence
+- **Email/Password Registration**: POST /api/auth/register endpoint for traditional signup
+- **Apple Sign-In**: Native iOS integration via expo-apple-authentication
+- **Google Sign-In**: OAuth 2.0 via expo-auth-session
+
+**Google Sign-In Production Setup** (required for production):
+1. Go to [Google Cloud Console](https://console.cloud.google.com/apis/credentials)
+2. Create OAuth 2.0 Client IDs for each platform:
+   - **Web**: Set authorized redirect URI to `https://{your-production-domain}/`
+   - **iOS**: Set bundle ID to `com.medinvest.app`
+   - **Android**: Set package name to `com.medinvest.app` and provide SHA-1 fingerprint
+   - **Expo Go**: Set redirect URI to `https://auth.expo.io/@{expo-username}/medinvest`
+3. Set environment variables:
+   - `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID` - Web OAuth client ID
+   - `EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID` - iOS OAuth client ID  
+   - `EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID` - Android OAuth client ID
+   - `EXPO_PUBLIC_GOOGLE_EXPO_CLIENT_ID` - Expo Go OAuth client ID
 
 ### Third-Party Services
 - **Expo** ecosystem: splash-screen, haptics, linear-gradient, blur, image, web-browser

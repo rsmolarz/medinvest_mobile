@@ -49,10 +49,26 @@ export interface AuthState {
   error: string | null;
 }
 
+export interface RegisterData {
+  email: string;
+  password: string;
+  first_name: string;
+  last_name: string;
+  specialty?: string;
+  referral_code?: string;
+}
+
+export interface LoginData {
+  email: string;
+  password: string;
+}
+
 export interface AuthContextType extends AuthState {
   signInWithApple: () => Promise<void>;
   signInWithGoogle: () => Promise<void>;
   signOut: () => Promise<void>;
+  register: (data: RegisterData) => Promise<boolean>;
+  login: (data: LoginData) => Promise<boolean>;
   clearError: () => void;
   refreshUser: () => Promise<void>;
   updateUser: (userData: Partial<User>) => Promise<void>;
@@ -272,6 +288,54 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   }, []);
 
+  const register = useCallback(async (data: RegisterData): Promise<boolean> => {
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      const response = await apiClient.post('/auth/register', data);
+      const { token: authToken, user: userData } = response.data;
+
+      await saveAuthData(authToken, {
+        ...userData,
+        fullName: userData.fullName || [userData.firstName, userData.lastName].filter(Boolean).join(' '),
+      });
+
+      return true;
+    } catch (err: any) {
+      const message = err?.response?.data?.message || err?.message || 'Registration failed';
+      setError(message);
+      console.error('Registration error:', err);
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  const login = useCallback(async (data: LoginData): Promise<boolean> => {
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      const response = await apiClient.post('/auth/login', data);
+      const { token: authToken, user: userData } = response.data;
+
+      await saveAuthData(authToken, {
+        ...userData,
+        fullName: userData.fullName || [userData.firstName, userData.lastName].filter(Boolean).join(' '),
+      });
+
+      return true;
+    } catch (err: any) {
+      const message = err?.response?.data?.message || err?.message || 'Login failed';
+      setError(message);
+      console.error('Login error:', err);
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
   const signOut = useCallback(async () => {
     try {
       setIsLoading(true);
@@ -326,6 +390,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
       signInWithApple,
       signInWithGoogle,
       signOut,
+      register,
+      login,
       clearError,
       refreshUser,
       updateUser,
@@ -341,6 +407,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
       signInWithApple,
       signInWithGoogle,
       signOut,
+      register,
+      login,
       clearError,
       refreshUser,
       updateUser,
