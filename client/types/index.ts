@@ -7,35 +7,39 @@
 // =============================================================================
 
 export interface User {
-  id: number;
+  id: number | string;
   email: string;
-  first_name: string;
-  last_name: string;
-  full_name: string;
+  firstName?: string;
+  lastName?: string;
+  fullName?: string;
+  phone?: string;
   specialty?: string;
   bio?: string;
-  avatar_url?: string;
-  is_verified: boolean;
-  is_premium: boolean;
-  is_admin: boolean;
-  subscription_tier: SubscriptionTier;
-  points: number;
-  level: number;
-  login_streak: number;
-  referral_code: string;
-  followers_count: number;
-  following_count: number;
-  posts_count: number;
-  created_at: string;
-  last_login?: string;
+  avatarUrl?: string;
+  provider?: 'apple' | 'google' | 'mock' | 'email';
+  isVerified?: boolean;
+  isAccredited?: boolean;
+  isPremium?: boolean;
+  isAdmin?: boolean;
+  subscriptionTier?: SubscriptionTier;
+  points?: number;
+  level?: number;
+  loginStreak?: number;
+  referralCode?: string;
+  followersCount?: number;
+  followingCount?: number;
+  postsCount?: number;
+  createdAt?: string;
+  updatedAt?: string;
+  lastLogin?: string;
 }
 
 export type SubscriptionTier = 'free' | 'premium';
 
 export interface UserProfile extends User {
   posts: Post[];
-  is_following: boolean;
-  mutual_followers: User[];
+  isFollowing: boolean;
+  mutualFollowers: User[];
 }
 
 // =============================================================================
