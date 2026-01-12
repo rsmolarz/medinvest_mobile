@@ -25,6 +25,7 @@ export default function LoginScreen() {
   };
 
   const handleGoogleSignIn = async () => {
+    console.log('handleGoogleSignIn clicked!');
     if (Platform.OS !== "web") {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     }
