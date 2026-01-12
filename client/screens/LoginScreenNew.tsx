@@ -61,7 +61,9 @@ export default function LoginScreen() {
   // Login mutation
   const loginMutation = useMutation({
     mutationFn: async (credentials: { email: string; password: string }) => {
+      console.log('Login attempt:', { email: credentials.email, apiBase: process.env.EXPO_PUBLIC_DOMAIN });
       const response = await apiClient.post<{ token: string; user: User }>('/auth/login', credentials);
+      console.log('Login response:', response.data);
       return response.data;
     },
     onSuccess: async (data, variables) => {
@@ -79,6 +81,7 @@ export default function LoginScreen() {
       }
     },
     onError: (error: any) => {
+      console.log('Login error:', JSON.stringify(error, null, 2));
       if (Platform.OS !== 'web') {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       }
