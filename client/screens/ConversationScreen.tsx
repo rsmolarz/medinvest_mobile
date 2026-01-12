@@ -25,6 +25,7 @@ import { Colors, Spacing, BorderRadius, Typography } from '@/constants/theme';
 import { messagesApi, ApiUser, Message } from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
 import { formatRelativeTime } from '@/lib/utils';
+import { videoCallService } from '@/lib/video/VideoCallService';
 
 type ConversationRouteParams = {
   Conversation: {
@@ -90,6 +91,26 @@ export default function ConversationScreen() {
     if (otherUser) {
       navigation.navigate('UserProfile', { userId: otherUser.id });
     }
+  }, [navigation, otherUser]);
+
+  const handleVoiceCall = useCallback(async () => {
+    if (!otherUser) return;
+    navigation.navigate('VoiceCall', {
+      recipientId: otherUser.id,
+      recipientName: otherUser.full_name || `${otherUser.first_name} ${otherUser.last_name}`,
+      recipientAvatar: otherUser.avatar_url,
+      callType: 'audio',
+    });
+  }, [navigation, otherUser]);
+
+  const handleVideoCall = useCallback(async () => {
+    if (!otherUser) return;
+    navigation.navigate('VoiceCall', {
+      recipientId: otherUser.id,
+      recipientName: otherUser.full_name || `${otherUser.first_name} ${otherUser.last_name}`,
+      recipientAvatar: otherUser.avatar_url,
+      callType: 'video',
+    });
   }, [navigation, otherUser]);
 
   // Scroll to bottom on initial load
@@ -183,6 +204,14 @@ export default function ConversationScreen() {
                 </ThemedText>
               )}
             </View>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.callButton} onPress={handleVoiceCall}>
+            <Ionicons name="call-outline" size={22} color={Colors.primary} />
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.callButton} onPress={handleVideoCall}>
+            <Ionicons name="videocam-outline" size={22} color={Colors.primary} />
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.moreButton}>
@@ -304,6 +333,10 @@ const styles = StyleSheet.create({
   headerSpecialty: {
     ...Typography.small,
     color: Colors.textSecondary,
+  },
+  callButton: {
+    padding: Spacing.sm,
+    marginRight: Spacing.xs,
   },
   moreButton: {
     padding: Spacing.sm,

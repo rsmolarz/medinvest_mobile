@@ -417,6 +417,7 @@ export type RootStackParamList = {
   RoomDetail: { roomSlug: string };
   Conversation: { userId: number };
   NewConversation: undefined;
+  VoiceCall: { recipientId: string; recipientName: string; recipientAvatar?: string; callType: 'audio' | 'video' };
   AMADetail: { amaId: number };
   DealDetail: { dealId: number };
   CourseDetail: { courseId: number };

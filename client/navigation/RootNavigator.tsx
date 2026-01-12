@@ -64,6 +64,7 @@ import ContentPreferencesScreen from '@/screens/ContentPreferencesScreen';
 import ReportScreen from '@/screens/ReportScreen';
 import SavedSearchesScreen from '@/screens/SavedSearchesScreen';
 import DataExportScreen from '@/screens/DataExportScreen';
+import VoiceCallScreen from '@/screens/VoiceCallScreen';
 
 // Types
 import { RootStackParamList, MainTabParamList, AuthStackParamList } from '@/types';
@@ -213,6 +214,15 @@ export default function RootNavigator() {
             <Stack.Screen name="RoomDetail" component={RoomDetailScreen} />
             <Stack.Screen name="Conversation" component={ConversationScreen} />
             <Stack.Screen name="NewConversation" component={NewConversationScreen} />
+            <Stack.Screen 
+              name="VoiceCall" 
+              component={VoiceCallScreen}
+              options={{
+                presentation: 'fullScreenModal',
+                animation: 'slide_from_bottom',
+                headerShown: false,
+              }}
+            />
             <Stack.Screen name="Notifications" component={NotificationsScreen} />
             <Stack.Screen name="Search" component={SearchScreen} />
             <Stack.Screen name="Hashtag" component={HashtagScreen} />
