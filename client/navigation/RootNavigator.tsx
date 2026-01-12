@@ -56,6 +56,14 @@ import DeleteAccountScreen from '@/screens/DeleteAccountScreen';
 import BiometricSettingsScreen from '@/screens/BiometricSettingsScreen';
 import PrivacyPolicyScreen from '@/screens/PrivacyPolicyScreen';
 import TermsOfServiceScreen from '@/screens/TermsOfServiceScreen';
+import AppearanceSettingsScreen from '@/screens/AppearanceSettingsScreen';
+import EditPostScreen from '@/screens/EditPostScreen';
+import DraftsScreen from '@/screens/DraftsScreen';
+import NotificationSettingsScreen from '@/screens/NotificationSettingsScreen';
+import ContentPreferencesScreen from '@/screens/ContentPreferencesScreen';
+import ReportScreen from '@/screens/ReportScreen';
+import SavedSearchesScreen from '@/screens/SavedSearchesScreen';
+import DataExportScreen from '@/screens/DataExportScreen';
 
 // Types
 import { RootStackParamList, MainTabParamList, AuthStackParamList } from '@/types';
@@ -247,6 +255,25 @@ export default function RootNavigator() {
             <Stack.Screen 
               name="AIChat" 
               component={AIChatScreen}
+              options={{
+                presentation: 'modal',
+                animation: 'slide_from_bottom',
+              }}
+            />
+            
+            {/* Additional Settings Screens */}
+            <Stack.Screen name="AppearanceSettings" component={AppearanceSettingsScreen} />
+            <Stack.Screen name="NotificationSettings" component={NotificationSettingsScreen} />
+            <Stack.Screen name="ContentPreferences" component={ContentPreferencesScreen} />
+            <Stack.Screen name="DataExport" component={DataExportScreen} />
+            <Stack.Screen name="SavedSearches" component={SavedSearchesScreen} />
+            
+            {/* Post Management */}
+            <Stack.Screen name="EditPost" component={EditPostScreen} />
+            <Stack.Screen name="Drafts" component={DraftsScreen} />
+            <Stack.Screen 
+              name="Report" 
+              component={ReportScreen}
               options={{
                 presentation: 'modal',
                 animation: 'slide_from_bottom',

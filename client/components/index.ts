@@ -56,3 +56,4 @@ export * from './Reactions';
 export { default as SearchFilters } from './SearchFilters';
 export * from './SkeletonLoaders';
 export { default as ThreadedComments } from './ThreadedComments';
+export * from './OnboardingTooltips';

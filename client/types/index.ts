@@ -404,8 +404,10 @@ export interface PremiumFeatures {
 export type RootStackParamList = {
   Auth: undefined;
   Main: undefined;
+  Onboarding: undefined;
   PostDetail: { postId: number };
   CreatePost: { roomSlug?: string };
+  EditPost: { postId: number };
   UserProfile: { userId: number };
   EditProfile: undefined;
   RoomDetail: { roomSlug: string };
@@ -415,6 +417,7 @@ export type RootStackParamList = {
   DealDetail: { dealId: number };
   CourseDetail: { courseId: number };
   LessonDetail: { courseId: number; lessonId: number };
+  LessonPlayer: { courseId: number; lessonId: number };
   EventDetail: { eventId: number };
   Settings: undefined;
   Notifications: undefined;
@@ -425,6 +428,20 @@ export type RootStackParamList = {
   Bookmarks: undefined;
   Leaderboard: undefined;
   Achievements: undefined;
+  Drafts: undefined;
+  AIChat: undefined;
+  ChangePassword: undefined;
+  BlockedUsers: undefined;
+  DeleteAccount: undefined;
+  BiometricSettings: undefined;
+  PrivacyPolicy: undefined;
+  TermsOfService: undefined;
+  AppearanceSettings: undefined;
+  NotificationSettings: undefined;
+  ContentPreferences: undefined;
+  Report: { type: 'post' | 'user' | 'comment'; targetId: number };
+  SavedSearches: undefined;
+  DataExport: undefined;
 };
 
 export type MainTabParamList = {
@@ -439,4 +456,5 @@ export type AuthStackParamList = {
   Register: undefined;
   ForgotPassword: undefined;
   ResetPassword: { token: string };
+  VerifyEmail: { email: string };
 };
