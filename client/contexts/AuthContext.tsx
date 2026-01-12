@@ -244,17 +244,23 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const signInWithGoogle = useCallback(async () => {
     try {
       setError(null);
+      console.log('Google Sign-In: Starting...');
+      console.log('Google Web Client ID:', GOOGLE_WEB_CLIENT_ID ? 'Set' : 'Not set');
+      console.log('Platform:', Platform.OS);
+      console.log('Has credentials:', getHasGoogleCredentialsForPlatform());
 
       if (!getHasGoogleCredentialsForPlatform()) {
-        if (Platform.OS === 'web') {
-          setError('Google Sign-In is not configured. Please contact support.');
-        } else {
-          setError('Google Sign-In is not available on this device. Please use Apple Sign-In or email login.');
-        }
+        const errorMsg = Platform.OS === 'web' 
+          ? 'Google Sign-In is not configured. Please contact support.'
+          : 'Google Sign-In is not available on this device. Please use Apple Sign-In or email login.';
+        console.log('Google Sign-In Error:', errorMsg);
+        setError(errorMsg);
         return;
       }
 
-      await promptGoogleAsync();
+      console.log('Google Sign-In: Prompting...');
+      const result = await promptGoogleAsync();
+      console.log('Google Sign-In result:', result);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Google sign-in failed';
       setError(message);
