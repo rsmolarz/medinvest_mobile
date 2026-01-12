@@ -1,13 +1,21 @@
 import axios, { type AxiosError, type InternalAxiosRequestConfig } from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import Constants from 'expo-constants';
 import { AUTH_TOKEN_KEY } from '@/constants/auth';
 
 function getApiBaseUrl(): string {
+  const extraApiBaseUrl = Constants.expoConfig?.extra?.apiBaseUrl;
+  if (extraApiBaseUrl) {
+    return `${extraApiBaseUrl}/api`;
+  }
+  
   const domain = process.env.EXPO_PUBLIC_DOMAIN;
   if (domain) {
     const protocol = domain.includes('localhost') ? 'http' : 'https';
     return `${protocol}://${domain}/api`;
   }
+  
+  console.warn('[API] No API base URL configured, using localhost fallback');
   return 'http://localhost:5000/api';
 }
 

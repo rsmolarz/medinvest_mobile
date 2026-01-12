@@ -61,7 +61,11 @@ export default function LoginScreen() {
   // Login mutation
   const loginMutation = useMutation({
     mutationFn: async (credentials: { email: string; password: string }) => {
-      console.log('Login attempt:', { email: credentials.email, apiBase: process.env.EXPO_PUBLIC_DOMAIN });
+      console.log('Login attempt:', { 
+        email: credentials.email, 
+        apiBaseUrl: apiClient.defaults.baseURL,
+        platform: Platform.OS,
+      });
       const response = await apiClient.post<{ token: string; user: User }>('/auth/login', credentials);
       console.log('Login response:', response.data);
       return response.data;
