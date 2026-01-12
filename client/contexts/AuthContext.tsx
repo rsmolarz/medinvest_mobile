@@ -25,6 +25,7 @@ const GOOGLE_ANDROID_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_I
 const GOOGLE_EXPO_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_EXPO_CLIENT_ID;
 
 const GITHUB_CLIENT_ID = process.env.EXPO_PUBLIC_GITHUB_CLIENT_ID;
+const FACEBOOK_APP_ID = process.env.EXPO_PUBLIC_FACEBOOK_APP_ID;
 
 const PLACEHOLDER_CLIENT_ID = 'placeholder.apps.googleusercontent.com';
 
@@ -70,6 +71,7 @@ export interface AuthContextType extends AuthState {
   signInWithApple: () => Promise<void>;
   signInWithGoogle: () => Promise<void>;
   signInWithGithub: () => Promise<void>;
+  signInWithFacebook: () => Promise<void>;
   signOut: () => Promise<void>;
   register: (data: RegisterData) => Promise<boolean>;
   login: (data: LoginData) => Promise<boolean>;
@@ -120,6 +122,27 @@ export function AuthProvider({ children }: AuthProviderProps) {
       redirectUri: githubRedirectUri,
     },
     githubDiscovery
+  );
+
+  // Facebook OAuth configuration
+  const facebookDiscovery = {
+    authorizationEndpoint: 'https://www.facebook.com/v18.0/dialog/oauth',
+    tokenEndpoint: 'https://graph.facebook.com/v18.0/oauth/access_token',
+  };
+
+  // Use platform-appropriate redirect URI for Facebook
+  const facebookRedirectUri = Platform.OS === 'web'
+    ? AuthSession.makeRedirectUri({ preferLocalhost: false })
+    : AuthSession.makeRedirectUri({ scheme: 'medinvest' });
+
+  const [_facebookRequest, facebookResponse, promptFacebookAsync] = AuthSession.useAuthRequest(
+    {
+      clientId: FACEBOOK_APP_ID || 'placeholder',
+      scopes: ['public_profile', 'email'],
+      redirectUri: facebookRedirectUri,
+      responseType: AuthSession.ResponseType.Code,
+    },
+    facebookDiscovery
   );
 
   useEffect(() => {
@@ -179,7 +202,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   };
 
   const authenticateWithBackend = useCallback(async (
-    provider: 'apple' | 'google' | 'github',
+    provider: 'apple' | 'google' | 'github' | 'facebook',
     tokenData: {
       token: string;
       identityToken?: string;
@@ -306,6 +329,46 @@ export function AuthProvider({ children }: AuthProviderProps) {
     handleGithubResponse();
   }, [handleGithubResponse]);
 
+  // Handle Facebook OAuth response
+  const handleFacebookResponse = useCallback(async () => {
+    if (facebookResponse?.type === 'success') {
+      const { code } = facebookResponse.params;
+      if (code) {
+        try {
+          setIsLoading(true);
+          setError(null);
+
+          // Exchange code for access token via backend
+          const redirectUri = Platform.OS === 'web'
+            ? AuthSession.makeRedirectUri({ preferLocalhost: false })
+            : AuthSession.makeRedirectUri({ scheme: 'medinvest' });
+          
+          const tokenResponse = await apiClient.post('/auth/facebook/token', {
+            code,
+            redirect_uri: redirectUri,
+          });
+
+          const { access_token } = tokenResponse.data;
+          if (access_token) {
+            await authenticateWithBackend('facebook', {
+              token: access_token,
+            });
+          }
+        } catch (err) {
+          const message = err instanceof Error ? err.message : 'Facebook sign-in failed';
+          setError(message);
+          console.error('Facebook sign-in error:', err);
+        } finally {
+          setIsLoading(false);
+        }
+      }
+    }
+  }, [facebookResponse, authenticateWithBackend]);
+
+  useEffect(() => {
+    handleFacebookResponse();
+  }, [handleFacebookResponse]);
+
   const signInWithGoogle = useCallback(async () => {
     try {
       setError(null);
@@ -353,6 +416,27 @@ export function AuthProvider({ children }: AuthProviderProps) {
       console.error('GitHub sign-in error:', err);
     }
   }, [promptGithubAsync]);
+
+  const signInWithFacebook = useCallback(async () => {
+    try {
+      setError(null);
+      console.log('Facebook Sign-In: Starting...');
+      console.log('Facebook App ID:', FACEBOOK_APP_ID ? 'Set' : 'Not set');
+
+      if (!FACEBOOK_APP_ID) {
+        setError('Facebook Sign-In is not configured. Please contact support.');
+        return;
+      }
+
+      console.log('Facebook Sign-In: Prompting...');
+      const result = await promptFacebookAsync();
+      console.log('Facebook Sign-In result:', result);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Facebook sign-in failed';
+      setError(message);
+      console.error('Facebook sign-in error:', err);
+    }
+  }, [promptFacebookAsync]);
 
   const mockSignIn = useCallback(async () => {
     try {
@@ -482,6 +566,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       signInWithApple,
       signInWithGoogle,
       signInWithGithub,
+      signInWithFacebook,
       signOut,
       register,
       login,
@@ -500,6 +585,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       signInWithApple,
       signInWithGoogle,
       signInWithGithub,
+      signInWithFacebook,
       signOut,
       register,
       login,

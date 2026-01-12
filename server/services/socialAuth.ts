@@ -2,6 +2,52 @@ import jwt from 'jsonwebtoken';
 import jwksClient from 'jwks-rsa';
 
 // ============================================
+// Facebook Sign In Verification
+// ============================================
+
+interface FacebookUserPayload {
+  sub: string;
+  email?: string;
+  name?: string;
+  picture?: string;
+  first_name?: string;
+  last_name?: string;
+}
+
+/**
+ * Verify Facebook access token and get user info
+ */
+export async function verifyFacebookToken(
+  accessToken: string
+): Promise<FacebookUserPayload | null> {
+  try {
+    // Fetch user info from Facebook Graph API
+    const userResponse = await fetch(
+      `https://graph.facebook.com/me?fields=id,name,email,first_name,last_name,picture.type(large)&access_token=${accessToken}`
+    );
+
+    if (!userResponse.ok) {
+      console.error('Facebook user fetch failed:', userResponse.status);
+      return null;
+    }
+
+    const userData = await userResponse.json();
+
+    return {
+      sub: userData.id,
+      email: userData.email,
+      name: userData.name,
+      picture: userData.picture?.data?.url,
+      first_name: userData.first_name,
+      last_name: userData.last_name,
+    };
+  } catch (error) {
+    console.error('Facebook token verification failed:', error);
+    return null;
+  }
+}
+
+// ============================================
 // GitHub Sign In Verification
 // ============================================
 

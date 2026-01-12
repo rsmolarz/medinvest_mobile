@@ -31,7 +31,7 @@ import { biometricAuth, BiometricStatus } from '@/lib/biometric-auth';
 
 export default function LoginScreen() {
   const navigation = useNavigation<any>();
-  const { login, signInWithGoogle, signInWithGithub, signInWithApple, isAppleAuthAvailable } = useAuth();
+  const { login, signInWithGoogle, signInWithGithub, signInWithFacebook, signInWithApple, isAppleAuthAvailable } = useAuth();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -261,6 +261,15 @@ export default function LoginScreen() {
                 }}
               >
                 <Ionicons name="logo-github" size={20} color={Colors.textPrimary} />
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={styles.socialButton}
+                onPress={() => {
+                  console.log('Facebook button pressed');
+                  signInWithFacebook();
+                }}
+              >
+                <Ionicons name="logo-facebook" size={20} color={Colors.textPrimary} />
               </TouchableOpacity>
               {isAppleAuthAvailable && Platform.OS === 'ios' ? (
                 <TouchableOpacity 

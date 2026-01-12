@@ -2,7 +2,7 @@ import { Router, Request, Response } from 'express';
 import { db, users, userSessions, notificationPreferences } from '../db';
 import { eq } from 'drizzle-orm';
 import { authMiddleware, generateToken } from '../middleware/auth';
-import { verifyAppleToken, verifyGoogleToken, verifyGithubToken } from '../services/socialAuth';
+import { verifyAppleToken, verifyGoogleToken, verifyGithubToken, verifyFacebookToken } from '../services/socialAuth';
 import bcrypt from 'bcrypt';
 
 const router = Router();
@@ -239,8 +239,53 @@ router.post('/github/token', async (req: Request, res: Response) => {
 });
 
 /**
+ * POST /api/auth/facebook/token
+ * Exchange Facebook authorization code for access token
+ */
+router.post('/facebook/token', async (req: Request, res: Response) => {
+  try {
+    const { code, redirect_uri } = req.body;
+
+    if (!code) {
+      res.status(400).json({ message: 'Authorization code is required' });
+      return;
+    }
+
+    // Use server-side env vars
+    const appId = process.env.FACEBOOK_APP_ID || process.env.EXPO_PUBLIC_FACEBOOK_APP_ID;
+    const appSecret = process.env.FACEBOOK_APP_SECRET;
+
+    if (!appId || !appSecret) {
+      res.status(500).json({ message: 'Facebook OAuth is not configured' });
+      return;
+    }
+
+    // Exchange code for access token
+    const tokenUrl = new URL('https://graph.facebook.com/v18.0/oauth/access_token');
+    tokenUrl.searchParams.append('client_id', appId);
+    tokenUrl.searchParams.append('client_secret', appSecret);
+    tokenUrl.searchParams.append('redirect_uri', redirect_uri);
+    tokenUrl.searchParams.append('code', code);
+
+    const tokenResponse = await fetch(tokenUrl.toString());
+    const tokenData = await tokenResponse.json();
+
+    if (tokenData.error) {
+      console.error('Facebook token exchange error:', tokenData);
+      res.status(401).json({ message: tokenData.error.message || 'Failed to exchange code' });
+      return;
+    }
+
+    res.json({ access_token: tokenData.access_token });
+  } catch (error) {
+    console.error('Facebook token exchange error:', error);
+    res.status(500).json({ message: 'Token exchange failed' });
+  }
+});
+
+/**
  * POST /api/auth/social
- * Social sign in (Apple/Google/GitHub)
+ * Social sign in (Apple/Google/GitHub/Facebook)
  */
 router.post('/social', async (req: Request, res: Response) => {
   try {
@@ -279,6 +324,14 @@ router.post('/social', async (req: Request, res: Response) => {
       }
       verifiedEmail = githubData.email || email;
       providerUserId = githubData.sub;
+    } else if (provider === 'facebook') {
+      const facebookData = await verifyFacebookToken(token);
+      if (!facebookData) {
+        res.status(401).json({ message: 'Invalid Facebook token' });
+        return;
+      }
+      verifiedEmail = facebookData.email || email;
+      providerUserId = facebookData.sub;
     } else {
       res.status(400).json({ message: 'Invalid provider' });
       return;
