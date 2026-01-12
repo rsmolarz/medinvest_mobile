@@ -11,6 +11,7 @@ import * as AppleAuthentication from 'expo-apple-authentication';
 import * as WebBrowser from 'expo-web-browser';
 import * as Google from 'expo-auth-session/providers/google';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import Constants from 'expo-constants';
 import { Platform } from 'react-native';
 import { apiClient } from '@/api/client';
 import type { User } from '@/types';
@@ -18,6 +19,9 @@ import type { User } from '@/types';
 WebBrowser.maybeCompleteAuthSession();
 
 const GOOGLE_WEB_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID;
+const GOOGLE_IOS_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID;
+const GOOGLE_ANDROID_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID;
+const GOOGLE_EXPO_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_EXPO_CLIENT_ID;
 
 const AUTH_TOKEN_KEY = '@medinvest/auth_token';
 const USER_DATA_KEY = '@medinvest/user_data';
@@ -55,7 +59,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [isAppleAuthAvailable, setIsAppleAuthAvailable] = useState(false);
 
   const [_googleRequest, googleResponse, promptGoogleAsync] = Google.useAuthRequest({
+    clientId: GOOGLE_EXPO_CLIENT_ID,
     webClientId: GOOGLE_WEB_CLIENT_ID,
+    iosClientId: GOOGLE_IOS_CLIENT_ID,
+    androidClientId: GOOGLE_ANDROID_CLIENT_ID,
     scopes: ['profile', 'email'],
   });
 
@@ -207,8 +214,21 @@ export function AuthProvider({ children }: AuthProviderProps) {
     try {
       setError(null);
       
-      if (!GOOGLE_WEB_CLIENT_ID) {
-        setError('Google Sign-In is not configured. Please contact support.');
+      const isExpoGo = Constants.appOwnership === 'expo';
+      
+      const hasRequiredClientId = Platform.select({
+        web: !!GOOGLE_WEB_CLIENT_ID,
+        ios: isExpoGo ? !!GOOGLE_EXPO_CLIENT_ID : !!GOOGLE_IOS_CLIENT_ID,
+        android: isExpoGo ? !!GOOGLE_EXPO_CLIENT_ID : !!GOOGLE_ANDROID_CLIENT_ID,
+        default: false,
+      });
+
+      if (!hasRequiredClientId) {
+        if (Platform.OS === 'web') {
+          setError('Google Sign-In is not configured. Please contact support.');
+        } else {
+          setError('Google Sign-In is not available on this device. Please use Apple Sign-In or email login.');
+        }
         return;
       }
 
