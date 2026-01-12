@@ -1,8 +1,9 @@
 import React from "react";
-import { View, StyleSheet, Image, Platform } from "react-native";
+import { View, StyleSheet, Image, Platform, Alert } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import * as Haptics from "expo-haptics";
+import { useNavigation } from "@react-navigation/native";
 
 import { ThemedText } from "@/components/ThemedText";
 import { Button } from "@/components/Button";
@@ -13,18 +14,25 @@ import { Colors, Spacing, BorderRadius } from "@/constants/theme";
 export default function LoginScreen() {
   const insets = useSafeAreaInsets();
   const { theme } = useTheme();
-  const { login } = useAuth();
+  const navigation = useNavigation<any>();
+  const { signInWithApple, signInWithGoogle, isAppleAuthAvailable, isLoading, error } = useAuth();
 
-  const handleSignIn = async () => {
+  const handleAppleSignIn = async () => {
     if (Platform.OS !== "web") {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     }
-    await login({
-      id: "user-1",
-      name: "Alex Johnson",
-      email: "alex.johnson@email.com",
-      verified: true,
-    });
+    await signInWithApple();
+  };
+
+  const handleGoogleSignIn = async () => {
+    if (Platform.OS !== "web") {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    }
+    await signInWithGoogle();
+  };
+
+  const handleEmailSignIn = () => {
+    navigation.navigate('Register');
   };
 
   return (
@@ -78,15 +86,30 @@ export default function LoginScreen() {
       </View>
 
       <View style={styles.buttonContainer}>
-        <Button onPress={handleSignIn} style={styles.signInButton}>
-          Sign In with Apple
+        {isAppleAuthAvailable && Platform.OS === 'ios' ? (
+          <Button onPress={handleAppleSignIn} style={styles.signInButton} disabled={isLoading}>
+            {"Sign In with Apple"}
+          </Button>
+        ) : null}
+        <Button
+          onPress={handleGoogleSignIn}
+          style={[styles.googleButton, { backgroundColor: theme.backgroundSecondary }]}
+          disabled={isLoading}
+        >
+          {isLoading ? 'Signing in...' : 'Sign In with Google'}
         </Button>
         <Button
-          onPress={handleSignIn}
-          style={[styles.googleButton, { backgroundColor: theme.backgroundSecondary }]}
+          onPress={handleEmailSignIn}
+          style={[styles.googleButton, { backgroundColor: 'transparent', borderWidth: 1, borderColor: Colors.border }]}
         >
-          <ThemedText style={{ color: theme.text }}>Sign In with Google</ThemedText>
+          {"Sign Up with Email"}
         </Button>
+
+        {error ? (
+          <ThemedText type="small" style={[styles.errorText, { color: Colors.error }]}>
+            {error}
+          </ThemedText>
+        ) : null}
 
         <ThemedText
           type="small"
@@ -180,5 +203,9 @@ const styles = StyleSheet.create({
   terms: {
     textAlign: "center",
     marginTop: Spacing.lg,
+  },
+  errorText: {
+    textAlign: "center",
+    marginTop: Spacing.sm,
   },
 });
