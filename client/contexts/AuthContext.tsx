@@ -161,14 +161,35 @@ export function AuthProvider({ children }: AuthProviderProps) {
   useEffect(() => {
     const loadStoredAuth = async () => {
       try {
-        const [storedToken, storedUser] = await Promise.all([
-          AsyncStorage.getItem(AUTH_TOKEN_KEY),
-          AsyncStorage.getItem(USER_DATA_KEY),
-        ]);
+        const storedToken = await AsyncStorage.getItem(AUTH_TOKEN_KEY);
 
-        if (storedToken && storedUser) {
+        if (storedToken) {
           setToken(storedToken);
-          setUser(JSON.parse(storedUser));
+          
+          // Fetch fresh user data from server instead of using cached data
+          try {
+            const response = await apiClient.get('/users/me', {
+              headers: { Authorization: `Bearer ${storedToken}` },
+            });
+            const userData = response.data as User;
+            setUser(userData);
+            await AsyncStorage.setItem(USER_DATA_KEY, JSON.stringify(userData));
+          } catch (error: any) {
+            console.error('Failed to fetch user on startup:', error);
+            // Token might be invalid, clear auth data
+            if (error?.status === 401 || error?.response?.status === 401) {
+              await AsyncStorage.removeItem(AUTH_TOKEN_KEY);
+              await AsyncStorage.removeItem(USER_DATA_KEY);
+              setToken(null);
+              setUser(null);
+            } else {
+              // Network error - fall back to cached user data
+              const storedUser = await AsyncStorage.getItem(USER_DATA_KEY);
+              if (storedUser) {
+                setUser(JSON.parse(storedUser));
+              }
+            }
+          }
         }
       } catch (err) {
         console.error('Failed to load stored auth:', err);
