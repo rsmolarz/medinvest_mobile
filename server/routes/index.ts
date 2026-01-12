@@ -1,11 +1,12 @@
 import type { Express } from 'express';
 import { createServer, type Server } from 'node:http';
 
-import authRoutes from './routes/auth';
-import investmentsRoutes from './routes/investments';
-import portfolioRoutes from './routes/portfolio';
-import articlesRoutes from './routes/articles';
-import usersRoutes from './routes/users';
+import authRoutes from './auth';
+import investmentsRoutes from './investments';
+import portfolioRoutes from './portfolio';
+import articlesRoutes from './articles';
+import usersRoutes from './users';
+import messagesRoutes from './messages';
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Health check
@@ -19,6 +20,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use('/api/portfolio', portfolioRoutes);
   app.use('/api/articles', articlesRoutes);
   app.use('/api/users', usersRoutes);
+  app.use('/api/messages', messagesRoutes);
 
   // 404 handler for API routes
   app.use('/api/*', (req, res) => {

@@ -651,37 +651,113 @@ export const notificationsApi = {
 // MESSAGES API
 // =============================================================================
 
+export interface ApiUser {
+  id: string;
+  email: string;
+  first_name: string;
+  last_name: string;
+  full_name: string;
+  avatar_url: string | null;
+  is_verified: boolean;
+  specialty?: string;
+}
+
 export interface Conversation {
-  id: number;
-  other_user: User;
+  id: string;
+  other_user: ApiUser;
   last_message?: string;
   last_message_at?: string;
   unread_count: number;
+  is_muted: boolean;
 }
 
 export interface Message {
-  id: number;
+  id: string;
+  conversation_id: string;
   content: string;
-  sender: User;
+  sender: ApiUser;
   is_read: boolean;
+  read_at?: string;
   created_at: string;
 }
 
+import { getApiUrl } from './query-client';
+
+const getMessagesApiUrl = () => {
+  const base = getApiUrl();
+  return `${base}api/messages`;
+};
+
 export const messagesApi = {
-  getConversations: () =>
-    api.get<{ conversations: Conversation[] }>('/messages'),
+  getConversations: async (): Promise<ApiResponse<{ conversations: Conversation[] }>> => {
+    try {
+      const token = await tokenManager.getAccessToken();
+      const res = await fetch(getMessagesApiUrl(), {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      const data = await res.json();
+      return { data, success: res.ok };
+    } catch (error) {
+      return { success: false, error: { error: 'Failed to fetch conversations' } };
+    }
+  },
 
-  getConversation: (userId: number) =>
-    api.get<{ messages: Message[]; other_user: User }>(`/messages/${userId}`),
+  getConversation: async (userId: string): Promise<ApiResponse<{ messages: Message[]; other_user: ApiUser }>> => {
+    try {
+      const token = await tokenManager.getAccessToken();
+      const res = await fetch(`${getMessagesApiUrl()}/${userId}`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      const data = await res.json();
+      return { data, success: res.ok };
+    } catch (error) {
+      return { success: false, error: { error: 'Failed to fetch conversation' } };
+    }
+  },
 
-  sendMessage: (userId: number, content: string) =>
-    api.post<Message>(`/messages/${userId}`, { content }),
+  sendMessage: async (userId: string, content: string): Promise<ApiResponse<Message>> => {
+    try {
+      const token = await tokenManager.getAccessToken();
+      const res = await fetch(`${getMessagesApiUrl()}/${userId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ content }),
+      });
+      const data = await res.json();
+      return { data, success: res.ok };
+    } catch (error) {
+      return { success: false, error: { error: 'Failed to send message' } };
+    }
+  },
 
-  deleteConversation: (userId: number) =>
-    api.delete(`/messages/${userId}`),
+  deleteConversation: async (userId: string): Promise<ApiResponse<void>> => {
+    try {
+      const token = await tokenManager.getAccessToken();
+      const res = await fetch(`${getMessagesApiUrl()}/${userId}`, {
+        method: 'DELETE',
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      return { success: res.ok };
+    } catch (error) {
+      return { success: false, error: { error: 'Failed to delete conversation' } };
+    }
+  },
 
-  getUnreadCount: () =>
-    api.get<{ count: number }>('/messages/unread-count'),
+  getUnreadCount: async (): Promise<ApiResponse<{ count: number }>> => {
+    try {
+      const token = await tokenManager.getAccessToken();
+      const res = await fetch(`${getMessagesApiUrl()}/unread-count`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      const data = await res.json();
+      return { data, success: res.ok };
+    } catch (error) {
+      return { success: false, error: { error: 'Failed to fetch unread count' } };
+    }
+  },
 };
 
 // =============================================================================

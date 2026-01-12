@@ -19,8 +19,7 @@ import { useQuery } from '@tanstack/react-query';
 
 import { ThemedText } from '@/components/ThemedText';
 import { Colors, Spacing, BorderRadius, Typography, Shadows } from '@/constants/theme';
-import { messagesApi } from '@/lib/api';
-import { Conversation } from '@/types';
+import { messagesApi, Conversation } from '@/lib/api';
 import { formatRelativeTime } from '@/lib/utils';
 
 export default function MessagesScreen() {
@@ -42,7 +41,7 @@ export default function MessagesScreen() {
 
   const conversations = conversationsData || [];
 
-  const handleConversationPress = useCallback((userId: number) => {
+  const handleConversationPress = useCallback((userId: string) => {
     navigation.navigate('Conversation', { userId });
   }, [navigation]);
 

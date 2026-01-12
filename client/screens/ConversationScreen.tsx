@@ -22,14 +22,13 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { ThemedText } from '@/components/ThemedText';
 import { Colors, Spacing, BorderRadius, Typography } from '@/constants/theme';
-import { messagesApi } from '@/lib/api';
-import { Message, User } from '@/types';
+import { messagesApi, ApiUser, Message } from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
 import { formatRelativeTime } from '@/lib/utils';
 
 type ConversationRouteParams = {
   Conversation: {
-    userId: number;
+    userId: string;
   };
 };
 
@@ -42,7 +41,7 @@ export default function ConversationScreen() {
   const flatListRef = useRef<FlatList>(null);
 
   const [messageText, setMessageText] = useState('');
-  const [otherUser, setOtherUser] = useState<User | null>(null);
+  const [otherUser, setOtherUser] = useState<ApiUser | null>(null);
 
   // Fetch messages
   const {
