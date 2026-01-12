@@ -11,23 +11,13 @@ import * as AppleAuthentication from 'expo-apple-authentication';
 import * as WebBrowser from 'expo-web-browser';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
+import { apiClient } from '@/api/client';
+import type { User } from '@/types';
 
 WebBrowser.maybeCompleteAuthSession();
 
 const AUTH_TOKEN_KEY = '@medinvest/auth_token';
 const USER_DATA_KEY = '@medinvest/user_data';
-
-export interface User {
-  id: string;
-  email: string;
-  firstName?: string;
-  lastName?: string;
-  fullName?: string;
-  avatarUrl?: string;
-  provider: 'apple' | 'google' | 'mock';
-  isVerified: boolean;
-  createdAt: string;
-}
 
 export interface AuthState {
   user: User | null;
@@ -43,6 +33,7 @@ export interface AuthContextType extends AuthState {
   signOut: () => Promise<void>;
   clearError: () => void;
   refreshUser: () => Promise<void>;
+  updateUser: (userData: Partial<User>) => Promise<void>;
   mockSignIn: () => Promise<void>;
   isAppleAuthAvailable: boolean;
 }
@@ -213,7 +204,28 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const refreshUser = useCallback(async () => {
     if (!token) return;
+    
+    try {
+      const response = await apiClient.get('/users/me');
+      const userData = response.data as User;
+      
+      setUser(userData);
+      await AsyncStorage.setItem(USER_DATA_KEY, JSON.stringify(userData));
+    } catch (error: any) {
+      console.error('Failed to refresh user:', error);
+      if (error?.status === 401 || error?.response?.status === 401) {
+        await clearAuthData();
+      }
+    }
   }, [token]);
+
+  const updateUser = useCallback(async (userData: Partial<User>) => {
+    if (!user) return;
+    
+    const updatedUser = { ...user, ...userData };
+    setUser(updatedUser);
+    await AsyncStorage.setItem(USER_DATA_KEY, JSON.stringify(updatedUser));
+  }, [user]);
 
   const isAuthenticated = useMemo(() => {
     return !!user && !!token;
@@ -231,6 +243,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       signOut,
       clearError,
       refreshUser,
+      updateUser,
       mockSignIn,
       isAppleAuthAvailable,
     }),
@@ -245,6 +258,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       signOut,
       clearError,
       refreshUser,
+      updateUser,
       mockSignIn,
       isAppleAuthAvailable,
     ]

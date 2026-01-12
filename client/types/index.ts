@@ -462,3 +462,101 @@ export type AuthStackParamList = {
   ResetPassword: { token: string };
   VerifyEmail: { email: string };
 };
+
+// =============================================================================
+// API/DATA TYPES
+// =============================================================================
+
+export interface PaginatedResponse<T> {
+  data: T[];
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+}
+
+export interface Investment {
+  id: string;
+  name: string;
+  company: string;
+  description: string;
+  category: string;
+  targetAmount: number;
+  currentAmount: number;
+  minInvestment: number;
+  maxInvestment?: number;
+  returnRate?: string;
+  riskLevel: 'low' | 'medium' | 'high';
+  status: 'active' | 'funded' | 'closed';
+  deadline?: string;
+  imageUrl?: string;
+  highlights: string[];
+  documents?: string[];
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface InvestmentFilters {
+  category?: string;
+  riskLevel?: string;
+  status?: string;
+  minAmount?: number;
+  maxAmount?: number;
+  search?: string;
+}
+
+export interface PortfolioInvestment {
+  id: string;
+  investmentId: string;
+  investment: Investment;
+  amount: number;
+  shares?: number;
+  purchaseDate: string;
+  currentValue?: number;
+  returnPercent?: number;
+  status: 'active' | 'matured' | 'exited';
+}
+
+export interface PortfolioSummary {
+  totalInvested: number;
+  currentValue: number;
+  totalReturn: number;
+  returnPercent: number;
+  investmentsCount: number;
+  activeInvestments: number;
+}
+
+export interface Transaction {
+  id: string;
+  type: 'investment' | 'dividend' | 'withdrawal' | 'deposit';
+  amount: number;
+  description: string;
+  investmentName?: string;
+  status: 'pending' | 'completed' | 'failed';
+  createdAt: string;
+}
+
+export interface Article {
+  id: string;
+  title: string;
+  excerpt: string;
+  content?: string;
+  category: string;
+  author: {
+    id: string;
+    name: string;
+    avatarUrl?: string;
+  };
+  imageUrl?: string;
+  readTime: number;
+  isBookmarked: boolean;
+  isPremium: boolean;
+  publishedAt: string;
+  tags?: string[];
+}
+
+export interface ArticleFilters {
+  category?: string;
+  isPremium?: boolean;
+  search?: string;
+}

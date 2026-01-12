@@ -16,18 +16,28 @@ import { Feather } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import * as ImagePicker from 'expo-image-picker';
 import Animated, { FadeInDown } from 'react-native-reanimated';
+import { Image } from 'expo-image';
 
 import { colors, typography, spacing, layout, shadows } from '@/theme';
 import { useUserProfile, useUpdateProfile, useUploadAvatar } from '@/api/hooks';
+import { useAuth } from '@/contexts/AuthContext';
 import type { User } from '@/types';
+import { getApiUrl } from '@/lib/query-client';
 
 export default function EditProfileScreen() {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
+  const { refreshUser } = useAuth();
   
   const { data: user, isLoading: isLoadingUser } = useUserProfile();
   const updateProfile = useUpdateProfile();
   const uploadAvatar = useUploadAvatar();
+
+  const getAvatarUrl = (avatarUrl?: string) => {
+    if (!avatarUrl) return null;
+    if (avatarUrl.startsWith('http')) return avatarUrl;
+    return `${getApiUrl()}${avatarUrl}`;
+  };
 
   // Form state
   const [firstName, setFirstName] = useState(user?.firstName || '');
@@ -75,28 +85,31 @@ export default function EditProfileScreen() {
     if (!result.canceled && result.assets[0]) {
       try {
         await uploadAvatar.mutateAsync(result.assets[0].uri);
+        await refreshUser();
         Alert.alert('Success', 'Avatar updated successfully!');
       } catch (error) {
         Alert.alert('Error', 'Failed to upload avatar. Please try again.');
       }
     }
-  }, [uploadAvatar]);
+  }, [uploadAvatar, refreshUser]);
 
   const handleSave = useCallback(async () => {
     if (!hasChanges) return;
 
     try {
-      await updateProfile.mutateAsync({
+      const updatedData = {
         firstName: firstName.trim(),
         lastName: lastName.trim(),
         phone: phone.trim() || undefined,
-      });
+      };
+      await updateProfile.mutateAsync(updatedData);
+      await refreshUser();
       Alert.alert('Success', 'Profile updated successfully!');
       setHasChanges(false);
     } catch (error) {
       Alert.alert('Error', 'Failed to update profile. Please try again.');
     }
-  }, [firstName, lastName, phone, hasChanges, updateProfile]);
+  }, [firstName, lastName, phone, hasChanges, updateProfile, refreshUser]);
 
   const getInitials = () => {
     if (firstName && lastName) {
@@ -164,8 +177,12 @@ export default function EditProfileScreen() {
           <Pressable style={styles.avatarContainer} onPress={handlePickImage}>
             <View style={styles.avatar}>
               {user?.avatarUrl ? (
-                // TODO: Add Image component with user.avatarUrl
-                <Text style={styles.avatarText}>{getInitials()}</Text>
+                <Image
+                  source={{ uri: getAvatarUrl(user.avatarUrl) ?? undefined }}
+                  style={styles.avatarImage}
+                  contentFit="cover"
+                  transition={200}
+                />
               ) : (
                 <Text style={styles.avatarText}>{getInitials()}</Text>
               )}
@@ -381,6 +398,11 @@ const styles = StyleSheet.create({
   avatarText: {
     ...typography.hero,
     color: colors.text.inverse,
+  },
+  avatarImage: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
   },
   editAvatarBadge: {
     position: 'absolute',

@@ -387,12 +387,12 @@ export function useUpdateProfile() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (data: Partial<User>) => {
-      const response = await apiClient.patch('/users/me', data);
+    mutationFn: async (data: { firstName?: string; lastName?: string; phone?: string }) => {
+      const response = await apiClient.patch<User>('/users/me', data);
       return response.data;
     },
-    onSuccess: (data) => {
-      queryClient.setQueryData(queryKeys.userProfile(), data);
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: queryKeys.userProfile() });
     },
   });
 }
@@ -412,15 +412,15 @@ export function useUploadAvatar() {
         name: 'avatar.jpg',
       } as any);
 
-      const response = await apiClient.post('/users/me/avatar', formData, {
+      const response = await apiClient.post<{ avatarUrl: string }>('/users/me/avatar', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
       });
       return response.data;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.userProfile() });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: queryKeys.userProfile() });
     },
   });
 }
