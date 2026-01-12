@@ -31,7 +31,7 @@ import { biometricAuth, BiometricStatus } from '@/lib/biometric-auth';
 
 export default function LoginScreen() {
   const navigation = useNavigation<any>();
-  const { login } = useAuth();
+  const { login, signInWithGoogle, signInWithApple, isAppleAuthAvailable } = useAuth();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -244,12 +244,23 @@ export default function LoginScreen() {
 
             {/* Social Login */}
             <View style={styles.socialButtons}>
-              <TouchableOpacity style={styles.socialButton}>
+              <TouchableOpacity 
+                style={styles.socialButton}
+                onPress={() => {
+                  console.log('Google button pressed');
+                  signInWithGoogle();
+                }}
+              >
                 <Ionicons name="logo-google" size={20} color={Colors.textPrimary} />
               </TouchableOpacity>
-              <TouchableOpacity style={styles.socialButton}>
-                <Ionicons name="logo-apple" size={20} color={Colors.textPrimary} />
-              </TouchableOpacity>
+              {isAppleAuthAvailable && Platform.OS === 'ios' ? (
+                <TouchableOpacity 
+                  style={styles.socialButton}
+                  onPress={signInWithApple}
+                >
+                  <Ionicons name="logo-apple" size={20} color={Colors.textPrimary} />
+                </TouchableOpacity>
+              ) : null}
             </View>
           </View>
 
