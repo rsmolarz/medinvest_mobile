@@ -294,6 +294,9 @@ router.post('/social', async (req: Request, res: Response) => {
 
     let verifiedEmail: string | undefined;
     let providerUserId: string | undefined;
+    let verifiedFirstName: string | undefined;
+    let verifiedLastName: string | undefined;
+    let verifiedAvatarUrl: string | undefined;
 
     // Verify token based on provider
     if (provider === 'apple') {
@@ -304,6 +307,10 @@ router.post('/social', async (req: Request, res: Response) => {
       }
       verifiedEmail = appleData.email || email;
       providerUserId = appleData.sub;
+      // Apple doesn't provide avatar, use client-provided values
+      verifiedFirstName = firstName;
+      verifiedLastName = lastName;
+      verifiedAvatarUrl = avatarUrl;
     } else if (provider === 'google') {
       const googleData = await verifyGoogleToken(token);
       if (!googleData) {
@@ -312,6 +319,9 @@ router.post('/social', async (req: Request, res: Response) => {
       }
       verifiedEmail = googleData.email || email;
       providerUserId = googleData.sub;
+      verifiedFirstName = googleData.given_name || firstName;
+      verifiedLastName = googleData.family_name || lastName;
+      verifiedAvatarUrl = googleData.picture || avatarUrl;
     } else if (provider === 'github') {
       const githubData = await verifyGithubToken(token);
       if (!githubData) {
@@ -320,6 +330,16 @@ router.post('/social', async (req: Request, res: Response) => {
       }
       verifiedEmail = githubData.email || email;
       providerUserId = githubData.sub;
+      // GitHub provides full name, try to split it
+      if (githubData.name) {
+        const nameParts = githubData.name.split(' ');
+        verifiedFirstName = nameParts[0] || firstName;
+        verifiedLastName = nameParts.slice(1).join(' ') || lastName;
+      } else {
+        verifiedFirstName = firstName;
+        verifiedLastName = lastName;
+      }
+      verifiedAvatarUrl = githubData.picture || avatarUrl;
     } else if (provider === 'facebook') {
       const facebookData = await verifyFacebookToken(token);
       if (!facebookData) {
@@ -328,6 +348,9 @@ router.post('/social', async (req: Request, res: Response) => {
       }
       verifiedEmail = facebookData.email || email;
       providerUserId = facebookData.sub;
+      verifiedFirstName = facebookData.first_name || firstName;
+      verifiedLastName = facebookData.last_name || lastName;
+      verifiedAvatarUrl = facebookData.picture || avatarUrl;
     } else {
       res.status(400).json({ message: 'Invalid provider' });
       return;
@@ -359,9 +382,9 @@ router.post('/social', async (req: Request, res: Response) => {
           lastLoginAt: new Date(),
           updatedAt: new Date(),
           // Only update name/avatar if not already set
-          ...(firstName && !existingUser.firstName ? { firstName } : {}),
-          ...(lastName && !existingUser.lastName ? { lastName } : {}),
-          ...(avatarUrl && !existingUser.avatarUrl ? { avatarUrl } : {}),
+          ...(verifiedFirstName && !existingUser.firstName ? { firstName: verifiedFirstName } : {}),
+          ...(verifiedLastName && !existingUser.lastName ? { lastName: verifiedLastName } : {}),
+          ...(verifiedAvatarUrl && !existingUser.avatarUrl ? { avatarUrl: verifiedAvatarUrl } : {}),
         })
         .where(eq(users.id, userId));
     } else {
@@ -370,9 +393,9 @@ router.post('/social', async (req: Request, res: Response) => {
         .insert(users)
         .values({
           email: verifiedEmail,
-          firstName,
-          lastName,
-          avatarUrl,
+          firstName: verifiedFirstName,
+          lastName: verifiedLastName,
+          avatarUrl: verifiedAvatarUrl,
           provider,
           providerUserId,
           isVerified: true, // Social auth users are auto-verified
