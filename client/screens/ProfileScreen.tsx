@@ -4,6 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { Image } from 'expo-image';
 
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
@@ -54,11 +55,19 @@ export default function ProfileScreen() {
         </View>
 
         <View style={[styles.profileCard, { backgroundColor: colors.surface }, Shadows.card]}>
-          <View style={[styles.avatar, { backgroundColor: colors.primary + '20' }]}>
-            <ThemedText type="title" style={{ color: colors.primary }}>
-              {user?.firstName?.[0] || user?.email?.[0]?.toUpperCase() || 'U'}
-            </ThemedText>
-          </View>
+          {user?.avatarUrl ? (
+            <Image
+              source={{ uri: user.avatarUrl }}
+              style={styles.avatarImage}
+              contentFit="cover"
+            />
+          ) : (
+            <View style={[styles.avatar, { backgroundColor: colors.primary + '20' }]}>
+              <ThemedText type="title" style={{ color: colors.primary }}>
+                {user?.firstName?.[0] || user?.email?.[0]?.toUpperCase() || 'U'}
+              </ThemedText>
+            </View>
+          )}
           <ThemedText type="heading" style={styles.userName}>
             {user?.fullName || user?.email || 'User'}
           </ThemedText>
@@ -153,6 +162,12 @@ const styles = StyleSheet.create({
     borderRadius: 40,
     alignItems: 'center',
     justifyContent: 'center',
+    marginBottom: Spacing.md,
+  },
+  avatarImage: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
     marginBottom: Spacing.md,
   },
   userName: {

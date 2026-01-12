@@ -381,10 +381,10 @@ router.post('/social', async (req: Request, res: Response) => {
           providerUserId,
           lastLoginAt: new Date(),
           updatedAt: new Date(),
-          // Only update name/avatar if not already set
-          ...(verifiedFirstName && !existingUser.firstName ? { firstName: verifiedFirstName } : {}),
-          ...(verifiedLastName && !existingUser.lastName ? { lastName: verifiedLastName } : {}),
-          ...(verifiedAvatarUrl && !existingUser.avatarUrl ? { avatarUrl: verifiedAvatarUrl } : {}),
+          // Always update profile data from social provider if available
+          ...(verifiedFirstName ? { firstName: verifiedFirstName } : {}),
+          ...(verifiedLastName ? { lastName: verifiedLastName } : {}),
+          ...(verifiedAvatarUrl ? { avatarUrl: verifiedAvatarUrl } : {}),
         })
         .where(eq(users.id, userId));
     } else {
