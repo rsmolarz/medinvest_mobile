@@ -98,6 +98,7 @@ import { User, Post, loginSchema, formatRelativeTime } from '@medinvest/shared';
 - **Email/Password Registration**: POST /api/auth/register endpoint for traditional signup
 - **Apple Sign-In**: Native iOS integration via expo-apple-authentication
 - **Google Sign-In**: OAuth 2.0 via expo-auth-session
+- **GitHub Sign-In**: OAuth 2.0 via expo-auth-session with backend token exchange
 
 **Google Sign-In Production Setup** (required for production):
 1. Go to [Google Cloud Console](https://console.cloud.google.com/apis/credentials)
@@ -111,6 +112,21 @@ import { User, Post, loginSchema, formatRelativeTime } from '@medinvest/shared';
    - `EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID` - iOS OAuth client ID  
    - `EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID` - Android OAuth client ID
    - `EXPO_PUBLIC_GOOGLE_EXPO_CLIENT_ID` - Expo Go OAuth client ID
+
+**GitHub Sign-In Production Setup** (required for production):
+1. Go to [GitHub Developer Settings](https://github.com/settings/developers)
+2. Create a new OAuth App:
+   - **Homepage URL**: `https://{your-production-domain}`
+   - **Authorization callback URL**: `medinvest://` (deep link scheme)
+3. Set environment variables:
+   - `EXPO_PUBLIC_GITHUB_CLIENT_ID` - GitHub OAuth client ID (for frontend)
+   - `GITHUB_CLIENT_ID` - GitHub OAuth client ID (for backend - same value as above)
+   - `GITHUB_CLIENT_SECRET` - GitHub OAuth client secret (keep secret!)
+
+**Apple Sign-In Production Setup** (required for iOS):
+1. Enable "Sign In with Apple" capability in Apple Developer Portal
+2. Configure the app identifier with Sign In with Apple
+3. The bundle identifier `com.medinvest.app` must match your Apple Developer account
 
 ### Third-Party Services
 - **Expo** ecosystem: splash-screen, haptics, linear-gradient, blur, image, web-browser

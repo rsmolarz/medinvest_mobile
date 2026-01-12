@@ -2,6 +2,72 @@ import jwt from 'jsonwebtoken';
 import jwksClient from 'jwks-rsa';
 
 // ============================================
+// GitHub Sign In Verification
+// ============================================
+
+interface GitHubUserPayload {
+  sub: string;
+  email?: string;
+  name?: string;
+  picture?: string;
+  login: string;
+}
+
+/**
+ * Exchange GitHub OAuth code for access token and get user info
+ */
+export async function verifyGithubToken(
+  accessToken: string
+): Promise<GitHubUserPayload | null> {
+  try {
+    // Fetch user info from GitHub
+    const userResponse = await fetch('https://api.github.com/user', {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        Accept: 'application/vnd.github.v3+json',
+      },
+    });
+
+    if (!userResponse.ok) {
+      console.error('GitHub user fetch failed:', userResponse.status);
+      return null;
+    }
+
+    const userData = await userResponse.json();
+
+    // Fetch primary email if not public
+    let email = userData.email;
+    if (!email) {
+      const emailResponse = await fetch('https://api.github.com/user/emails', {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          Accept: 'application/vnd.github.v3+json',
+        },
+      });
+
+      if (emailResponse.ok) {
+        const emails = await emailResponse.json();
+        const primaryEmail = emails.find(
+          (e: any) => e.primary && e.verified
+        );
+        email = primaryEmail?.email;
+      }
+    }
+
+    return {
+      sub: String(userData.id),
+      email,
+      name: userData.name,
+      picture: userData.avatar_url,
+      login: userData.login,
+    };
+  } catch (error) {
+    console.error('GitHub token verification failed:', error);
+    return null;
+  }
+}
+
+// ============================================
 // Apple Sign In Verification
 // ============================================
 

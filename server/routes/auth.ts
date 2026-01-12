@@ -2,7 +2,7 @@ import { Router, Request, Response } from 'express';
 import { db, users, userSessions, notificationPreferences } from '../db';
 import { eq } from 'drizzle-orm';
 import { authMiddleware, generateToken } from '../middleware/auth';
-import { verifyAppleToken, verifyGoogleToken } from '../services/socialAuth';
+import { verifyAppleToken, verifyGoogleToken, verifyGithubToken } from '../services/socialAuth';
 import bcrypt from 'bcrypt';
 
 const router = Router();
@@ -187,8 +187,60 @@ router.post('/login', async (req: Request, res: Response) => {
 });
 
 /**
+ * POST /api/auth/github/token
+ * Exchange GitHub authorization code for access token
+ */
+router.post('/github/token', async (req: Request, res: Response) => {
+  try {
+    const { code, redirect_uri } = req.body;
+
+    if (!code) {
+      res.status(400).json({ message: 'Authorization code is required' });
+      return;
+    }
+
+    // Use server-side env vars (EXPO_PUBLIC_* is stripped in production)
+    const clientId = process.env.GITHUB_CLIENT_ID || process.env.EXPO_PUBLIC_GITHUB_CLIENT_ID;
+    const clientSecret = process.env.GITHUB_CLIENT_SECRET;
+
+    if (!clientId || !clientSecret) {
+      res.status(500).json({ message: 'GitHub OAuth is not configured' });
+      return;
+    }
+
+    // Exchange code for access token
+    const tokenResponse = await fetch('https://github.com/login/oauth/access_token', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      body: JSON.stringify({
+        client_id: clientId,
+        client_secret: clientSecret,
+        code,
+        redirect_uri,
+      }),
+    });
+
+    const tokenData = await tokenResponse.json();
+
+    if (tokenData.error) {
+      console.error('GitHub token exchange error:', tokenData);
+      res.status(401).json({ message: tokenData.error_description || 'Failed to exchange code' });
+      return;
+    }
+
+    res.json({ access_token: tokenData.access_token });
+  } catch (error) {
+    console.error('GitHub token exchange error:', error);
+    res.status(500).json({ message: 'Token exchange failed' });
+  }
+});
+
+/**
  * POST /api/auth/social
- * Social sign in (Apple/Google)
+ * Social sign in (Apple/Google/GitHub)
  */
 router.post('/social', async (req: Request, res: Response) => {
   try {
@@ -219,6 +271,14 @@ router.post('/social', async (req: Request, res: Response) => {
       }
       verifiedEmail = googleData.email || email;
       providerUserId = googleData.sub;
+    } else if (provider === 'github') {
+      const githubData = await verifyGithubToken(token);
+      if (!githubData) {
+        res.status(401).json({ message: 'Invalid GitHub token' });
+        return;
+      }
+      verifiedEmail = githubData.email || email;
+      providerUserId = githubData.sub;
     } else {
       res.status(400).json({ message: 'Invalid provider' });
       return;

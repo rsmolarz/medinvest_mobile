@@ -10,6 +10,7 @@ import React, {
 import * as AppleAuthentication from 'expo-apple-authentication';
 import * as WebBrowser from 'expo-web-browser';
 import * as Google from 'expo-auth-session/providers/google';
+import * as AuthSession from 'expo-auth-session';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import { Platform } from 'react-native';
@@ -22,6 +23,8 @@ const GOOGLE_WEB_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID;
 const GOOGLE_IOS_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID;
 const GOOGLE_ANDROID_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID;
 const GOOGLE_EXPO_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_EXPO_CLIENT_ID;
+
+const GITHUB_CLIENT_ID = process.env.EXPO_PUBLIC_GITHUB_CLIENT_ID;
 
 const PLACEHOLDER_CLIENT_ID = 'placeholder.apps.googleusercontent.com';
 
@@ -66,6 +69,7 @@ export interface LoginData {
 export interface AuthContextType extends AuthState {
   signInWithApple: () => Promise<void>;
   signInWithGoogle: () => Promise<void>;
+  signInWithGithub: () => Promise<void>;
   signOut: () => Promise<void>;
   register: (data: RegisterData) => Promise<boolean>;
   login: (data: LoginData) => Promise<boolean>;
@@ -96,6 +100,24 @@ export function AuthProvider({ children }: AuthProviderProps) {
     androidClientId: GOOGLE_ANDROID_CLIENT_ID || PLACEHOLDER_CLIENT_ID,
     scopes: ['profile', 'email'],
   });
+
+  // GitHub OAuth configuration
+  const githubDiscovery = {
+    authorizationEndpoint: 'https://github.com/login/oauth/authorize',
+    tokenEndpoint: 'https://github.com/login/oauth/access_token',
+    revocationEndpoint: `https://github.com/settings/connections/applications/${GITHUB_CLIENT_ID}`,
+  };
+
+  const [_githubRequest, githubResponse, promptGithubAsync] = AuthSession.useAuthRequest(
+    {
+      clientId: GITHUB_CLIENT_ID || 'placeholder',
+      scopes: ['read:user', 'user:email'],
+      redirectUri: AuthSession.makeRedirectUri({
+        scheme: 'medinvest',
+      }),
+    },
+    githubDiscovery
+  );
 
   useEffect(() => {
     const checkAppleAuth = async () => {
@@ -154,7 +176,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   };
 
   const authenticateWithBackend = useCallback(async (
-    provider: 'apple' | 'google',
+    provider: 'apple' | 'google' | 'github',
     tokenData: {
       token: string;
       identityToken?: string;
@@ -241,6 +263,42 @@ export function AuthProvider({ children }: AuthProviderProps) {
     handleGoogleResponse();
   }, [handleGoogleResponse]);
 
+  // Handle GitHub OAuth response
+  const handleGithubResponse = useCallback(async () => {
+    if (githubResponse?.type === 'success') {
+      const { code } = githubResponse.params;
+      if (code) {
+        try {
+          setIsLoading(true);
+          setError(null);
+
+          // Exchange code for access token via backend
+          const tokenResponse = await apiClient.post('/auth/github/token', {
+            code,
+            redirect_uri: AuthSession.makeRedirectUri({ scheme: 'medinvest' }),
+          });
+
+          const { access_token } = tokenResponse.data;
+          if (access_token) {
+            await authenticateWithBackend('github', {
+              token: access_token,
+            });
+          }
+        } catch (err) {
+          const message = err instanceof Error ? err.message : 'GitHub sign-in failed';
+          setError(message);
+          console.error('GitHub sign-in error:', err);
+        } finally {
+          setIsLoading(false);
+        }
+      }
+    }
+  }, [githubResponse, authenticateWithBackend]);
+
+  useEffect(() => {
+    handleGithubResponse();
+  }, [handleGithubResponse]);
+
   const signInWithGoogle = useCallback(async () => {
     try {
       setError(null);
@@ -267,6 +325,27 @@ export function AuthProvider({ children }: AuthProviderProps) {
       console.error('Google sign-in error:', err);
     }
   }, [promptGoogleAsync]);
+
+  const signInWithGithub = useCallback(async () => {
+    try {
+      setError(null);
+      console.log('GitHub Sign-In: Starting...');
+      console.log('GitHub Client ID:', GITHUB_CLIENT_ID ? 'Set' : 'Not set');
+
+      if (!GITHUB_CLIENT_ID) {
+        setError('GitHub Sign-In is not configured. Please contact support.');
+        return;
+      }
+
+      console.log('GitHub Sign-In: Prompting...');
+      const result = await promptGithubAsync();
+      console.log('GitHub Sign-In result:', result);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'GitHub sign-in failed';
+      setError(message);
+      console.error('GitHub sign-in error:', err);
+    }
+  }, [promptGithubAsync]);
 
   const mockSignIn = useCallback(async () => {
     try {
@@ -395,6 +474,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       error,
       signInWithApple,
       signInWithGoogle,
+      signInWithGithub,
       signOut,
       register,
       login,
@@ -412,6 +492,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       error,
       signInWithApple,
       signInWithGoogle,
+      signInWithGithub,
       signOut,
       register,
       login,
