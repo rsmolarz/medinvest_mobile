@@ -7,6 +7,7 @@ import investmentsRoutes from './routes/investments';
 import portfolioRoutes from './routes/portfolio';
 import articlesRoutes from './routes/articles';
 import usersRoutes from './routes/users';
+import aiRoutes from './routes/ai';
 
 export async function registerRoutes(app: Express): Promise<Server> {
   registerChatRoutes(app);
@@ -20,6 +21,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use('/api/portfolio', portfolioRoutes);
   app.use('/api/articles', articlesRoutes);
   app.use('/api/users', usersRoutes);
+  app.use('/api/ai', aiRoutes);
 
   app.use('/api/*', (req, res) => {
     res.status(404).json({ message: 'Endpoint not found' });
