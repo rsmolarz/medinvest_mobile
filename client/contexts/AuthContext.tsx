@@ -16,6 +16,7 @@ import Constants from 'expo-constants';
 import { Platform } from 'react-native';
 import { apiClient } from '@/api/client';
 import type { User } from '@/types';
+import { AUTH_TOKEN_KEY, USER_DATA_KEY } from '@/constants/auth';
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -41,9 +42,6 @@ function getHasGoogleCredentialsForPlatform(): boolean {
   }
   return false;
 }
-
-const AUTH_TOKEN_KEY = '@medinvest/auth_token';
-const USER_DATA_KEY = '@medinvest/user_data';
 
 export interface AuthState {
   user: User | null;
@@ -75,6 +73,7 @@ export interface AuthContextType extends AuthState {
   signOut: () => Promise<void>;
   register: (data: RegisterData) => Promise<boolean>;
   login: (data: LoginData) => Promise<boolean>;
+  setAuthSession: (token: string, user: User) => Promise<void>;
   clearError: () => void;
   refreshUser: () => Promise<void>;
   updateUser: (userData: Partial<User>) => Promise<void>;
@@ -552,6 +551,22 @@ export function AuthProvider({ children }: AuthProviderProps) {
     await AsyncStorage.setItem(USER_DATA_KEY, JSON.stringify(updatedUser));
   }, [user]);
 
+  const setAuthSession = useCallback(async (authToken: string, userData: User) => {
+    const normalizedUser: User = {
+      id: userData.id,
+      email: userData.email,
+      firstName: userData.firstName,
+      lastName: userData.lastName,
+      fullName: userData.fullName || [userData.firstName, userData.lastName].filter(Boolean).join(' '),
+      avatarUrl: userData.avatarUrl,
+      provider: userData.provider,
+      isVerified: userData.isVerified,
+      isAccredited: userData.isAccredited,
+      createdAt: userData.createdAt,
+    };
+    await saveAuthData(authToken, normalizedUser);
+  }, []);
+
   const isAuthenticated = useMemo(() => {
     return !!user && !!token;
   }, [user, token]);
@@ -570,6 +585,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       signOut,
       register,
       login,
+      setAuthSession,
       clearError,
       refreshUser,
       updateUser,
@@ -589,6 +605,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       signOut,
       register,
       login,
+      setAuthSession,
       clearError,
       refreshUser,
       updateUser,

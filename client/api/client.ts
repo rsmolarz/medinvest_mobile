@@ -1,7 +1,6 @@
 import axios, { type AxiosError, type InternalAxiosRequestConfig } from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
-const AUTH_TOKEN_KEY = '@medinvest/auth_token';
+import { AUTH_TOKEN_KEY } from '@/constants/auth';
 
 function getApiBaseUrl(): string {
   const domain = process.env.EXPO_PUBLIC_DOMAIN;

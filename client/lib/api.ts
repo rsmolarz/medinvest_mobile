@@ -718,18 +718,6 @@ export interface AMA {
   questions_count: number;
 }
 
-export interface Deal {
-  id: number;
-  title: string;
-  company_name: string;
-  description: string;
-  target_amount: number;
-  current_amount: number;
-  min_investment: number;
-  status: 'active' | 'closed';
-  deadline: string;
-  category: string;
-}
 
 export interface Course {
   id: number;

@@ -13,7 +13,7 @@ const router = Router();
  */
 router.post('/register', async (req: Request, res: Response) => {
   try {
-    const { email, password, first_name, last_name, specialty, referral_code } = req.body;
+    const { email, password, first_name, last_name } = req.body;
 
     if (!email || !password) {
       res.status(400).json({ message: 'Email and password are required' });
@@ -66,8 +66,6 @@ router.post('/register', async (req: Request, res: Response) => {
         passwordHash,
         firstName: first_name,
         lastName: last_name,
-        specialty,
-        referralCode: referral_code,
         provider: 'email',
         isVerified: false,
         lastLoginAt: new Date(),
@@ -102,7 +100,6 @@ router.post('/register', async (req: Request, res: Response) => {
         email: newUser.email,
         firstName: newUser.firstName,
         lastName: newUser.lastName,
-        specialty: newUser.specialty,
         isVerified: newUser.isVerified,
         fullName: [newUser.firstName, newUser.lastName].filter(Boolean).join(' '),
       },
@@ -175,7 +172,6 @@ router.post('/login', async (req: Request, res: Response) => {
         firstName: user.firstName,
         lastName: user.lastName,
         avatarUrl: user.avatarUrl,
-        specialty: user.specialty,
         isVerified: user.isVerified,
         fullName: [user.firstName, user.lastName].filter(Boolean).join(' '),
       },

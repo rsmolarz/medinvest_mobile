@@ -25,13 +25,14 @@ import { useMutation } from '@tanstack/react-query';
 
 import { ThemedText } from '@/components/ThemedText';
 import { Colors, Spacing, BorderRadius, Typography, Shadows } from '@/constants/theme';
-import { authApi } from '@/lib/api';
+import { apiClient } from '@/api/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { biometricAuth, BiometricStatus } from '@/lib/biometric-auth';
+import type { User } from '@/types';
 
 export default function LoginScreen() {
   const navigation = useNavigation<any>();
-  const { login, signInWithGoogle, signInWithGithub, signInWithFacebook, signInWithApple, isAppleAuthAvailable } = useAuth();
+  const { setAuthSession, signInWithGoogle, signInWithGithub, signInWithFacebook, signInWithApple, isAppleAuthAvailable } = useAuth();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -60,10 +61,7 @@ export default function LoginScreen() {
   // Login mutation
   const loginMutation = useMutation({
     mutationFn: async (credentials: { email: string; password: string }) => {
-      const response = await authApi.login(credentials);
-      if (!response.success) {
-        throw new Error(response.error?.message || 'Login failed');
-      }
+      const response = await apiClient.post<{ token: string; user: User }>('/auth/login', credentials);
       return response.data;
     },
     onSuccess: async (data, variables) => {
@@ -76,13 +74,16 @@ export default function LoginScreen() {
         biometricAuth.promptEnableBiometric(variables.email, variables.password);
       }
       
-      await login(data.user);
+      if (data?.token && data?.user) {
+        await setAuthSession(data.token, data.user);
+      }
     },
-    onError: (error: Error) => {
+    onError: (error: any) => {
       if (Platform.OS !== 'web') {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       }
-      Alert.alert('Login Failed', error.message);
+      const message = error?.message || error?.response?.data?.message || 'Login failed';
+      Alert.alert('Login Failed', message);
     },
   });
 
@@ -322,7 +323,7 @@ const styles = StyleSheet.create({
     ...Shadows.card,
   },
   title: {
-    ...Typography.largeTitle,
+    ...Typography.hero,
     color: Colors.textPrimary,
     textAlign: 'center',
   },
@@ -370,7 +371,7 @@ const styles = StyleSheet.create({
   loginButton: {
     borderRadius: BorderRadius.md,
     overflow: 'hidden',
-    ...Shadows.button,
+    ...Shadows.card,
   },
   loginButtonDisabled: {
     opacity: 0.7,
