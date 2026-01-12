@@ -7,9 +7,9 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
-import { useTheme } from '@/hooks/useTheme';
+import { useThemeContext } from '@/contexts/ThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
-import { Colors, Spacing, BorderRadius, Shadows } from '@/constants/theme';
+import { Spacing, BorderRadius, Shadows } from '@/constants/theme';
 import { RootStackParamList } from '@/types';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
@@ -17,7 +17,7 @@ type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<NavigationProp>();
-  const { theme } = useTheme();
+  const { colors } = useThemeContext();
   const { user, signOut } = useAuth();
 
   const menuItems = [
@@ -41,35 +41,35 @@ export default function ProfileScreen() {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.header}>
-          <ThemedText type="h1">Profile</ThemedText>
+          <ThemedText type="title">Profile</ThemedText>
           <Pressable
             onPress={() => navigation.navigate('Settings')}
             style={({ pressed }) => [
               styles.headerButton,
-              { backgroundColor: theme.backgroundSecondary, opacity: pressed ? 0.7 : 1 },
+              { backgroundColor: colors.backgroundSecondary, opacity: pressed ? 0.7 : 1 },
             ]}
           >
-            <Feather name="settings" size={20} color={theme.text} />
+            <Feather name="settings" size={20} color={colors.textPrimary} />
           </Pressable>
         </View>
 
-        <View style={[styles.profileCard, { backgroundColor: theme.backgroundDefault }, Shadows.card]}>
-          <View style={[styles.avatar, { backgroundColor: Colors.primary + '20' }]}>
-            <ThemedText type="h1" style={{ color: Colors.primary }}>
+        <View style={[styles.profileCard, { backgroundColor: colors.surface }, Shadows.card]}>
+          <View style={[styles.avatar, { backgroundColor: colors.primary + '20' }]}>
+            <ThemedText type="title" style={{ color: colors.primary }}>
               {user?.firstName?.[0] || user?.email?.[0]?.toUpperCase() || 'U'}
             </ThemedText>
           </View>
-          <ThemedText type="h2" style={styles.userName}>
+          <ThemedText type="heading" style={styles.userName}>
             {user?.fullName || user?.email || 'User'}
           </ThemedText>
-          <ThemedText type="body" style={{ color: theme.textSecondary }}>
+          <ThemedText type="body" style={{ color: colors.textSecondary }}>
             {user?.email || ''}
           </ThemedText>
           <Pressable
             onPress={() => navigation.navigate('EditProfile')}
             style={({ pressed }) => [
               styles.editButton,
-              { backgroundColor: Colors.primary, opacity: pressed ? 0.9 : 1 },
+              { backgroundColor: colors.primary, opacity: pressed ? 0.9 : 1 },
             ]}
           >
             <Feather name="edit-2" size={16} color="#FFFFFF" />
@@ -79,7 +79,7 @@ export default function ProfileScreen() {
           </Pressable>
         </View>
 
-        <View style={[styles.menuSection, { backgroundColor: theme.backgroundDefault }, Shadows.card]}>
+        <View style={[styles.menuSection, { backgroundColor: colors.surface }, Shadows.card]}>
           {menuItems.map((item, index) => (
             <Pressable
               key={item.screen}
@@ -89,17 +89,17 @@ export default function ProfileScreen() {
                 { opacity: pressed ? 0.7 : 1 },
                 index < menuItems.length - 1 && {
                   borderBottomWidth: 1,
-                  borderBottomColor: theme.border,
+                  borderBottomColor: colors.border,
                 },
               ]}
             >
-              <View style={[styles.menuIcon, { backgroundColor: Colors.primary + '15' }]}>
-                <Feather name={item.icon as any} size={20} color={Colors.primary} />
+              <View style={[styles.menuIcon, { backgroundColor: colors.primary + '15' }]}>
+                <Feather name={item.icon as any} size={20} color={colors.primary} />
               </View>
               <ThemedText type="heading" style={styles.menuLabel}>
                 {item.label}
               </ThemedText>
-              <Feather name="chevron-right" size={20} color={theme.textSecondary} />
+              <Feather name="chevron-right" size={20} color={colors.textSecondary} />
             </Pressable>
           ))}
         </View>
@@ -108,11 +108,11 @@ export default function ProfileScreen() {
           onPress={handleLogout}
           style={({ pressed }) => [
             styles.logoutButton,
-            { backgroundColor: Colors.semantic.error + '15', opacity: pressed ? 0.7 : 1 },
+            { backgroundColor: colors.error + '15', opacity: pressed ? 0.7 : 1 },
           ]}
         >
-          <Feather name="log-out" size={20} color={Colors.semantic.error} />
-          <ThemedText type="heading" style={{ color: Colors.semantic.error, marginLeft: Spacing.sm }}>
+          <Feather name="log-out" size={20} color={colors.error} />
+          <ThemedText type="heading" style={{ color: colors.error, marginLeft: Spacing.sm }}>
             Sign Out
           </ThemedText>
         </Pressable>
@@ -126,25 +126,26 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingHorizontal: Spacing.lg,
-    gap: Spacing.lg,
+    padding: Spacing.lg,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    marginBottom: Spacing.xl,
   },
   headerButton: {
     width: 40,
     height: 40,
-    borderRadius: BorderRadius.md,
+    borderRadius: BorderRadius.sm,
     alignItems: 'center',
     justifyContent: 'center',
   },
   profileCard: {
-    padding: Spacing.xl,
     borderRadius: BorderRadius.lg,
+    padding: Spacing.xl,
     alignItems: 'center',
+    marginBottom: Spacing.lg,
   },
   avatar: {
     width: 80,
@@ -162,11 +163,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.sm,
-    borderRadius: BorderRadius.md,
+    borderRadius: BorderRadius.full,
     marginTop: Spacing.lg,
   },
   menuSection: {
     borderRadius: BorderRadius.lg,
+    marginBottom: Spacing.lg,
     overflow: 'hidden',
   },
   menuItem: {
@@ -177,13 +179,13 @@ const styles = StyleSheet.create({
   menuIcon: {
     width: 40,
     height: 40,
-    borderRadius: BorderRadius.md,
+    borderRadius: BorderRadius.sm,
     alignItems: 'center',
     justifyContent: 'center',
+    marginRight: Spacing.md,
   },
   menuLabel: {
     flex: 1,
-    marginLeft: Spacing.md,
   },
   logoutButton: {
     flexDirection: 'row',
