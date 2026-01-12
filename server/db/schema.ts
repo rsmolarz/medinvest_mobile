@@ -441,6 +441,58 @@ export const notifications = pgTable(
 );
 
 // ============================================
+// Direct Messages Tables
+// ============================================
+
+export const dmConversations = pgTable(
+  'dm_conversations',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    user1Id: uuid('user1_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    user2Id: uuid('user2_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    lastMessageAt: timestamp('last_message_at'),
+    lastMessage: text('last_message'),
+    user1Unread: integer('user1_unread').notNull().default(0),
+    user2Unread: integer('user2_unread').notNull().default(0),
+    user1Muted: boolean('user1_muted').notNull().default(false),
+    user2Muted: boolean('user2_muted').notNull().default(false),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow(),
+  },
+  (table) => ({
+    user1Idx: index('dm_conv_user1_idx').on(table.user1Id),
+    user2Idx: index('dm_conv_user2_idx').on(table.user2Id),
+    usersIdx: uniqueIndex('dm_conv_users_idx').on(table.user1Id, table.user2Id),
+  })
+);
+
+export const directMessages = pgTable(
+  'direct_messages',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    conversationId: uuid('conversation_id')
+      .notNull()
+      .references(() => dmConversations.id, { onDelete: 'cascade' }),
+    senderId: uuid('sender_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    content: text('content').notNull(),
+    isRead: boolean('is_read').notNull().default(false),
+    readAt: timestamp('read_at'),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+  },
+  (table) => ({
+    conversationIdx: index('dm_conversation_idx').on(table.conversationId),
+    senderIdx: index('dm_sender_idx').on(table.senderId),
+    createdAtIdx: index('dm_created_at_idx').on(table.createdAt),
+  })
+);
+
+// ============================================
 // Relations
 // ============================================
 
@@ -453,6 +505,34 @@ export const usersRelations = relations(users, ({ many, one }) => ({
   paymentMethods: many(paymentMethods),
   bookmarks: many(articleBookmarks),
   notifications: many(notifications),
+  dmConversationsAsUser1: many(dmConversations, { relationName: 'user1' }),
+  dmConversationsAsUser2: many(dmConversations, { relationName: 'user2' }),
+  sentMessages: many(directMessages),
+}));
+
+export const dmConversationsRelations = relations(dmConversations, ({ one, many }) => ({
+  user1: one(users, {
+    fields: [dmConversations.user1Id],
+    references: [users.id],
+    relationName: 'user1',
+  }),
+  user2: one(users, {
+    fields: [dmConversations.user2Id],
+    references: [users.id],
+    relationName: 'user2',
+  }),
+  messages: many(directMessages),
+}));
+
+export const directMessagesRelations = relations(directMessages, ({ one }) => ({
+  conversation: one(dmConversations, {
+    fields: [directMessages.conversationId],
+    references: [dmConversations.id],
+  }),
+  sender: one(users, {
+    fields: [directMessages.senderId],
+    references: [users.id],
+  }),
 }));
 
 export const investmentsRelations = relations(investments, ({ many }) => ({
