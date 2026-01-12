@@ -23,6 +23,17 @@ const GOOGLE_IOS_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID;
 const GOOGLE_ANDROID_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID;
 const GOOGLE_EXPO_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_EXPO_CLIENT_ID;
 
+const isExpoGo = Constants.appOwnership === 'expo';
+
+const hasGoogleCredentialsForPlatform = Platform.select({
+  web: !!GOOGLE_WEB_CLIENT_ID,
+  ios: isExpoGo ? !!GOOGLE_EXPO_CLIENT_ID : !!GOOGLE_IOS_CLIENT_ID,
+  android: isExpoGo ? !!GOOGLE_EXPO_CLIENT_ID : !!GOOGLE_ANDROID_CLIENT_ID,
+  default: false,
+});
+
+const PLACEHOLDER_CLIENT_ID = 'placeholder.apps.googleusercontent.com';
+
 const AUTH_TOKEN_KEY = '@medinvest/auth_token';
 const USER_DATA_KEY = '@medinvest/user_data';
 
@@ -59,10 +70,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [isAppleAuthAvailable, setIsAppleAuthAvailable] = useState(false);
 
   const [_googleRequest, googleResponse, promptGoogleAsync] = Google.useAuthRequest({
-    clientId: GOOGLE_EXPO_CLIENT_ID,
-    webClientId: GOOGLE_WEB_CLIENT_ID,
-    iosClientId: GOOGLE_IOS_CLIENT_ID,
-    androidClientId: GOOGLE_ANDROID_CLIENT_ID,
+    clientId: GOOGLE_EXPO_CLIENT_ID || PLACEHOLDER_CLIENT_ID,
+    webClientId: GOOGLE_WEB_CLIENT_ID || PLACEHOLDER_CLIENT_ID,
+    iosClientId: GOOGLE_IOS_CLIENT_ID || PLACEHOLDER_CLIENT_ID,
+    androidClientId: GOOGLE_ANDROID_CLIENT_ID || PLACEHOLDER_CLIENT_ID,
     scopes: ['profile', 'email'],
   });
 
@@ -213,17 +224,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const signInWithGoogle = useCallback(async () => {
     try {
       setError(null);
-      
-      const isExpoGo = Constants.appOwnership === 'expo';
-      
-      const hasRequiredClientId = Platform.select({
-        web: !!GOOGLE_WEB_CLIENT_ID,
-        ios: isExpoGo ? !!GOOGLE_EXPO_CLIENT_ID : !!GOOGLE_IOS_CLIENT_ID,
-        android: isExpoGo ? !!GOOGLE_EXPO_CLIENT_ID : !!GOOGLE_ANDROID_CLIENT_ID,
-        default: false,
-      });
 
-      if (!hasRequiredClientId) {
+      if (!hasGoogleCredentialsForPlatform) {
         if (Platform.OS === 'web') {
           setError('Google Sign-In is not configured. Please contact support.');
         } else {
