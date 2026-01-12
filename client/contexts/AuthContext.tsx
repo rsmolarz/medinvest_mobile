@@ -108,13 +108,16 @@ export function AuthProvider({ children }: AuthProviderProps) {
     revocationEndpoint: `https://github.com/settings/connections/applications/${GITHUB_CLIENT_ID}`,
   };
 
+  // Use platform-appropriate redirect URI for GitHub
+  const githubRedirectUri = Platform.OS === 'web'
+    ? AuthSession.makeRedirectUri({ preferLocalhost: false })
+    : AuthSession.makeRedirectUri({ scheme: 'medinvest' });
+
   const [_githubRequest, githubResponse, promptGithubAsync] = AuthSession.useAuthRequest(
     {
       clientId: GITHUB_CLIENT_ID || 'placeholder',
       scopes: ['read:user', 'user:email'],
-      redirectUri: AuthSession.makeRedirectUri({
-        scheme: 'medinvest',
-      }),
+      redirectUri: githubRedirectUri,
     },
     githubDiscovery
   );
@@ -272,10 +275,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
           setIsLoading(true);
           setError(null);
 
-          // Exchange code for access token via backend
+          // Exchange code for access token via backend (use same redirect URI as auth request)
+          const redirectUri = Platform.OS === 'web'
+            ? AuthSession.makeRedirectUri({ preferLocalhost: false })
+            : AuthSession.makeRedirectUri({ scheme: 'medinvest' });
+          
           const tokenResponse = await apiClient.post('/auth/github/token', {
             code,
-            redirect_uri: AuthSession.makeRedirectUri({ scheme: 'medinvest' }),
+            redirect_uri: redirectUri,
           });
 
           const { access_token } = tokenResponse.data;
