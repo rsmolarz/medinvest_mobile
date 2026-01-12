@@ -1,5 +1,5 @@
 import React from "react";
-import { View, StyleSheet, Image, Platform, Alert } from "react-native";
+import { View, StyleSheet, Image, Platform, Alert, Pressable, Text } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import * as Haptics from "expo-haptics";
@@ -92,13 +92,15 @@ export default function LoginScreen() {
             {"Sign In with Apple"}
           </Button>
         ) : null}
-        <Button
+        <Pressable
           onPress={handleGoogleSignIn}
-          style={[styles.googleButton, { backgroundColor: theme.backgroundSecondary }]}
+          style={[styles.googleButton, { backgroundColor: theme.backgroundSecondary, padding: Spacing.md, borderRadius: BorderRadius.md, alignItems: 'center' }]}
           disabled={isLoading}
         >
-          {isLoading ? 'Signing in...' : 'Sign In with Google'}
-        </Button>
+          <Text style={{ color: theme.text, fontSize: 16 }}>
+            {isLoading ? 'Signing in...' : 'Sign In with Google'}
+          </Text>
+        </Pressable>
         <Button
           onPress={handleEmailSignIn}
           style={[styles.googleButton, { backgroundColor: 'transparent', borderWidth: 1, borderColor: Colors.border }]}
