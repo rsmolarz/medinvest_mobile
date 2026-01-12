@@ -5,10 +5,12 @@
     "esModuleInterop": true,
     "paths": {
       "@/*": ["./client/*"],
-      "@shared/*": ["./shared/*"]
+      "@shared/*": ["./shared/*"],
+      "@medinvest/shared": ["./packages/shared/src/index.ts"],
+      "@medinvest/shared/*": ["./packages/shared/src/*"]
     },
     "types": ["node"]
   },
   "include": ["**/*.ts", "**/*.tsx"],
-  "exclude": ["node_modules", "build", "dist", "**/*.test.ts"],
+  "exclude": ["node_modules", "build", "dist", "**/*.test.ts"]
 }
