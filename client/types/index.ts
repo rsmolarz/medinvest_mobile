@@ -1,271 +1,430 @@
-// ============================================
-// User Types
-// ============================================
+/**
+ * MedInvest Type Definitions
+ */
+
+// =============================================================================
+// USER TYPES
+// =============================================================================
 
 export interface User {
-  id: string;
+  id: number;
   email: string;
-  firstName?: string;
-  lastName?: string;
-  fullName?: string;
-  avatarUrl?: string;
-  phone?: string;
-  provider: 'apple' | 'google' | 'email';
-  isVerified: boolean;
-  isAccredited: boolean;
-  createdAt: string;
-  updatedAt: string;
+  first_name: string;
+  last_name: string;
+  full_name: string;
+  specialty?: string;
+  bio?: string;
+  avatar_url?: string;
+  is_verified: boolean;
+  is_premium: boolean;
+  is_admin: boolean;
+  subscription_tier: SubscriptionTier;
+  points: number;
+  level: number;
+  login_streak: number;
+  referral_code: string;
+  followers_count: number;
+  following_count: number;
+  posts_count: number;
+  created_at: string;
+  last_login?: string;
 }
 
-// ============================================
-// Investment Types
-// ============================================
+export type SubscriptionTier = 'free' | 'premium';
 
-export interface Investment {
-  id: string;
+export interface UserProfile extends User {
+  posts: Post[];
+  is_following: boolean;
+  mutual_followers: User[];
+}
+
+// =============================================================================
+// POST TYPES
+// =============================================================================
+
+export interface Post {
+  id: number;
+  content: string;
+  author: User;
+  room: Room;
+  images: string[];
+  video_url?: string;
+  is_anonymous: boolean;
+  anonymous_name?: string;
+  mentions: Mention[];
+  hashtags: string[];
+  upvotes: number;
+  downvotes: number;
+  comments_count: number;
+  user_vote?: VoteDirection;
+  is_bookmarked: boolean;
+  feed_score: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Mention {
+  user_id: number;
+  username: string;
+  start_index: number;
+  end_index: number;
+}
+
+export type VoteDirection = 'up' | 'down' | null;
+
+export interface Comment {
+  id: number;
+  content: string;
+  author: User;
+  post_id: number;
+  parent_id?: number;
+  upvotes: number;
+  downvotes: number;
+  user_vote?: VoteDirection;
+  replies: Comment[];
+  replies_count: number;
+  mentions: Mention[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreatePostData {
+  content: string;
+  room_id: number;
+  is_anonymous?: boolean;
+  images?: string[];
+  video_url?: string;
+}
+
+// =============================================================================
+// ROOM TYPES
+// =============================================================================
+
+export interface Room {
+  id: number;
   name: string;
+  slug: string;
   description: string;
-  longDescription?: string;
-  category: InvestmentCategory;
-  fundingGoal: number;
-  fundingCurrent: number;
-  minimumInvestment: number;
-  expectedROI: string;
-  daysRemaining: number;
-  startDate: string;
-  endDate: string;
-  imageUrl?: string;
-  riskLevel: RiskLevel;
-  status: InvestmentStatus;
-  investors: number;
-  documents: InvestmentDocument[];
-  team: TeamMember[];
-  milestones: Milestone[];
-  createdAt: string;
-  updatedAt: string;
+  icon: string;
+  color: string;
+  posts_count: number;
+  members_count: number;
+  is_member: boolean;
+  rules?: string[];
+  moderators?: User[];
 }
 
-export type InvestmentCategory =
-  | 'Biotech'
-  | 'Medical Devices'
-  | 'Digital Health'
-  | 'Pharmaceuticals'
-  | 'Research'
-  | 'Healthcare Services';
+export const ROOM_CATEGORIES = [
+  { slug: 'general', name: 'General Discussion', icon: '💬', color: '#6B7280' },
+  { slug: 'biotech', name: 'Biotech', icon: '🧬', color: '#10B981' },
+  { slug: 'medtech', name: 'MedTech', icon: '🏥', color: '#3B82F6' },
+  { slug: 'pharma', name: 'Pharma', icon: '💊', color: '#8B5CF6' },
+  { slug: 'digital-health', name: 'Digital Health', icon: '📱', color: '#EC4899' },
+  { slug: 'diagnostics', name: 'Diagnostics', icon: '🔬', color: '#F59E0B' },
+  { slug: 'genomics', name: 'Genomics', icon: '🧪', color: '#14B8A6' },
+  { slug: 'medical-devices', name: 'Medical Devices', icon: '⚕️', color: '#EF4444' },
+  { slug: 'healthcare-ai', name: 'Healthcare AI', icon: '🤖', color: '#6366F1' },
+  { slug: 'clinical-trials', name: 'Clinical Trials', icon: '📋', color: '#84CC16' },
+  { slug: 'regulatory', name: 'Regulatory & FDA', icon: '📜', color: '#F97316' },
+  { slug: 'investment-strategies', name: 'Investment Strategies', icon: '📈', color: '#0EA5E9' },
+  { slug: 'market-analysis', name: 'Market Analysis', icon: '📊', color: '#A855F7' },
+  { slug: 'career', name: 'Career & Networking', icon: '🤝', color: '#22C55E' },
+] as const;
 
-export type RiskLevel = 'Low' | 'Medium' | 'High';
+// =============================================================================
+// FEED TYPES
+// =============================================================================
 
-export type InvestmentStatus = 'active' | 'funded' | 'closed' | 'cancelled';
+export type FeedStyle = 'algorithmic' | 'chronological' | 'discovery';
 
-export interface InvestmentDocument {
-  id: string;
-  name: string;
-  type: string;
-  url: string;
+export interface FeedResponse {
+  posts: Post[];
+  has_more: boolean;
+  next_cursor?: string;
+  feed_style: FeedStyle;
 }
 
-export interface TeamMember {
-  id: string;
-  name: string;
-  role: string;
-  avatarUrl?: string;
-  linkedInUrl?: string;
+export interface TrendingTopic {
+  hashtag: string;
+  count: number;
+  trend: 'up' | 'down' | 'stable';
+  change_percent?: number;
 }
 
-export interface Milestone {
-  id: string;
-  title: string;
-  description?: string;
-  targetDate?: string;
-  completed: boolean;
-  completedAt?: string;
-}
-
-export interface InvestmentFilters {
-  search?: string;
-  category?: InvestmentCategory;
-  riskLevel?: RiskLevel;
-  status?: InvestmentStatus;
-  minInvestment?: number;
-  maxInvestment?: number;
-  sortBy?: 'newest' | 'endingSoon' | 'mostFunded' | 'highestROI';
-}
-
-// ============================================
-// Portfolio Types
-// ============================================
-
-export interface PortfolioSummary {
-  totalValue: number;
-  totalInvested: number;
-  totalGainLoss: number;
-  gainLossPercent: number;
-  activeInvestments: number;
-  completedInvestments: number;
-  pendingInvestments: number;
-}
-
-export interface PortfolioInvestment {
-  id: string;
-  investmentId: string;
-  name: string;
-  category: InvestmentCategory;
-  amountInvested: number;
-  currentValue: number;
-  gainLossPercent: number;
-  status: PortfolioInvestmentStatus;
-  investedAt: string;
-  imageUrl?: string;
-}
-
-export type PortfolioInvestmentStatus = 'active' | 'completed' | 'pending' | 'cancelled';
-
-export interface Transaction {
-  id: string;
-  type: 'investment' | 'dividend' | 'withdrawal' | 'refund';
-  amount: number;
-  status: 'pending' | 'completed' | 'failed';
-  investmentId?: string;
-  investmentName?: string;
-  createdAt: string;
-  completedAt?: string;
-}
-
-// ============================================
-// Article Types
-// ============================================
-
-export interface Article {
-  id: string;
-  title: string;
-  summary: string;
-  content?: string;
-  source: string;
-  sourceUrl?: string;
-  author?: string;
-  publishedAt: string;
-  readTime: number;
-  imageUrl?: string;
-  category: ArticleCategory;
-  tags: string[];
-  isFeatured: boolean;
-  isBookmarked: boolean;
-  viewCount: number;
-}
-
-export type ArticleCategory =
-  | 'AI & Healthcare'
-  | 'Biotech'
-  | 'Medical Devices'
-  | 'Digital Health'
-  | 'Market Trends'
-  | 'Regulations'
-  | 'Research';
-
-export interface ArticleFilters {
-  search?: string;
-  category?: ArticleCategory;
-  featured?: boolean;
-  sortBy?: 'newest' | 'popular' | 'readTime';
-}
-
-// ============================================
-// Payment Types
-// ============================================
-
-export interface PaymentMethod {
-  id: string;
-  type: 'bank' | 'card';
-  name: string;
-  last4: string;
-  isDefault: boolean;
-  expiryMonth?: number;
-  expiryYear?: number;
-  bankName?: string;
-}
-
-// ============================================
-// Notification Types
-// ============================================
+// =============================================================================
+// NOTIFICATION TYPES
+// =============================================================================
 
 export interface Notification {
-  id: string;
+  id: number;
   type: NotificationType;
   title: string;
   body: string;
-  data?: Record<string, any>;
-  read: boolean;
-  createdAt: string;
+  data?: NotificationData;
+  is_read: boolean;
+  created_at: string;
 }
 
-export type NotificationType =
-  | 'investment_update'
-  | 'portfolio_milestone'
-  | 'new_opportunity'
-  | 'article'
-  | 'system';
+export type NotificationType = 
+  | 'like'
+  | 'comment'
+  | 'follow'
+  | 'mention'
+  | 'reply'
+  | 'message'
+  | 'ama_live'
+  | 'deal_update'
+  | 'achievement';
 
-// ============================================
-// API Response Types
-// ============================================
-
-export interface PaginatedResponse<T> {
-  data: T[];
-  page: number;
-  limit: number;
-  totalItems: number;
-  totalPages: number;
-  hasMore: boolean;
+export interface NotificationData {
+  post_id?: number;
+  user_id?: number;
+  comment_id?: number;
+  ama_id?: number;
+  deal_id?: number;
+  achievement_id?: number;
 }
 
-export interface ApiResponse<T> {
-  success: boolean;
-  data: T;
-  message?: string;
+// =============================================================================
+// MESSAGE TYPES
+// =============================================================================
+
+export interface Conversation {
+  id: number;
+  other_user: User;
+  last_message?: string;
+  last_message_at?: string;
+  unread_count: number;
+  is_muted: boolean;
 }
 
-export interface ApiError {
-  success: false;
-  message: string;
-  errors?: Record<string, string[]>;
+export interface Message {
+  id: number;
+  conversation_id: number;
+  content: string;
+  sender: User;
+  is_read: boolean;
+  read_at?: string;
+  created_at: string;
 }
 
-// ============================================
-// Navigation Types
-// ============================================
+// =============================================================================
+// CONTENT TYPES
+// =============================================================================
+
+// AMA
+export interface AMA {
+  id: number;
+  title: string;
+  description: string;
+  expert: User;
+  expert_bio: string;
+  status: AMAStatus;
+  scheduled_at: string;
+  ended_at?: string;
+  questions_count: number;
+  attendees_count: number;
+  is_attending: boolean;
+  questions?: AMAQuestion[];
+}
+
+export type AMAStatus = 'scheduled' | 'live' | 'ended' | 'cancelled';
+
+export interface AMAQuestion {
+  id: number;
+  question: string;
+  author: User;
+  answer?: string;
+  upvotes: number;
+  is_answered: boolean;
+  created_at: string;
+}
+
+// Deals
+export interface Deal {
+  id: number;
+  title: string;
+  company_name: string;
+  company_logo?: string;
+  description: string;
+  pitch_deck_url?: string;
+  target_amount: number;
+  current_amount: number;
+  min_investment: number;
+  max_investment?: number;
+  status: DealStatus;
+  deadline: string;
+  category: string;
+  highlights: string[];
+  risks: string[];
+  investors_count: number;
+  is_invested: boolean;
+  my_investment?: number;
+}
+
+export type DealStatus = 'draft' | 'review' | 'active' | 'funded' | 'closed' | 'rejected';
+
+// Courses
+export interface Course {
+  id: number;
+  title: string;
+  description: string;
+  instructor: User;
+  thumbnail_url?: string;
+  duration_minutes: number;
+  lessons_count: number;
+  lessons?: Lesson[];
+  is_premium: boolean;
+  price?: number;
+  rating: number;
+  reviews_count: number;
+  enrolled_count: number;
+  is_enrolled: boolean;
+  progress?: number;
+  completed_lessons?: number[];
+}
+
+export interface Lesson {
+  id: number;
+  course_id: number;
+  title: string;
+  description: string;
+  video_url?: string;
+  content?: string;
+  duration_minutes: number;
+  order: number;
+  is_completed: boolean;
+}
+
+// Events
+export interface Event {
+  id: number;
+  title: string;
+  description: string;
+  event_type: EventType;
+  starts_at: string;
+  ends_at: string;
+  location?: string;
+  virtual_url?: string;
+  is_virtual: boolean;
+  organizer: User;
+  thumbnail_url?: string;
+  attendees_count: number;
+  max_attendees?: number;
+  is_attending: boolean;
+  price?: number;
+  is_free: boolean;
+}
+
+export type EventType = 'webinar' | 'conference' | 'meetup' | 'workshop' | 'networking';
+
+// =============================================================================
+// GAMIFICATION TYPES
+// =============================================================================
+
+export interface LeaderboardEntry {
+  rank: number;
+  user: User;
+  points: number;
+  change?: number;
+}
+
+export interface Achievement {
+  id: number;
+  name: string;
+  description: string;
+  icon: string;
+  points: number;
+  category: AchievementCategory;
+  unlocked: boolean;
+  unlocked_at?: string;
+  progress?: number;
+  target?: number;
+}
+
+export type AchievementCategory = 
+  | 'posting'
+  | 'engagement'
+  | 'learning'
+  | 'investing'
+  | 'social'
+  | 'streak';
+
+export interface UserStats {
+  points: number;
+  level: number;
+  rank: number;
+  streak: number;
+  posts_created: number;
+  comments_made: number;
+  upvotes_received: number;
+  courses_completed: number;
+  achievements_unlocked: number;
+}
+
+// =============================================================================
+// SEARCH TYPES
+// =============================================================================
+
+export interface SearchResults {
+  posts: Post[];
+  users: User[];
+  rooms: Room[];
+  hashtags: TrendingTopic[];
+  total_count: number;
+}
+
+export type SearchType = 'all' | 'posts' | 'users' | 'rooms' | 'hashtags';
+
+// =============================================================================
+// SUBSCRIPTION TYPES
+// =============================================================================
+
+export interface SubscriptionStatus {
+  is_premium: boolean;
+  tier: SubscriptionTier;
+  expires_at?: string;
+  will_renew: boolean;
+  stripe_subscription_id?: string;
+}
+
+export interface PremiumFeatures {
+  exclusive_content: boolean;
+  deal_access: boolean;
+  priority_support: boolean;
+  advanced_analytics: boolean;
+  ad_free: boolean;
+  early_access: boolean;
+}
+
+// =============================================================================
+// NAVIGATION TYPES
+// =============================================================================
 
 export type RootStackParamList = {
-  Onboarding: undefined;
   Auth: undefined;
   Main: undefined;
-  CreatePost: { roomId?: string };
-  PostDetail: { postId: string };
-  UserProfile: { userId: string };
+  PostDetail: { postId: number };
+  CreatePost: { roomSlug?: string };
+  UserProfile: { userId: number };
   EditProfile: undefined;
-  RoomDetail: { roomId: string };
-  Conversation: { userId: string; userName: string };
+  RoomDetail: { roomSlug: string };
+  Conversation: { userId: number };
   NewConversation: undefined;
+  AMADetail: { amaId: number };
+  DealDetail: { dealId: number };
+  CourseDetail: { courseId: number };
+  LessonDetail: { courseId: number; lessonId: number };
+  EventDetail: { eventId: number };
+  Settings: undefined;
   Notifications: undefined;
-  Search: undefined;
-  Hashtag: { hashtag: string };
-  Followers: { userId: string; type: 'followers' | 'following' };
+  Search: { query?: string; type?: SearchType };
+  Hashtag: { tag: string };
+  Followers: { userId: number; type: 'followers' | 'following' };
+  Premium: undefined;
   Bookmarks: undefined;
   Leaderboard: undefined;
   Achievements: undefined;
-  Settings: undefined;
-  Premium: undefined;
-  ChangePassword: undefined;
-  BlockedUsers: undefined;
-  DeleteAccount: undefined;
-  BiometricSettings: undefined;
-  PrivacyPolicy: undefined;
-  TermsOfService: undefined;
-  AMADetail: { amaId: string };
-  CourseDetail: { courseId: string };
-  EventDetail: { eventId: string };
-  DealDetail: { dealId: string };
-  AIChat: undefined;
-  LessonPlayer: { courseId: string; lessonId: string };
 };
 
 export type MainTabParamList = {
@@ -279,5 +438,5 @@ export type AuthStackParamList = {
   Login: undefined;
   Register: undefined;
   ForgotPassword: undefined;
-  VerifyEmail: { email: string };
+  ResetPassword: { token: string };
 };

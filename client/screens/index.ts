@@ -63,3 +63,13 @@ export { default as LessonPlayerScreen } from './LessonPlayerScreen';
 
 // AI Chat
 export { default as AIChatScreen } from './AIChatScreen';
+
+// Additional Settings Screens
+export { default as ContentPreferencesScreen } from './ContentPreferencesScreen';
+export { default as DataExportScreen } from './DataExportScreen';
+export { default as NotificationSettingsScreen } from './NotificationSettingsScreen';
+export { default as ReportScreen } from './ReportScreen';
+export { default as SavedSearchesScreen } from './SavedSearchesScreen';
+export { default as AppearanceSettingsScreen } from './AppearanceSettingsScreen';
+export { default as DraftsScreen } from './DraftsScreen';
+export { default as EditPostScreen } from './EditPostScreen';
