@@ -9,12 +9,15 @@ import React, {
 } from 'react';
 import * as AppleAuthentication from 'expo-apple-authentication';
 import * as WebBrowser from 'expo-web-browser';
+import * as Google from 'expo-auth-session/providers/google';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
 import { apiClient } from '@/api/client';
 import type { User } from '@/types';
 
 WebBrowser.maybeCompleteAuthSession();
+
+const GOOGLE_WEB_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID;
 
 const AUTH_TOKEN_KEY = '@medinvest/auth_token';
 const USER_DATA_KEY = '@medinvest/user_data';
@@ -50,6 +53,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isAppleAuthAvailable, setIsAppleAuthAvailable] = useState(false);
+
+  const [_googleRequest, googleResponse, promptGoogleAsync] = Google.useAuthRequest({
+    webClientId: GOOGLE_WEB_CLIENT_ID,
+    scopes: ['profile', 'email'],
+  });
 
   useEffect(() => {
     const checkAppleAuth = async () => {
@@ -107,6 +115,30 @@ export function AuthProvider({ children }: AuthProviderProps) {
     setUser(null);
   };
 
+  const authenticateWithBackend = useCallback(async (
+    provider: 'apple' | 'google',
+    tokenData: {
+      token: string;
+      identityToken?: string;
+      email?: string;
+      firstName?: string;
+      lastName?: string;
+      avatarUrl?: string;
+    }
+  ) => {
+    const response = await apiClient.post('/auth/social', {
+      provider,
+      ...tokenData,
+    });
+
+    const { token: authToken, user: userData } = response.data as {
+      token: string;
+      user: User;
+    };
+
+    await saveAuthData(authToken, userData);
+  }, []);
+
   const signInWithApple = useCallback(async () => {
     try {
       setIsLoading(true);
@@ -125,18 +157,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
         throw new Error('No identity token received from Apple');
       }
 
-      const mockUser: User = {
-        id: credential.user,
-        email: email || 'user@apple.com',
+      await authenticateWithBackend('apple', {
+        token: credential.user,
+        identityToken,
+        email: email || undefined,
         firstName: fullName?.givenName || undefined,
         lastName: fullName?.familyName || undefined,
-        fullName: fullName ? `${fullName.givenName || ''} ${fullName.familyName || ''}`.trim() : undefined,
-        provider: 'apple',
-        isVerified: true,
-        createdAt: new Date().toISOString(),
-      };
-
-      await saveAuthData(identityToken, mockUser);
+      });
     } catch (err: any) {
       if (err.code === 'ERR_REQUEST_CANCELED') {
         return;
@@ -148,18 +175,50 @@ export function AuthProvider({ children }: AuthProviderProps) {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [authenticateWithBackend]);
+
+  const handleGoogleResponse = useCallback(async () => {
+    if (googleResponse?.type === 'success') {
+      const { authentication } = googleResponse;
+      if (authentication?.accessToken) {
+        try {
+          setIsLoading(true);
+          setError(null);
+
+          await authenticateWithBackend('google', {
+            token: authentication.accessToken,
+          });
+        } catch (err) {
+          const message = err instanceof Error ? err.message : 'Google sign-in failed';
+          setError(message);
+          console.error('Google sign-in error:', err);
+        } finally {
+          setIsLoading(false);
+        }
+      }
+    }
+  }, [googleResponse, authenticateWithBackend]);
+
+  useEffect(() => {
+    handleGoogleResponse();
+  }, [handleGoogleResponse]);
 
   const signInWithGoogle = useCallback(async () => {
     try {
       setError(null);
-      setError('Google sign-in is not configured. Please use the demo login or Apple Sign-In on iOS.');
+      
+      if (!GOOGLE_WEB_CLIENT_ID) {
+        setError('Google Sign-In is not configured. Please contact support.');
+        return;
+      }
+
+      await promptGoogleAsync();
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Google sign-in failed';
       setError(message);
       console.error('Google sign-in error:', err);
     }
-  }, []);
+  }, [promptGoogleAsync]);
 
   const mockSignIn = useCallback(async () => {
     try {
