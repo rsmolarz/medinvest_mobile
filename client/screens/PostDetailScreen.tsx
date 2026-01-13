@@ -148,14 +148,14 @@ export default function PostDetailScreen() {
   }, [navigation]);
 
   const renderComment = ({ item }: { item: Comment }) => (
-    <View style={[styles.commentItem, item.parent_id && styles.replyItem]}>
-      <TouchableOpacity onPress={() => handleUserPress(item.author.id)}>
+    <View style={[styles.commentItem, item.parent_id != null && styles.replyItem]}>
+      <TouchableOpacity onPress={() => handleUserPress(Number(item.author.id))}>
         {item.author.avatar_url ? (
           <Image source={{ uri: item.author.avatar_url }} style={styles.commentAvatar} />
         ) : (
           <View style={[styles.commentAvatar, styles.commentAvatarPlaceholder]}>
             <ThemedText style={styles.commentAvatarText}>
-              {item.author.first_name[0]}{item.author.last_name[0]}
+              {(item.author.first_name || 'U')[0]}{(item.author.last_name || '')[0]}
             </ThemedText>
           </View>
         )}
@@ -163,7 +163,7 @@ export default function PostDetailScreen() {
 
       <View style={styles.commentContent}>
         <View style={styles.commentHeader}>
-          <TouchableOpacity onPress={() => handleUserPress(item.author.id)}>
+          <TouchableOpacity onPress={() => handleUserPress(Number(item.author.id))}>
             <ThemedText style={styles.commentAuthor}>{item.author.full_name}</ThemedText>
           </TouchableOpacity>
           <ThemedText style={styles.commentTime}>
@@ -173,7 +173,6 @@ export default function PostDetailScreen() {
 
         <RichTextContent
           content={item.content}
-          mentions={item.mentions}
           onMentionPress={handleUserPress}
           onHashtagPress={handleHashtagPress}
           style={styles.commentText}
@@ -206,17 +205,17 @@ export default function PostDetailScreen() {
         </View>
 
         {/* Nested replies */}
-        {item.replies && item.replies.length > 0 && (
+        {item.replies && item.replies.length > 0 ? (
           <View style={styles.repliesContainer}>
             {item.replies.map((reply) => (
               <View key={reply.id} style={styles.replyItem}>
-                <TouchableOpacity onPress={() => handleUserPress(reply.author.id)}>
+                <TouchableOpacity onPress={() => handleUserPress(Number(reply.author.id))}>
                   {reply.author.avatar_url ? (
                     <Image source={{ uri: reply.author.avatar_url }} style={styles.replyAvatar} />
                   ) : (
                     <View style={[styles.replyAvatar, styles.commentAvatarPlaceholder]}>
                       <ThemedText style={styles.replyAvatarText}>
-                        {reply.author.first_name[0]}{reply.author.last_name[0]}
+                        {(reply.author.first_name || 'U')[0]}{(reply.author.last_name || '')[0]}
                       </ThemedText>
                     </View>
                   )}
@@ -228,7 +227,7 @@ export default function PostDetailScreen() {
               </View>
             ))}
           </View>
-        )}
+        ) : null}
       </View>
     </View>
   );

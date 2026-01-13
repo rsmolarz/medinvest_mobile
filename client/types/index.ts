@@ -9,29 +9,29 @@
 export interface User {
   id: number | string;
   email: string;
-  firstName?: string;
-  lastName?: string;
-  fullName?: string;
+  first_name?: string;
+  last_name?: string;
+  full_name?: string;
   phone?: string;
   specialty?: string;
   bio?: string;
-  avatarUrl?: string;
+  avatar_url?: string;
   provider?: 'apple' | 'google' | 'mock' | 'email';
-  isVerified?: boolean;
-  isAccredited?: boolean;
-  isPremium?: boolean;
-  isAdmin?: boolean;
-  subscriptionTier?: SubscriptionTier;
+  is_verified?: boolean;
+  is_accredited?: boolean;
+  is_premium?: boolean;
+  is_admin?: boolean;
+  subscription_tier?: SubscriptionTier;
   points?: number;
   level?: number;
-  loginStreak?: number;
-  referralCode?: string;
-  followersCount?: number;
-  followingCount?: number;
-  postsCount?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  lastLogin?: string;
+  login_streak?: number;
+  referral_code?: string;
+  followers_count?: number;
+  following_count?: number;
+  posts_count?: number;
+  created_at?: string;
+  updated_at?: string;
+  last_login?: string;
 }
 
 export type SubscriptionTier = 'free' | 'premium';
@@ -50,12 +50,12 @@ export interface Post {
   id: number;
   content: string;
   author: User;
-  room: Room;
+  room: Room | null;
   images: string[];
   video_url?: string;
   is_anonymous: boolean;
   anonymous_name?: string;
-  mentions: Mention[];
+  mentions: string[];
   hashtags: string[];
   upvotes: number;
   downvotes: number;
@@ -81,15 +81,13 @@ export interface Comment {
   content: string;
   author: User;
   post_id: number;
-  parent_id?: number;
+  parent_id?: number | null;
   upvotes: number;
   downvotes: number;
   user_vote?: VoteDirection;
-  replies: Comment[];
+  replies?: Comment[];
   replies_count: number;
-  mentions: Mention[];
   created_at: string;
-  updated_at: string;
 }
 
 export interface CreatePostData {

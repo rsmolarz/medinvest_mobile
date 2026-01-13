@@ -184,7 +184,7 @@ export default function CreatePostScreen() {
       const newVideo: MediaItem = {
         uri: asset.uri,
         type: 'video',
-        duration: asset.duration,
+        duration: asset.duration ?? undefined,
       };
       setMedia([...media, newVideo]);
     }
@@ -209,7 +209,7 @@ export default function CreatePostScreen() {
       const newMedia: MediaItem = {
         uri: asset.uri,
         type: asset.type === 'video' ? 'video' : 'image',
-        duration: asset.duration,
+        duration: asset.duration ?? undefined,
       };
       
       if (newMedia.type === 'video' && videos.length >= MAX_VIDEOS) {

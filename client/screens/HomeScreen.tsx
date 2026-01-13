@@ -168,8 +168,8 @@ export default function HomeScreen() {
     <PostCard
       post={item}
       onPress={() => handlePostPress(item.id)}
-      onUserPress={() => handleUserPress(item.author.id)}
-      onVote={(direction) => handleVote(item.id, direction)}
+      onUserPress={() => handleUserPress(Number(item.author.id))}
+      onVote={(direction) => direction && handleVote(item.id, direction)}
       onBookmark={() => handleBookmark(item.id, item.is_bookmarked)}
       onHashtagPress={handleHashtagPress}
       onMentionPress={handleUserPress}
