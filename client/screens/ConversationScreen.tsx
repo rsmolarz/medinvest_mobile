@@ -335,8 +335,13 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
   },
   callButton: {
-    padding: Spacing.sm,
-    marginRight: Spacing.xs,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: Colors.primary + '15',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: Spacing.xs,
   },
   moreButton: {
     padding: Spacing.sm,
