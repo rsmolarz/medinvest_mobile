@@ -7,9 +7,13 @@ import * as SecureStore from 'expo-secure-store';
 import { Platform } from 'react-native';
 
 // Configuration
-const API_BASE_URL = __DEV__ 
-  ? 'http://localhost:5000/api/v1'
-  : 'https://your-production-url.com/api/v1';
+const getApiBaseUrl = () => {
+  const domain = process.env.EXPO_PUBLIC_DOMAIN || 'localhost:5000';
+  const protocol = domain.includes('localhost') ? 'http' : 'https';
+  return `${protocol}://${domain}/api`;
+};
+
+const API_BASE_URL = getApiBaseUrl();
 
 // Token storage keys
 const ACCESS_TOKEN_KEY = 'medinvest_access_token';
