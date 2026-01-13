@@ -527,6 +527,8 @@ export const usersApi = {
 
   search: (query: string) => api.get<{ users: User[] }>(`/users/search?q=${encodeURIComponent(query)}`),
 
+  explore: () => api.get<{ users: User[] }>('/users/explore'),
+
   getBookmarks: () => api.get<{ posts: Post[] }>('/users/me/bookmarks'),
   
   // Block/Unblock

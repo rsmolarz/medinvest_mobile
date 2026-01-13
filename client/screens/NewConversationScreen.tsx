@@ -45,12 +45,11 @@ export default function NewConversationScreen() {
     handleSearch(text);
   };
 
-  // Fetch following users (for suggestions)
-  const { data: followingData, isLoading: followingLoading } = useQuery({
-    queryKey: ['following', currentUser?.id],
+  // Fetch suggested users (explore)
+  const { data: suggestedData, isLoading: suggestedLoading } = useQuery({
+    queryKey: ['exploreUsers'],
     queryFn: async () => {
-      if (!currentUser?.id) return [];
-      const response = await usersApi.getFollowing(String(currentUser.id));
+      const response = await usersApi.explore();
       return response.data?.users || [];
     },
     enabled: !debouncedQuery,
@@ -66,8 +65,8 @@ export default function NewConversationScreen() {
     enabled: debouncedQuery.length > 0,
   });
 
-  const users = debouncedQuery ? searchResults : followingData;
-  const isLoading = debouncedQuery ? searchLoading : followingLoading;
+  const users = debouncedQuery ? searchResults : suggestedData;
+  const isLoading = debouncedQuery ? searchLoading : suggestedLoading;
 
   const handleUserPress = useCallback((userId: string | number) => {
     navigation.replace('Conversation', { userId: String(userId) });
@@ -107,7 +106,7 @@ export default function NewConversationScreen() {
     return (
       <View style={styles.sectionHeader}>
         <ThemedText style={styles.sectionTitle}>
-          {followingData && followingData.length > 0 ? 'People You Follow' : 'Suggested'}
+          {suggestedData && suggestedData.length > 0 ? 'People to Message' : 'Suggested'}
         </ThemedText>
       </View>
     );
