@@ -18,6 +18,7 @@ import DiscoverStackNavigator from "@/navigation/DiscoverStackNavigator";
 import PortfolioStackNavigator from "@/navigation/PortfolioStackNavigator";
 import ResearchStackNavigator from "@/navigation/ResearchStackNavigator";
 import ProfileStackNavigator from "@/navigation/ProfileStackNavigator";
+import NotificationsStackNavigator from "@/navigation/NotificationsStackNavigator";
 import { useTheme } from "@/hooks/useTheme";
 import { Colors, Shadows, Spacing } from "@/constants/theme";
 import { RootStackParamList } from "@/navigation/RootStackNavigator";
@@ -25,6 +26,7 @@ import { RootStackParamList } from "@/navigation/RootStackNavigator";
 export type MainTabParamList = {
   DiscoverTab: undefined;
   PortfolioTab: undefined;
+  NotificationsTab: undefined;
   ResearchTab: undefined;
   ProfileTab: undefined;
 };
@@ -128,6 +130,16 @@ export default function MainTabNavigator() {
             title: "Portfolio",
             tabBarIcon: ({ color, size }) => (
               <Feather name="pie-chart" size={size} color={color} />
+            ),
+          }}
+        />
+        <Tab.Screen
+          name="NotificationsTab"
+          component={NotificationsStackNavigator}
+          options={{
+            title: "Alerts",
+            tabBarIcon: ({ color, size }) => (
+              <Feather name="bell" size={size} color={color} />
             ),
           }}
         />

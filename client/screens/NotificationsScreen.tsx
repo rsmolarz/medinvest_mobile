@@ -33,6 +33,12 @@ const NOTIFICATION_ICONS: Record<NotificationType, { name: string; color: string
   ama_live: { name: 'mic', color: '#EC4899' },
   deal_update: { name: 'trending-up', color: '#22C55E' },
   achievement: { name: 'trophy', color: '#F97316' },
+  friend_request: { name: 'people', color: '#8B5CF6' },
+  friend_accepted: { name: 'checkmark-circle', color: '#22C55E' },
+  investment_update: { name: 'cash', color: '#00A86B' },
+  course_update: { name: 'school', color: '#3B82F6' },
+  event_reminder: { name: 'calendar', color: '#F59E0B' },
+  system: { name: 'information-circle', color: '#6B7280' },
 };
 
 type FilterType = 'all' | 'unread' | 'mentions';
@@ -120,6 +126,31 @@ export default function NotificationsScreen() {
         break;
       case 'achievement':
         navigation.navigate('Achievements');
+        break;
+      case 'friend_request':
+      case 'friend_accepted':
+        if (data?.user_id) {
+          navigation.navigate('UserProfile', { userId: data.user_id });
+        }
+        break;
+      case 'investment_update':
+        if (data?.deal_id) {
+          navigation.navigate('DealDetail', { dealId: data.deal_id });
+        } else {
+          navigation.getParent()?.navigate('PortfolioTab');
+        }
+        break;
+      case 'course_update':
+        if (data?.course_id) {
+          navigation.navigate('CourseDetail', { courseId: data.course_id });
+        }
+        break;
+      case 'event_reminder':
+        if (data?.event_id) {
+          navigation.navigate('EventDetail', { eventId: data.event_id });
+        }
+        break;
+      case 'system':
         break;
     }
   }, [navigation, markAsReadMutation]);

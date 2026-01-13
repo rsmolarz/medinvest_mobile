@@ -178,7 +178,13 @@ export type NotificationType =
   | 'message'
   | 'ama_live'
   | 'deal_update'
-  | 'achievement';
+  | 'achievement'
+  | 'friend_request'
+  | 'friend_accepted'
+  | 'investment_update'
+  | 'course_update'
+  | 'event_reminder'
+  | 'system';
 
 export interface NotificationData {
   post_id?: number;
@@ -187,6 +193,9 @@ export interface NotificationData {
   ama_id?: number;
   deal_id?: number;
   achievement_id?: number;
+  course_id?: number;
+  event_id?: number;
+  investment_id?: number;
 }
 
 // =============================================================================

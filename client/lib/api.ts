@@ -5,6 +5,7 @@
 
 import * as SecureStore from 'expo-secure-store';
 import { Platform } from 'react-native';
+import { Notification as NotificationFromTypes } from '@/types';
 
 // Configuration
 const getApiBaseUrl = () => {
@@ -598,15 +599,7 @@ export const newsApi = {
 // NOTIFICATIONS API
 // =============================================================================
 
-export interface Notification {
-  id: number;
-  type: string;
-  title: string;
-  body: string;
-  data?: Record<string, unknown>;
-  is_read: boolean;
-  created_at: string;
-}
+export type Notification = NotificationFromTypes;
 
 export const notificationsApi = {
   getNotifications: (page?: number) => {
