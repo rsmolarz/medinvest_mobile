@@ -110,8 +110,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
   };
 
   // Use platform-appropriate redirect URI for GitHub
+  // For web on Replit, we need to use an explicit redirect URI that matches the GitHub OAuth app config
   const githubRedirectUri = Platform.OS === 'web'
-    ? AuthSession.makeRedirectUri({ preferLocalhost: false })
+    ? (process.env.EXPO_PUBLIC_DOMAIN 
+        ? `https://${process.env.EXPO_PUBLIC_DOMAIN.replace(/:5000$/, '')}`
+        : AuthSession.makeRedirectUri({ preferLocalhost: false }))
     : AuthSession.makeRedirectUri({ scheme: 'medinvest' });
 
   const [_githubRequest, githubResponse, promptGithubAsync] = AuthSession.useAuthRequest(
