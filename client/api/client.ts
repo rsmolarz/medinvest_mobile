@@ -11,7 +11,10 @@ function getApiBaseUrl(): string {
   
   const domain = process.env.EXPO_PUBLIC_DOMAIN;
   if (domain) {
-    const protocol = domain.includes('localhost') ? 'http' : 'https';
+    if (domain.includes('localhost')) {
+      return `http://${domain}/api`;
+    }
+    const protocol = 'https';
     return `${protocol}://${domain}/api`;
   }
   

@@ -19,11 +19,15 @@ function setupCors(app: express.Application) {
 
     if (process.env.REPLIT_DEV_DOMAIN) {
       origins.add(`https://${process.env.REPLIT_DEV_DOMAIN}`);
+      origins.add(`https://${process.env.REPLIT_DEV_DOMAIN}:5000`);
+      origins.add(`https://${process.env.REPLIT_DEV_DOMAIN}:8081`);
     }
 
     if (process.env.REPLIT_DOMAINS) {
       process.env.REPLIT_DOMAINS.split(",").forEach((d) => {
-        origins.add(`https://${d.trim()}`);
+        const domain = d.trim();
+        origins.add(`https://${domain}`);
+        origins.add(`https://${domain}:5000`);
       });
     }
 
@@ -33,14 +37,20 @@ function setupCors(app: express.Application) {
     const isLocalhost =
       origin?.startsWith("http://localhost:") ||
       origin?.startsWith("http://127.0.0.1:");
+    
+    // Allow any Replit dev domain origin (handles various port configurations)
+    const isReplitDev = origin?.includes(".picard.replit.dev") || 
+                        origin?.includes(".repl.co") ||
+                        origin?.includes(".replit.app") ||
+                        origin?.includes(".replit.dev");
 
-    if (origin && (origins.has(origin) || isLocalhost)) {
+    if (origin && (origins.has(origin) || isLocalhost || isReplitDev)) {
       res.header("Access-Control-Allow-Origin", origin);
       res.header(
         "Access-Control-Allow-Methods",
-        "GET, POST, PUT, DELETE, OPTIONS",
+        "GET, POST, PUT, DELETE, OPTIONS, PATCH",
       );
-      res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+      res.header("Access-Control-Allow-Headers", "Content-Type, Authorization, expo-platform");
       res.header("Access-Control-Allow-Credentials", "true");
     }
 
