@@ -46,14 +46,19 @@ export default function NewConversationScreen() {
   };
 
   // Fetch suggested users (explore)
-  const { data: suggestedData, isLoading: suggestedLoading } = useQuery({
+  const { data: suggestedData, isLoading: suggestedLoading, error: suggestedError } = useQuery({
     queryKey: ['exploreUsers'],
     queryFn: async () => {
+      console.log('Fetching explore users...');
       const response = await usersApi.explore();
+      console.log('Explore response:', response);
       return response.data?.users || [];
     },
     enabled: !debouncedQuery,
   });
+
+  // Debug logging
+  console.log('suggestedData:', suggestedData, 'error:', suggestedError, 'loading:', suggestedLoading);
 
   // Search users
   const { data: searchResults, isLoading: searchLoading } = useQuery({
