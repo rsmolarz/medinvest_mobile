@@ -521,9 +521,9 @@ export const usersApi = {
 
   unfollow: (id: number) => api.delete(`/users/${id}/follow`),
 
-  getFollowers: (id: number) => api.get<{ users: User[] }>(`/users/${id}/followers`),
+  getFollowers: (id: string | number) => api.get<{ users: User[] }>(`/users/${id}/followers`),
 
-  getFollowing: (id: number) => api.get<{ users: User[] }>(`/users/${id}/following`),
+  getFollowing: (id: string | number) => api.get<{ users: User[] }>(`/users/${id}/following`),
 
   search: (query: string) => api.get<{ users: User[] }>(`/users/search?q=${encodeURIComponent(query)}`),
 

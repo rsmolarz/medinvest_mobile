@@ -1,6 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { db, users, pushTokens, notificationPreferences, paymentMethods } from '../db';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, ne, or, ilike, sql } from 'drizzle-orm';
 import { authMiddleware } from '../middleware/auth';
 import multer from 'multer';
 import path from 'path';
@@ -364,6 +364,135 @@ router.get('/me/payment-methods', async (req: Request, res: Response) => {
   } catch (error) {
     console.error('Get payment methods error:', error);
     res.status(500).json({ message: 'Failed to fetch payment methods' });
+  }
+});
+
+/**
+ * GET /api/users/search
+ * Search users by name or email
+ */
+router.get('/search', async (req: Request, res: Response) => {
+  try {
+    const { q } = req.query;
+    const searchTerm = String(q || '').trim();
+
+    if (!searchTerm) {
+      res.json({ users: [] });
+      return;
+    }
+
+    const searchPattern = `%${searchTerm}%`;
+
+    const results = await db
+      .select({
+        id: users.id,
+        email: users.email,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        avatarUrl: users.avatarUrl,
+        isVerified: users.isVerified,
+      })
+      .from(users)
+      .where(
+        and(
+          ne(users.id, req.user!.id),
+          or(
+            ilike(users.firstName, searchPattern),
+            ilike(users.lastName, searchPattern),
+            ilike(users.email, searchPattern),
+            sql`CONCAT(${users.firstName}, ' ', ${users.lastName}) ILIKE ${searchPattern}`
+          )
+        )
+      )
+      .limit(20);
+
+    const formattedUsers = results.map((user) => ({
+      id: user.id,
+      email: user.email,
+      firstName: user.firstName || '',
+      lastName: user.lastName || '',
+      fullName: [user.firstName, user.lastName].filter(Boolean).join(' ') || user.email,
+      avatarUrl: user.avatarUrl,
+      isVerified: user.isVerified,
+    }));
+
+    res.json({ users: formattedUsers });
+  } catch (error) {
+    console.error('Search users error:', error);
+    res.status(500).json({ message: 'Failed to search users' });
+  }
+});
+
+/**
+ * GET /api/users/explore
+ * Get suggested users to connect with (excludes current user)
+ */
+router.get('/explore', async (req: Request, res: Response) => {
+  try {
+    const results = await db
+      .select({
+        id: users.id,
+        email: users.email,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        avatarUrl: users.avatarUrl,
+        isVerified: users.isVerified,
+      })
+      .from(users)
+      .where(ne(users.id, req.user!.id))
+      .limit(20);
+
+    const formattedUsers = results.map((user) => ({
+      id: user.id,
+      email: user.email,
+      firstName: user.firstName || '',
+      lastName: user.lastName || '',
+      fullName: [user.firstName, user.lastName].filter(Boolean).join(' ') || user.email,
+      avatarUrl: user.avatarUrl,
+      isVerified: user.isVerified,
+    }));
+
+    res.json({ users: formattedUsers });
+  } catch (error) {
+    console.error('Explore users error:', error);
+    res.status(500).json({ message: 'Failed to fetch suggested users' });
+  }
+});
+
+/**
+ * GET /api/users/:id/following
+ * Get users that a user is following (for messaging suggestions)
+ */
+router.get('/:id/following', async (req: Request, res: Response) => {
+  try {
+    // For now, return explore results as "following" since we don't have a follow system yet
+    const results = await db
+      .select({
+        id: users.id,
+        email: users.email,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        avatarUrl: users.avatarUrl,
+        isVerified: users.isVerified,
+      })
+      .from(users)
+      .where(ne(users.id, req.user!.id))
+      .limit(20);
+
+    const formattedUsers = results.map((user) => ({
+      id: user.id,
+      email: user.email,
+      firstName: user.firstName || '',
+      lastName: user.lastName || '',
+      fullName: [user.firstName, user.lastName].filter(Boolean).join(' ') || user.email,
+      avatarUrl: user.avatarUrl,
+      isVerified: user.isVerified,
+    }));
+
+    res.json({ users: formattedUsers });
+  } catch (error) {
+    console.error('Get following error:', error);
+    res.status(500).json({ message: 'Failed to fetch following users' });
   }
 });
 

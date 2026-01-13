@@ -50,7 +50,7 @@ export default function NewConversationScreen() {
     queryKey: ['following', currentUser?.id],
     queryFn: async () => {
       if (!currentUser?.id) return [];
-      const response = await usersApi.getFollowing(currentUser.id);
+      const response = await usersApi.getFollowing(String(currentUser.id));
       return response.data?.users || [];
     },
     enabled: !debouncedQuery,
@@ -69,8 +69,8 @@ export default function NewConversationScreen() {
   const users = debouncedQuery ? searchResults : followingData;
   const isLoading = debouncedQuery ? searchLoading : followingLoading;
 
-  const handleUserPress = useCallback((userId: number) => {
-    navigation.replace('Conversation', { userId });
+  const handleUserPress = useCallback((userId: string | number) => {
+    navigation.replace('Conversation', { userId: String(userId) });
   }, [navigation]);
 
   const renderUser = ({ item }: { item: User }) => (
@@ -78,19 +78,19 @@ export default function NewConversationScreen() {
       style={styles.userItem}
       onPress={() => handleUserPress(item.id)}
     >
-      {item.avatar_url ? (
-        <Image source={{ uri: item.avatar_url }} style={styles.avatar} />
+      {item.avatarUrl ? (
+        <Image source={{ uri: item.avatarUrl }} style={styles.avatar} />
       ) : (
         <View style={[styles.avatar, styles.avatarPlaceholder]}>
           <ThemedText style={styles.avatarText}>
-            {item.first_name[0]}{item.last_name[0]}
+            {item.firstName?.[0]}{item.lastName?.[0]}
           </ThemedText>
         </View>
       )}
       <View style={styles.userInfo}>
         <View style={styles.userNameRow}>
-          <ThemedText style={styles.userName}>{item.full_name}</ThemedText>
-          {item.is_verified && (
+          <ThemedText style={styles.userName}>{item.fullName}</ThemedText>
+          {item.isVerified && (
             <Ionicons name="checkmark-circle" size={14} color={Colors.primary} />
           )}
         </View>
