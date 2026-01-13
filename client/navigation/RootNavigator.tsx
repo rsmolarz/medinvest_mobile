@@ -23,6 +23,7 @@ import OnboardingScreen, { hasCompletedOnboarding } from '@/screens/OnboardingSc
 
 // Main Screens
 import HomeScreen from '@/screens/HomeScreen';
+import RoomsScreen from '@/screens/RoomsScreen';
 import MessagesScreen from '@/screens/MessagesScreen';
 import ProfileScreen from '@/screens/ProfileScreen';
 import DealsScreen from '@/screens/DealsScreen';
@@ -116,6 +117,9 @@ function MainTabNavigator() {
             case 'Home':
               iconName = focused ? 'home' : 'home-outline';
               break;
+            case 'Rooms':
+              iconName = focused ? 'people' : 'people-outline';
+              break;
             case 'Discover':
               iconName = focused ? 'compass' : 'compass-outline';
               break;
@@ -135,6 +139,11 @@ function MainTabNavigator() {
         name="Home" 
         component={HomeScreen}
         options={{ tabBarLabel: 'Feed' }}
+      />
+      <Tab.Screen 
+        name="Rooms" 
+        component={RoomsScreen}
+        options={{ tabBarLabel: 'Rooms' }}
       />
       <Tab.Screen 
         name="Discover" 

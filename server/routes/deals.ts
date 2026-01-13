@@ -7,7 +7,7 @@ const DEALS = [
   {
     id: 1,
     title: 'CardioTech Innovations Series B',
-    company: 'CardioTech Innovations',
+    company_name: 'CardioTech Innovations',
     description: 'Revolutionary AI-powered cardiac monitoring platform that enables real-time detection of arrhythmias and heart conditions. FDA-cleared device with proven clinical outcomes.',
     category: 'Medical Devices',
     stage: 'Series B',
@@ -46,7 +46,7 @@ const DEALS = [
   {
     id: 2,
     title: 'GenomeRx Seed Round',
-    company: 'GenomeRx',
+    company_name: 'GenomeRx',
     description: 'Pioneering personalized medicine through advanced genomic analysis. Our platform enables physicians to prescribe the right medication at the right dose based on genetic profiles.',
     category: 'Biotech',
     stage: 'Seed',
@@ -85,7 +85,7 @@ const DEALS = [
   {
     id: 3,
     title: 'MindWell Digital Therapeutics Pre-Series A',
-    company: 'MindWell Health',
+    company_name: 'MindWell Health',
     description: 'FDA-authorized digital therapeutic for anxiety and depression. Prescription-based app with proven clinical efficacy and reimbursement pathways.',
     category: 'Digital Health',
     stage: 'Pre-Series A',
@@ -124,7 +124,7 @@ const DEALS = [
   {
     id: 4,
     title: 'NeuraScan AI Series A',
-    company: 'NeuraScan AI',
+    company_name: 'NeuraScan AI',
     description: 'AI-powered medical imaging analysis for early detection of neurological conditions. Our algorithms detect Alzheimer\'s and Parkinson\'s years before symptoms appear.',
     category: 'Healthcare AI',
     stage: 'Series A',

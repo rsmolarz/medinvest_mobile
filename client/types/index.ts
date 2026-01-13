@@ -468,6 +468,7 @@ export type RootStackParamList = {
 
 export type MainTabParamList = {
   Home: undefined;
+  Rooms: undefined;
   Discover: undefined;
   Messages: undefined;
   Profile: undefined;
