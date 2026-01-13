@@ -257,22 +257,32 @@ export interface AMAQuestion {
 export interface Deal {
   id: number;
   title: string;
+  company?: string;
   company_name: string;
   company_logo?: string;
+  image_url?: string;
   description: string;
   pitch_deck_url?: string;
-  target_amount: number;
-  current_amount: number;
-  min_investment: number;
-  max_investment?: number;
+  target_raise: number;
+  raised: number;
+  minimum_investment: number;
+  maximum_investment?: number;
+  valuation?: number;
+  equity_offered?: number;
   status: DealStatus;
   deadline: string;
   category: string;
+  stage?: string;
   highlights: string[];
-  risks: string[];
+  risks?: string[];
+  team?: Array<{ name: string; role: string; background?: string }>;
+  documents?: Array<{ name: string; url: string }>;
   investors_count: number;
-  is_invested: boolean;
+  featured?: boolean;
+  is_watched?: boolean;
+  is_invested?: boolean;
   my_investment?: number;
+  created_at?: string;
 }
 
 export type DealStatus = 'draft' | 'review' | 'active' | 'funded' | 'closed' | 'rejected';

@@ -21,8 +21,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 
 import { ThemedText } from '@/components/ThemedText';
 import { Colors, Spacing, BorderRadius, Typography, Shadows } from '@/constants/theme';
-import { contentApi } from '@/lib/api';
-import { Deal } from '@/types';
+import { dealsApi, Deal } from '@/lib/api';
 import { formatCurrency, formatNumber } from '@/lib/utils';
 
 const { width } = Dimensions.get('window');
@@ -41,19 +40,21 @@ export default function DealsScreen() {
   const [selectedCategory, setSelectedCategory] = useState('all');
 
   const {
-    data: deals,
+    data: dealsData,
     isLoading,
     isRefetching,
     refetch,
   } = useQuery({
-    queryKey: ['deals', selectedCategory],
+    queryKey: ['/api/deals', selectedCategory],
     queryFn: async () => {
-      const response = await contentApi.getDeals(
+      const response = await dealsApi.getDeals(
         selectedCategory === 'all' ? undefined : selectedCategory
       );
-      return response.data?.deals || [];
+      return response.data;
     },
   });
+
+  const deals = dealsData?.deals || [];
 
   const handleDealPress = useCallback((dealId: number) => {
     navigation.navigate('DealDetail', { dealId });
@@ -89,7 +90,7 @@ export default function DealsScreen() {
   );
 
   const renderDealCard = ({ item }: { item: Deal }) => {
-    const fundingProgress = (item.current_amount / item.target_amount) * 100;
+    const fundingProgress = (item.raised / item.target_raise) * 100;
     const daysLeft = Math.ceil(
       (new Date(item.deadline).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
     );
@@ -157,7 +158,7 @@ export default function DealsScreen() {
           </View>
           <View style={styles.progressStats}>
             <ThemedText style={styles.progressAmount}>
-              {formatCurrency(item.current_amount)} raised
+              {formatCurrency(item.raised)} raised
             </ThemedText>
             <ThemedText style={styles.progressPercent}>
               {fundingProgress.toFixed(0)}%
@@ -170,13 +171,13 @@ export default function DealsScreen() {
           <View style={styles.footerItem}>
             <Ionicons name="flag-outline" size={16} color={Colors.textSecondary} />
             <ThemedText style={styles.footerText}>
-              {formatCurrency(item.target_amount)} goal
+              {formatCurrency(item.target_raise)} goal
             </ThemedText>
           </View>
           <View style={styles.footerItem}>
             <Ionicons name="cash-outline" size={16} color={Colors.textSecondary} />
             <ThemedText style={styles.footerText}>
-              {formatCurrency(item.min_investment)} min
+              {formatCurrency(item.minimum_investment)} min
             </ThemedText>
           </View>
           <View style={styles.footerItem}>
@@ -216,7 +217,7 @@ export default function DealsScreen() {
         <View style={styles.statCard}>
           <ThemedText style={styles.statValue}>
             {formatCurrency(
-              deals?.reduce((sum, d) => sum + d.current_amount, 0) || 0
+              deals?.reduce((sum, d) => sum + (d.raised || 0), 0) || 0
             )}
           </ThemedText>
           <ThemedText style={styles.statLabel}>Total Raised</ThemedText>

@@ -945,20 +945,27 @@ export interface ChatMessage {
 }
 
 export const aiApi = {
-  chat: (message: string, history?: ChatMessage[]) =>
-    api.post<{ response: string; tokens_used: number }>('/ai/chat', {
-      message,
-      history: history?.slice(-10), // Last 10 messages for context
+  chat: (messages: ChatMessage[], options?: { specialty?: string; investorType?: string }) =>
+    api.post<{ success: boolean; data: { message: string } }>('/ai/chat', {
+      messages: messages.slice(-20), // Last 20 messages for context
+      specialty: options?.specialty,
+      investorType: options?.investorType,
     }),
 
-  streamChat: (message: string, history?: ChatMessage[]) =>
-    api.post<{ stream_url: string }>('/ai/chat/stream', {
-      message,
-      history: history?.slice(-10),
-    }),
+  moderate: (content: string) =>
+    api.post<{ success: boolean; data: { is_appropriate: boolean; flags: string[] } }>('/ai/moderate', { content }),
 
-  getSuggestions: (context: string) =>
-    api.post<{ suggestions: string[] }>('/ai/suggestions', { context }),
+  summarize: (content: string) =>
+    api.post<{ success: boolean; data: { summary: string } }>('/ai/summarize', { content }),
+
+  analyzeDeal: (dealInfo: { title: string; description: string; category?: string; stage?: string }) =>
+    api.post<{ success: boolean; data: { analysis: string; score: number; pros: string[]; cons: string[] } }>('/ai/analyze-deal', dealInfo),
+
+  enhanceSearch: (query: string) =>
+    api.post<{ success: boolean; data: { enhanced_query: string; suggestions: string[] } }>('/ai/enhance-search', { query }),
+
+  getRecommendations: (userContext: { interests?: string[]; recent_activity?: string[] }) =>
+    api.post<{ success: boolean; data: { recommendations: any[] } }>('/ai/recommendations', userContext),
 };
 
 // =============================================================================
@@ -967,28 +974,36 @@ export const aiApi = {
 
 export interface Deal {
   id: number;
+  title: string;
+  company?: string;
   company_name: string;
   company_logo?: string;
+  image_url?: string;
   category: string;
+  stage?: string;
   description: string;
   highlights: string[];
-  status: 'open' | 'closing_soon' | 'funded' | 'closed';
-  funding_goal: number;
-  raised_amount: number;
-  min_investment: number;
+  risks?: string[];
+  status: 'active' | 'funded' | 'closed' | 'draft' | 'review' | 'rejected';
+  target_raise: number;
+  raised: number;
+  minimum_investment: number;
+  maximum_investment?: number;
+  valuation?: number;
+  equity_offered?: number;
   investors_count: number;
-  closing_date?: string;
-  investment_url?: string;
+  deadline: string;
   team?: Array<{
     name: string;
     role: string;
-    avatar_url?: string;
+    background?: string;
   }>;
   documents?: Array<{
     name: string;
-    type: string;
     url: string;
   }>;
+  featured?: boolean;
+  is_watched?: boolean;
   created_at: string;
 }
 
@@ -1000,13 +1015,17 @@ export const dealsApi = {
     if (status) params.append('status', status);
     const query = params.toString();
     if (query) endpoint += `?${query}`;
-    return api.get<{ deals: Deal[]; stats: { active_count: number; total_raised: number } }>(endpoint);
+    return api.get<{ deals: Deal[]; total: number; categories: string[]; stages: string[] }>(endpoint);
   },
 
   getDeal: (id: number) => api.get<Deal>(`/deals/${id}`),
 
-  expressInterest: (id: number, amount: number) =>
-    api.post(`/deals/${id}/interest`, { amount }),
+  watchDeal: (id: number) => api.post(`/deals/${id}/watch`),
+
+  unwatchDeal: (id: number) => api.delete(`/deals/${id}/watch`),
+
+  expressInterest: (id: number, amount: number, message?: string) =>
+    api.post(`/deals/${id}/interest`, { amount, message }),
 };
 
 

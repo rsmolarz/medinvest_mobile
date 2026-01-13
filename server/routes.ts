@@ -8,6 +8,11 @@ import portfolioRoutes from './routes/portfolio';
 import articlesRoutes from './routes/articles';
 import usersRoutes from './routes/users';
 import aiRoutes from './routes/ai';
+import postsRoutes from './routes/posts';
+import roomsRoutes from './routes/rooms';
+import dealsRoutes from './routes/deals';
+import notificationsRoutes from './routes/notifications';
+import messagesRoutes from './routes/messages';
 
 export async function registerRoutes(app: Express): Promise<Server> {
   registerChatRoutes(app);
@@ -22,6 +27,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use('/api/articles', articlesRoutes);
   app.use('/api/users', usersRoutes);
   app.use('/api/ai', aiRoutes);
+  app.use('/api/posts', postsRoutes);
+  app.use('/api/feed', postsRoutes);
+  app.use('/api/rooms', roomsRoutes);
+  app.use('/api/deals', dealsRoutes);
+  app.use('/api/notifications', notificationsRoutes);
+  app.use('/api/messages', messagesRoutes);
 
   app.use('/api/*', (req, res) => {
     res.status(404).json({ message: 'Endpoint not found' });
