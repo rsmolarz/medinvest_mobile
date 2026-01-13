@@ -212,7 +212,11 @@ export default function RootNavigator() {
             <Stack.Screen name="UserProfile" component={UserProfileScreen} />
             <Stack.Screen name="EditProfile" component={EditProfileScreen} />
             <Stack.Screen name="RoomDetail" component={RoomDetailScreen} />
-            <Stack.Screen name="Conversation" component={ConversationScreen} />
+            <Stack.Screen 
+              name="Conversation" 
+              component={ConversationScreen}
+              options={{ headerShown: false }}
+            />
             <Stack.Screen name="NewConversation" component={NewConversationScreen} />
             <Stack.Screen 
               name="VoiceCall" 
