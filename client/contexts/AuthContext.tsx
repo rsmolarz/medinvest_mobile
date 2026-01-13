@@ -424,6 +424,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setError(null);
       console.log('GitHub Sign-In: Starting...');
       console.log('GitHub Client ID:', GITHUB_CLIENT_ID ? 'Set' : 'Not set');
+      console.log('GitHub Redirect URI:', githubRedirectUri);
+      console.log('EXPO_PUBLIC_DOMAIN:', process.env.EXPO_PUBLIC_DOMAIN);
 
       if (!GITHUB_CLIENT_ID) {
         setError('GitHub Sign-In is not configured. Please contact support.');
