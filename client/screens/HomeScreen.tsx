@@ -30,6 +30,7 @@ import TrendingSidebar from '@/components/TrendingSidebar';
 import RoomFilter from '@/components/RoomFilter';
 import { NotificationBell } from '@/components/NotificationsDropdown';
 import NotificationsDropdown from '@/components/NotificationsDropdown';
+import HeaderMenu, { MenuButton } from '@/components/HeaderMenu';
 import PeopleYouMayKnow from '@/components/PeopleYouMayKnow';
 
 const { width } = Dimensions.get('window');
@@ -44,6 +45,7 @@ export default function HomeScreen() {
   const [selectedRoom, setSelectedRoom] = useState<string | null>(null);
   const [showTrending, setShowTrending] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
 
   // Fetch unread count
   const { data: notificationData } = useQuery({
@@ -291,6 +293,7 @@ export default function HomeScreen() {
               unreadCount={notificationData?.unread_count || 0}
               onPress={() => setShowNotifications(true)}
             />
+            <MenuButton onPress={() => setShowMenu(true)} />
           </View>
         </View>
       </Animated.View>
@@ -300,6 +303,12 @@ export default function HomeScreen() {
         visible={showNotifications}
         onClose={() => setShowNotifications(false)}
         anchorPosition={{ top: 100, right: 16 }}
+      />
+
+      {/* Header Menu */}
+      <HeaderMenu
+        visible={showMenu}
+        onClose={() => setShowMenu(false)}
       />
 
       {/* Main Content */}
