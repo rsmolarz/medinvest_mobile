@@ -185,24 +185,47 @@ router.post('/login', async (req: Request, res: Response) => {
 /**
  * POST /api/auth/github/token
  * Exchange GitHub authorization code for access token
+ * Supports both web and mobile OAuth apps
  */
 router.post('/github/token', async (req: Request, res: Response) => {
   try {
-    const { code, redirect_uri } = req.body;
+    const { code, redirect_uri, platform } = req.body;
 
     if (!code) {
       res.status(400).json({ message: 'Authorization code is required' });
       return;
     }
 
-    // Use server-side env vars (EXPO_PUBLIC_* is stripped in production)
-    const clientId = process.env.GITHUB_CLIENT_ID || process.env.EXPO_PUBLIC_GITHUB_CLIENT_ID;
-    const clientSecret = process.env.GITHUB_CLIENT_SECRET;
+    // Use platform-specific credentials
+    // Mobile app uses separate OAuth app with different redirect URI
+    const isMobile = platform === 'mobile' || platform === 'ios' || platform === 'android';
+    
+    let clientId: string | undefined;
+    let clientSecret: string | undefined;
+    
+    if (isMobile) {
+      // Mobile OAuth credentials
+      clientId = process.env.GITHUB_MOBILE_CLIENT_ID || process.env.EXPO_PUBLIC_GITHUB_MOBILE_CLIENT_ID;
+      clientSecret = process.env.GITHUB_MOBILE_CLIENT_SECRET;
+      
+      // Fall back to web credentials if mobile not configured
+      if (!clientId || !clientSecret) {
+        console.log('Mobile GitHub credentials not found, falling back to web credentials');
+        clientId = process.env.GITHUB_CLIENT_ID || process.env.EXPO_PUBLIC_GITHUB_CLIENT_ID;
+        clientSecret = process.env.GITHUB_CLIENT_SECRET;
+      }
+    } else {
+      // Web OAuth credentials
+      clientId = process.env.GITHUB_CLIENT_ID || process.env.EXPO_PUBLIC_GITHUB_CLIENT_ID;
+      clientSecret = process.env.GITHUB_CLIENT_SECRET;
+    }
 
     if (!clientId || !clientSecret) {
       res.status(500).json({ message: 'GitHub OAuth is not configured' });
       return;
     }
+
+    console.log(`GitHub token exchange: platform=${platform}, isMobile=${isMobile}`);
 
     // Exchange code for access token
     const tokenResponse = await fetch('https://github.com/login/oauth/access_token', {

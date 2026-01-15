@@ -336,9 +336,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
             ? AuthSession.makeRedirectUri({ preferLocalhost: false })
             : AuthSession.makeRedirectUri({ scheme: 'medinvest' });
           
+          // Send platform so backend uses correct OAuth credentials
           const tokenResponse = await apiClient.post('/auth/github/token', {
             code,
             redirect_uri: redirectUri,
+            platform: Platform.OS, // 'web', 'ios', or 'android'
           });
 
           const { access_token } = tokenResponse.data;
