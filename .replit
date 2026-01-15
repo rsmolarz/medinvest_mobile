@@ -78,3 +78,5 @@ ensurePreviewReachable = "/status"
 [userenv]
 
 [userenv.shared]
+EXPO_PUBLIC_GITHUB_MOBILE_CLIENT_ID = "Ov23li0L1mgzOg5veCd0"
+GITHUB_MOBILE_CLIENT_ID = "Ov23li0L1mgzOg5veCd0"
