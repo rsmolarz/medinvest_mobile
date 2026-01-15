@@ -25,8 +25,16 @@ const GOOGLE_IOS_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID;
 const GOOGLE_ANDROID_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID;
 const GOOGLE_EXPO_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_EXPO_CLIENT_ID;
 
-const GITHUB_CLIENT_ID = process.env.EXPO_PUBLIC_GITHUB_CLIENT_ID;
+const GITHUB_WEB_CLIENT_ID = process.env.EXPO_PUBLIC_GITHUB_CLIENT_ID;
+const GITHUB_MOBILE_CLIENT_ID = process.env.EXPO_PUBLIC_GITHUB_MOBILE_CLIENT_ID;
 const FACEBOOK_APP_ID = process.env.EXPO_PUBLIC_FACEBOOK_APP_ID;
+
+function getGitHubClientId(): string | undefined {
+  if (Platform.OS === 'web') {
+    return GITHUB_WEB_CLIENT_ID;
+  }
+  return GITHUB_MOBILE_CLIENT_ID || GITHUB_WEB_CLIENT_ID;
+}
 
 const PLACEHOLDER_CLIENT_ID = 'placeholder.apps.googleusercontent.com';
 
@@ -102,15 +110,17 @@ export function AuthProvider({ children }: AuthProviderProps) {
     scopes: ['profile', 'email'],
   });
 
-  // GitHub OAuth configuration
+  // GitHub OAuth configuration - use platform-specific client ID
+  const githubClientId = getGitHubClientId();
+  
   const githubDiscovery = {
     authorizationEndpoint: 'https://github.com/login/oauth/authorize',
     tokenEndpoint: 'https://github.com/login/oauth/access_token',
-    revocationEndpoint: `https://github.com/settings/connections/applications/${GITHUB_CLIENT_ID}`,
+    revocationEndpoint: `https://github.com/settings/connections/applications/${githubClientId}`,
   };
 
   // Use platform-appropriate redirect URI for GitHub
-  // For web on Replit, we need to use an explicit redirect URI that matches the GitHub OAuth app config
+  // Web uses the domain URL, mobile uses the app scheme
   const githubRedirectUri = Platform.OS === 'web'
     ? (process.env.EXPO_PUBLIC_DOMAIN 
         ? `https://${process.env.EXPO_PUBLIC_DOMAIN.replace(/:5000$/, '')}`
@@ -119,7 +129,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const [_githubRequest, githubResponse, promptGithubAsync] = AuthSession.useAuthRequest(
     {
-      clientId: GITHUB_CLIENT_ID || 'placeholder',
+      clientId: githubClientId || 'placeholder',
       scopes: ['read:user', 'user:email'],
       redirectUri: githubRedirectUri,
     },
@@ -422,13 +432,17 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const signInWithGithub = useCallback(async () => {
     try {
       setError(null);
+      const currentClientId = getGitHubClientId();
       console.log('GitHub Sign-In: Starting...');
-      console.log('GitHub Client ID:', GITHUB_CLIENT_ID ? 'Set' : 'Not set');
+      console.log('GitHub Client ID:', currentClientId ? 'Set' : 'Not set');
+      console.log('Platform:', Platform.OS);
       console.log('GitHub Redirect URI:', githubRedirectUri);
-      console.log('EXPO_PUBLIC_DOMAIN:', process.env.EXPO_PUBLIC_DOMAIN);
 
-      if (!GITHUB_CLIENT_ID) {
-        setError('GitHub Sign-In is not configured. Please contact support.');
+      if (!currentClientId) {
+        const errorMsg = Platform.OS === 'web'
+          ? 'GitHub Sign-In is not configured for web. Please contact support.'
+          : 'GitHub Sign-In is not configured for mobile. Please set up EXPO_PUBLIC_GITHUB_MOBILE_CLIENT_ID.';
+        setError(errorMsg);
         return;
       }
 
@@ -440,7 +454,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setError(message);
       console.error('GitHub sign-in error:', err);
     }
-  }, [promptGithubAsync]);
+  }, [promptGithubAsync, githubRedirectUri]);
 
   const signInWithFacebook = useCallback(async () => {
     try {
