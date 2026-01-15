@@ -153,6 +153,54 @@ Apple requires disclosure of data collection practices. MedInvest collects:
 
 ---
 
+## Push Notifications Setup
+
+Push notifications require Expo Application Services (EAS) configuration.
+
+### Step 1: Initialize EAS Project
+```bash
+npx eas project:init
+```
+This creates a project on Expo's servers and adds your project ID to app.json.
+
+### Step 2: Verify Configuration
+After running the command above, your app.json will have:
+```json
+{
+  "expo": {
+    "extra": {
+      "eas": {
+        "projectId": "your-project-id"
+      }
+    }
+  }
+}
+```
+
+### Step 3: Configure Credentials (for Production)
+
+**iOS:**
+- Push notifications work automatically with EAS Build
+- For bare workflow: Configure APNs key in Apple Developer Portal
+
+**Android:**
+- Push notifications work automatically with EAS Build
+- For bare workflow: Configure FCM in Firebase Console
+
+### How Push Notifications Work
+1. User grants notification permission on device
+2. App receives Expo Push Token from Expo's servers
+3. Token is registered with MedInvest backend
+4. Backend sends notifications via Expo Push API (`https://exp.host/--/api/v2/push/send`)
+5. Expo routes notifications to Apple/Google
+
+### Testing Push Notifications
+- Push notifications only work on physical devices
+- They do NOT work in simulators, emulators, or web browsers
+- Use Expo Go app on a physical device to test
+
+---
+
 ## Database & Backend
 
 ### Production Database

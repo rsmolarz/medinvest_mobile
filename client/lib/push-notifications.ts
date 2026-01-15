@@ -57,8 +57,20 @@ class PushNotificationService {
 
     // Get push token
     try {
+      // Use the Expo project ID from Constants or environment
+      const Constants = await import('expo-constants');
+      const projectId = Constants.default.expoConfig?.extra?.eas?.projectId 
+        || Constants.default.easConfig?.projectId
+        || process.env.EXPO_PROJECT_ID;
+      
+      if (!projectId) {
+        console.log('No Expo project ID configured - push notifications disabled');
+        console.log('To enable, run: npx eas project:init');
+        return null;
+      }
+      
       const tokenData = await Notifications.getExpoPushTokenAsync({
-        projectId: process.env.EXPO_PROJECT_ID,
+        projectId,
       });
       this.expoPushToken = tokenData.data;
 
