@@ -113,15 +113,22 @@ import { User, Post, loginSchema, formatRelativeTime } from '@medinvest/shared';
    - `EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID` - Android OAuth client ID
    - `EXPO_PUBLIC_GOOGLE_EXPO_CLIENT_ID` - Expo Go OAuth client ID
 
-**GitHub Sign-In Production Setup** (required for production):
+**GitHub Sign-In Production Setup** (requires separate apps for web and mobile):
+
+**Web OAuth App:**
 1. Go to [GitHub Developer Settings](https://github.com/settings/developers)
-2. Create a new OAuth App:
-   - **Homepage URL**: `https://{your-production-domain}`
-   - **Authorization callback URL**: `medinvest://` (deep link scheme)
+2. Create OAuth App for web with callback URL: `https://{your-production-domain}`
 3. Set environment variables:
-   - `EXPO_PUBLIC_GITHUB_CLIENT_ID` - GitHub OAuth client ID (for frontend)
-   - `GITHUB_CLIENT_ID` - GitHub OAuth client ID (for backend - same value as above)
-   - `GITHUB_CLIENT_SECRET` - GitHub OAuth client secret (keep secret!)
+   - `EXPO_PUBLIC_GITHUB_CLIENT_ID` - Web GitHub client ID
+   - `GITHUB_CLIENT_ID` - Same as above (for backend)
+   - `GITHUB_CLIENT_SECRET` - Web GitHub client secret
+
+**Mobile OAuth App:**
+1. Create a second OAuth App for mobile with callback URL: `medinvest://`
+2. Set environment variables:
+   - `EXPO_PUBLIC_GITHUB_MOBILE_CLIENT_ID` - Mobile GitHub client ID
+   - `GITHUB_MOBILE_CLIENT_ID` - Same as above (for backend)
+   - `GITHUB_MOBILE_CLIENT_SECRET` - Mobile GitHub client secret
 
 **Apple Sign-In Production Setup** (required for iOS):
 1. Enable "Sign In with Apple" capability in Apple Developer Portal

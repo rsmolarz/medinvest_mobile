@@ -45,18 +45,39 @@ GOOGLE_WEB_CLIENT_SECRET=your-web-client-secret
 
 ### 2. GitHub Sign-In
 
+> **Important:** Web and mobile apps require **separate** GitHub OAuth apps because they use different redirect URIs.
+
+#### Web OAuth App (for browser-based login)
+
 **GitHub Developer Settings:**
 1. Go to [GitHub Developer Settings](https://github.com/settings/developers)
-2. Create a new OAuth App
+2. Create a new OAuth App for **Web**
+3. Set Homepage URL: `https://your-production-domain.com`
+4. Set Authorization callback URL: `https://your-production-domain.com`
+
+**Web Environment Variables:**
+```
+EXPO_PUBLIC_GITHUB_CLIENT_ID=your-web-github-client-id
+GITHUB_CLIENT_ID=your-web-github-client-id
+GITHUB_CLIENT_SECRET=your-web-github-client-secret
+```
+
+#### Mobile OAuth App (for iOS/Android)
+
+**GitHub Developer Settings:**
+1. Go to [GitHub Developer Settings](https://github.com/settings/developers)
+2. Create a **second** OAuth App for **Mobile**
 3. Set Homepage URL: `https://your-production-domain.com`
 4. Set Authorization callback URL: `medinvest://` (deep link scheme)
 
-**Environment Variables:**
+**Mobile Environment Variables:**
 ```
-EXPO_PUBLIC_GITHUB_CLIENT_ID=your-github-client-id
-GITHUB_CLIENT_ID=your-github-client-id (same value, for backend)
-GITHUB_CLIENT_SECRET=your-github-client-secret
+EXPO_PUBLIC_GITHUB_MOBILE_CLIENT_ID=your-mobile-github-client-id
+GITHUB_MOBILE_CLIENT_ID=your-mobile-github-client-id
+GITHUB_MOBILE_CLIENT_SECRET=your-mobile-github-client-secret
 ```
+
+> **Why separate apps?** GitHub OAuth only allows one callback URL per app. Web uses `https://domain.com` while mobile uses the `medinvest://` deep link scheme. Using the same credentials causes authentication failures.
 
 ### 3. Apple Sign-In
 
