@@ -143,8 +143,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
   };
 
   // Use platform-appropriate redirect URI for Facebook
+  // Web uses the domain URL, mobile uses the app scheme
   const facebookRedirectUri = Platform.OS === 'web'
-    ? AuthSession.makeRedirectUri({ preferLocalhost: false })
+    ? (process.env.EXPO_PUBLIC_DOMAIN 
+        ? `https://${process.env.EXPO_PUBLIC_DOMAIN.replace(/:5000$/, '')}`
+        : AuthSession.makeRedirectUri({ preferLocalhost: false }))
     : AuthSession.makeRedirectUri({ scheme: 'medinvest' });
 
   const [_facebookRequest, facebookResponse, promptFacebookAsync] = AuthSession.useAuthRequest(
