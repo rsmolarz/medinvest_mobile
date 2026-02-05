@@ -16,7 +16,7 @@ export interface User {
   specialty?: string;
   bio?: string;
   avatar_url?: string;
-  provider?: 'apple' | 'google' | 'mock' | 'email';
+  provider?: 'apple' | 'google' | 'github' | 'facebook' | 'mock' | 'email';
   is_verified?: boolean;
   is_accredited?: boolean;
   is_premium?: boolean;

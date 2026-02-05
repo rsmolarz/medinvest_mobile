@@ -490,13 +490,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
       const mockUser: User = {
         id: 'demo-user-123',
         email: 'demo@medinvest.com',
-        firstName: 'Demo',
-        lastName: 'User',
-        fullName: 'Demo User',
-        avatarUrl: undefined,
+        first_name: 'Demo',
+        last_name: 'User',
+        full_name: 'Demo User',
+        avatar_url: undefined,
         provider: 'mock',
-        isVerified: true,
-        createdAt: new Date().toISOString(),
+        is_verified: true,
+        created_at: new Date().toISOString(),
       };
 
       await saveAuthData('mock-token-' + Date.now(), mockUser);
@@ -600,14 +600,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
     const normalizedUser: User = {
       id: userData.id,
       email: userData.email,
-      firstName: userData.firstName,
-      lastName: userData.lastName,
-      fullName: userData.fullName || [userData.firstName, userData.lastName].filter(Boolean).join(' '),
-      avatarUrl: userData.avatarUrl,
+      first_name: userData.first_name,
+      last_name: userData.last_name,
+      full_name: userData.full_name || [userData.first_name, userData.last_name].filter(Boolean).join(' '),
+      avatar_url: userData.avatar_url,
       provider: userData.provider,
-      isVerified: userData.isVerified,
-      isAccredited: userData.isAccredited,
-      createdAt: userData.createdAt,
+      is_verified: userData.is_verified,
+      is_accredited: userData.is_accredited,
+      created_at: userData.created_at,
     };
     await saveAuthData(authToken, normalizedUser);
   }, []);

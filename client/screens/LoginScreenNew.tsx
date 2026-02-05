@@ -1,4 +1,4 @@
-AuthContextp/**
+/**
  * Login Screen
  * Email/password login with biometric authentication support
  */
