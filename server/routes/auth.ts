@@ -597,4 +597,73 @@ router.post('/logout-all', authMiddleware, async (req: Request, res: Response) =
   }
 });
 
+/**
+ * POST /api/auth/demo
+ * Demo/guest login - creates or finds a demo user with a real JWT
+ */
+router.post('/demo', async (req: Request, res: Response) => {
+  try {
+    const demoEmail = 'demo@medinvest.com';
+
+    let [demoUser] = await db
+      .select()
+      .from(users)
+      .where(eq(users.email, demoEmail))
+      .limit(1);
+
+    if (!demoUser) {
+      [demoUser] = await db
+        .insert(users)
+        .values({
+          email: demoEmail,
+          firstName: 'Demo',
+          lastName: 'User',
+          provider: 'demo',
+          isVerified: true,
+          lastLoginAt: new Date(),
+        })
+        .returning();
+
+      await db.insert(notificationPreferences).values({
+        userId: demoUser.id,
+      });
+    } else {
+      await db
+        .update(users)
+        .set({ lastLoginAt: new Date() })
+        .where(eq(users.id, demoUser.id));
+    }
+
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 30);
+
+    const [session] = await db
+      .insert(userSessions)
+      .values({
+        userId: demoUser.id,
+        token: crypto.randomUUID(),
+        expiresAt,
+      })
+      .returning();
+
+    const jwtToken = generateToken(demoUser.id, session.id);
+
+    res.json({
+      token: jwtToken,
+      user: {
+        id: demoUser.id,
+        email: demoUser.email,
+        firstName: demoUser.firstName,
+        lastName: demoUser.lastName,
+        isVerified: demoUser.isVerified,
+        fullName: [demoUser.firstName, demoUser.lastName].filter(Boolean).join(' '),
+        provider: 'demo',
+      },
+    });
+  } catch (error) {
+    console.error('Demo login error:', error);
+    res.status(500).json({ message: 'Demo login failed' });
+  }
+});
+
 export default router;

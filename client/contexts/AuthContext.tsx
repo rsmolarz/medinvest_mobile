@@ -487,22 +487,17 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setIsLoading(true);
       setError(null);
 
-      const mockUser: User = {
-        id: 'demo-user-123',
-        email: 'demo@medinvest.com',
-        first_name: 'Demo',
-        last_name: 'User',
-        full_name: 'Demo User',
-        avatar_url: undefined,
-        provider: 'mock',
-        is_verified: true,
-        created_at: new Date().toISOString(),
-      };
+      const response = await apiClient.post('/auth/demo');
+      const { token: authToken, user: userData } = response.data;
 
-      await saveAuthData('mock-token-' + Date.now(), mockUser);
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Demo sign-in failed';
+      await saveAuthData(authToken, {
+        ...userData,
+        fullName: userData.fullName || [userData.firstName, userData.lastName].filter(Boolean).join(' '),
+      });
+    } catch (err: any) {
+      const message = err?.response?.data?.message || err?.message || 'Demo sign-in failed';
       setError(message);
+      console.error('Demo sign-in error:', err);
     } finally {
       setIsLoading(false);
     }
