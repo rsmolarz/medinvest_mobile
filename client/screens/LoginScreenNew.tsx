@@ -32,7 +32,7 @@ import type { User } from '@/types';
 
 export default function LoginScreen() {
   const navigation = useNavigation<any>();
-  const { setAuthSession, signInWithGoogle, signInWithGithub, signInWithFacebook, signInWithApple, isAppleAuthAvailable } = useAuth();
+  const { setAuthSession, signInWithGoogle, signInWithGithub, signInWithFacebook, signInWithApple, isAppleAuthAvailable, mockSignIn } = useAuth();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -297,6 +297,16 @@ export default function LoginScreen() {
               <ThemedText style={styles.registerLink}>Sign Up</ThemedText>
             </TouchableOpacity>
           </View>
+
+          {/* Demo Login */}
+          <TouchableOpacity
+            style={styles.demoButton}
+            onPress={mockSignIn}
+            testID="button-demo-login"
+          >
+            <Ionicons name="flask-outline" size={18} color={Colors.textSecondary} />
+            <ThemedText style={styles.demoButtonText}>Try Demo Account</ThemedText>
+          </TouchableOpacity>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -450,5 +460,23 @@ const styles = StyleSheet.create({
     ...Typography.body,
     color: Colors.primary,
     fontWeight: '600',
+  },
+  demoButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: Spacing.md,
+    marginTop: Spacing.lg,
+    marginBottom: Spacing.md,
+    gap: Spacing.sm,
+    borderRadius: BorderRadius.md,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderStyle: 'dashed',
+  },
+  demoButtonText: {
+    ...Typography.caption,
+    color: Colors.textSecondary,
+    fontWeight: '500',
   },
 });

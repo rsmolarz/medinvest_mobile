@@ -5,11 +5,35 @@
 
 import * as LocalAuthentication from 'expo-local-authentication';
 import * as SecureStore from 'expo-secure-store';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform, Alert } from 'react-native';
 
 // Storage keys
 const BIOMETRIC_ENABLED_KEY = 'biometric_enabled';
 const BIOMETRIC_CREDENTIALS_KEY = 'biometric_credentials';
+
+const secureGet = async (key: string): Promise<string | null> => {
+  if (Platform.OS === 'web') {
+    return AsyncStorage.getItem(key);
+  }
+  return SecureStore.getItemAsync(key);
+};
+
+const secureSet = async (key: string, value: string, options?: any): Promise<void> => {
+  if (Platform.OS === 'web') {
+    await AsyncStorage.setItem(key, value);
+    return;
+  }
+  await SecureStore.setItemAsync(key, value, options);
+};
+
+const secureDelete = async (key: string): Promise<void> => {
+  if (Platform.OS === 'web') {
+    await AsyncStorage.removeItem(key);
+    return;
+  }
+  await SecureStore.deleteItemAsync(key);
+};
 
 export type BiometricType = 'fingerprint' | 'facial' | 'iris' | 'none';
 
@@ -152,7 +176,7 @@ class BiometricAuthService {
    */
   async isBiometricLoginEnabled(): Promise<boolean> {
     try {
-      const enabled = await SecureStore.getItemAsync(BIOMETRIC_ENABLED_KEY);
+      const enabled = await secureGet(BIOMETRIC_ENABLED_KEY);
       return enabled === 'true';
     } catch (error) {
       console.error('[Biometric] Error checking enabled status:', error);
@@ -174,16 +198,15 @@ class BiometricAuthService {
 
       // Store credentials securely
       const credentials: StoredCredentials = { email, password };
-      await SecureStore.setItemAsync(
+      await secureSet(
         BIOMETRIC_CREDENTIALS_KEY,
         JSON.stringify(credentials),
-        {
+        Platform.OS !== 'web' ? {
           keychainAccessible: SecureStore.WHEN_PASSCODE_SET_THIS_DEVICE_ONLY,
-        }
+        } : undefined
       );
 
-      // Mark biometric as enabled
-      await SecureStore.setItemAsync(BIOMETRIC_ENABLED_KEY, 'true');
+      await secureSet(BIOMETRIC_ENABLED_KEY, 'true');
 
       return true;
     } catch (error) {
@@ -197,8 +220,8 @@ class BiometricAuthService {
    */
   async disableBiometricLogin(): Promise<boolean> {
     try {
-      await SecureStore.deleteItemAsync(BIOMETRIC_CREDENTIALS_KEY);
-      await SecureStore.deleteItemAsync(BIOMETRIC_ENABLED_KEY);
+      await secureDelete(BIOMETRIC_CREDENTIALS_KEY);
+      await secureDelete(BIOMETRIC_ENABLED_KEY);
       return true;
     } catch (error) {
       console.error('[Biometric] Error disabling biometric login:', error);
@@ -224,7 +247,7 @@ class BiometricAuthService {
       }
 
       // Retrieve stored credentials
-      const credentialsJson = await SecureStore.getItemAsync(BIOMETRIC_CREDENTIALS_KEY);
+      const credentialsJson = await secureGet(BIOMETRIC_CREDENTIALS_KEY);
       if (!credentialsJson) {
         return null;
       }
@@ -241,7 +264,7 @@ class BiometricAuthService {
    */
   async updateStoredPassword(newPassword: string): Promise<boolean> {
     try {
-      const credentialsJson = await SecureStore.getItemAsync(BIOMETRIC_CREDENTIALS_KEY);
+      const credentialsJson = await secureGet(BIOMETRIC_CREDENTIALS_KEY);
       if (!credentialsJson) {
         return false;
       }
@@ -249,12 +272,12 @@ class BiometricAuthService {
       const credentials: StoredCredentials = JSON.parse(credentialsJson);
       credentials.password = newPassword;
 
-      await SecureStore.setItemAsync(
+      await secureSet(
         BIOMETRIC_CREDENTIALS_KEY,
         JSON.stringify(credentials),
-        {
+        Platform.OS !== 'web' ? {
           keychainAccessible: SecureStore.WHEN_PASSCODE_SET_THIS_DEVICE_ONLY,
-        }
+        } : undefined
       );
 
       return true;
