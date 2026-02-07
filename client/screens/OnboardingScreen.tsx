@@ -21,6 +21,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { ThemedText } from '@/components/ThemedText';
 import { Colors, Spacing, BorderRadius, Typography } from '@/constants/theme';
+import { useAppColors } from '@/hooks/useAppColors';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -80,6 +81,7 @@ const SLIDES: OnboardingSlide[] = [
 
 export default function OnboardingScreen() {
   const navigation = useNavigation<any>();
+  const appColors = useAppColors();
   const flatListRef = useRef<FlatList>(null);
   const scrollX = useRef(new Animated.Value(0)).current;
   
@@ -158,8 +160,8 @@ export default function OnboardingScreen() {
         </Animated.View>
 
         <Animated.View style={{ opacity }}>
-          <ThemedText style={styles.title}>{item.title}</ThemedText>
-          <ThemedText style={styles.description}>{item.description}</ThemedText>
+          <ThemedText style={[styles.title, { color: appColors.textPrimary }]}>{item.title}</ThemedText>
+          <ThemedText style={[styles.description, { color: appColors.textSecondary }]}>{item.description}</ThemedText>
         </Animated.View>
       </View>
     );
@@ -203,10 +205,10 @@ export default function OnboardingScreen() {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: appColors.surface }]}>
       {/* Skip Button */}
       <TouchableOpacity style={styles.skipButton} onPress={handleSkip}>
-        <ThemedText style={styles.skipText}>Skip</ThemedText>
+        <ThemedText style={[styles.skipText, { color: appColors.textSecondary }]}>Skip</ThemedText>
       </TouchableOpacity>
 
       {/* Slides */}
@@ -253,7 +255,7 @@ export default function OnboardingScreen() {
 
         {/* Sign In Link */}
         <TouchableOpacity style={styles.signInLink} onPress={handleComplete}>
-          <ThemedText style={styles.signInText}>
+          <ThemedText style={[styles.signInText, { color: appColors.textSecondary }]}>
             Already have an account? <ThemedText style={styles.signInTextBold}>Sign In</ThemedText>
           </ThemedText>
         </TouchableOpacity>
@@ -288,7 +290,6 @@ export async function resetOnboarding(): Promise<void> {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.surface,
   },
   skipButton: {
     position: 'absolute',
@@ -299,7 +300,6 @@ const styles = StyleSheet.create({
   },
   skipText: {
     ...Typography.body,
-    color: Colors.textSecondary,
   },
   slide: {
     width: SCREEN_WIDTH,
@@ -325,13 +325,11 @@ const styles = StyleSheet.create({
   },
   title: {
     ...Typography.largeTitle,
-    color: Colors.textPrimary,
     textAlign: 'center',
     marginBottom: Spacing.lg,
   },
   description: {
     ...Typography.body,
-    color: Colors.textSecondary,
     textAlign: 'center',
     lineHeight: 26,
     paddingHorizontal: Spacing.md,
@@ -375,7 +373,6 @@ const styles = StyleSheet.create({
   },
   signInText: {
     ...Typography.body,
-    color: Colors.textSecondary,
   },
   signInTextBold: {
     color: Colors.primary,

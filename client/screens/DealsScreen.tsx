@@ -21,6 +21,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 
 import { ThemedText } from '@/components/ThemedText';
 import { Colors, Spacing, BorderRadius, Typography, Shadows } from '@/constants/theme';
+import { useAppColors } from '@/hooks/useAppColors';
 import { dealsApi, Deal } from '@/lib/api';
 import { formatCurrency, formatNumber } from '@/lib/utils';
 
@@ -38,6 +39,7 @@ const CATEGORIES = [
 export default function DealsScreen() {
   const navigation = useNavigation<any>();
   const [selectedCategory, setSelectedCategory] = useState('all');
+  const appColors = useAppColors();
 
   const {
     data: dealsData,
@@ -78,6 +80,7 @@ export default function DealsScreen() {
           <ThemedText
             style={[
               styles.categoryName,
+              { color: appColors.textSecondary },
               selectedCategory === item.id && styles.categoryNameActive,
             ]}
           >
@@ -97,7 +100,7 @@ export default function DealsScreen() {
 
     return (
       <TouchableOpacity
-        style={styles.dealCard}
+        style={[styles.dealCard, { backgroundColor: appColors.surface }]}
         onPress={() => handleDealPress(item.id)}
       >
         {/* Header */}
@@ -112,8 +115,8 @@ export default function DealsScreen() {
             </View>
           )}
           <View style={styles.dealInfo}>
-            <ThemedText style={styles.companyName}>{item.company_name}</ThemedText>
-            <ThemedText style={styles.dealTitle} numberOfLines={1}>
+            <ThemedText style={[styles.companyName, { color: appColors.textSecondary }]}>{item.company_name}</ThemedText>
+            <ThemedText style={[styles.dealTitle, { color: appColors.textPrimary }]} numberOfLines={1}>
               {item.title}
             </ThemedText>
           </View>
@@ -128,7 +131,7 @@ export default function DealsScreen() {
         </View>
 
         {/* Description */}
-        <ThemedText style={styles.dealDescription} numberOfLines={2}>
+        <ThemedText style={[styles.dealDescription, { color: appColors.textSecondary }]} numberOfLines={2}>
           {item.description}
         </ThemedText>
 
@@ -138,7 +141,7 @@ export default function DealsScreen() {
             {item.highlights.slice(0, 2).map((highlight, index) => (
               <View key={index} style={styles.highlightItem}>
                 <Ionicons name="checkmark-circle" size={14} color={Colors.secondary} />
-                <ThemedText style={styles.highlightText} numberOfLines={1}>
+                <ThemedText style={[styles.highlightText, { color: appColors.textPrimary }]} numberOfLines={1}>
                   {highlight}
                 </ThemedText>
               </View>
@@ -157,7 +160,7 @@ export default function DealsScreen() {
             />
           </View>
           <View style={styles.progressStats}>
-            <ThemedText style={styles.progressAmount}>
+            <ThemedText style={[styles.progressAmount, { color: appColors.textPrimary }]}>
               {formatCurrency(item.raised)} raised
             </ThemedText>
             <ThemedText style={styles.progressPercent}>
@@ -167,28 +170,28 @@ export default function DealsScreen() {
         </View>
 
         {/* Footer */}
-        <View style={styles.dealFooter}>
+        <View style={[styles.dealFooter, { borderTopColor: appColors.border }]}>
           <View style={styles.footerItem}>
-            <Ionicons name="flag-outline" size={16} color={Colors.textSecondary} />
-            <ThemedText style={styles.footerText}>
+            <Ionicons name="flag-outline" size={16} color={appColors.textSecondary} />
+            <ThemedText style={[styles.footerText, { color: appColors.textSecondary }]}>
               {formatCurrency(item.target_raise)} goal
             </ThemedText>
           </View>
           <View style={styles.footerItem}>
-            <Ionicons name="cash-outline" size={16} color={Colors.textSecondary} />
-            <ThemedText style={styles.footerText}>
+            <Ionicons name="cash-outline" size={16} color={appColors.textSecondary} />
+            <ThemedText style={[styles.footerText, { color: appColors.textSecondary }]}>
               {formatCurrency(item.minimum_investment)} min
             </ThemedText>
           </View>
           <View style={styles.footerItem}>
-            <Ionicons name="people-outline" size={16} color={Colors.textSecondary} />
-            <ThemedText style={styles.footerText}>
+            <Ionicons name="people-outline" size={16} color={appColors.textSecondary} />
+            <ThemedText style={[styles.footerText, { color: appColors.textSecondary }]}>
               {formatNumber(item.investors_count)}
             </ThemedText>
           </View>
           <View style={styles.footerItem}>
-            <Ionicons name="time-outline" size={16} color={daysLeft <= 7 ? Colors.error : Colors.textSecondary} />
-            <ThemedText style={[styles.footerText, daysLeft <= 7 && styles.urgentText]}>
+            <Ionicons name="time-outline" size={16} color={daysLeft <= 7 ? appColors.error : appColors.textSecondary} />
+            <ThemedText style={[styles.footerText, { color: appColors.textSecondary }, daysLeft <= 7 && { color: appColors.error, fontWeight: '600' }]}>
               {daysLeft > 0 ? `${daysLeft}d left` : 'Ended'}
             </ThemedText>
           </View>
@@ -199,20 +202,20 @@ export default function DealsScreen() {
 
   const renderEmpty = () => (
     <View style={styles.emptyContainer}>
-      <MaterialCommunityIcons name="chart-line" size={64} color={Colors.textSecondary} />
-      <ThemedText style={styles.emptyTitle}>No deals available</ThemedText>
-      <ThemedText style={styles.emptySubtitle}>
+      <MaterialCommunityIcons name="chart-line" size={64} color={appColors.textSecondary} />
+      <ThemedText style={[styles.emptyTitle, { color: appColors.textPrimary }]}>No deals available</ThemedText>
+      <ThemedText style={[styles.emptySubtitle, { color: appColors.textSecondary }]}>
         Check back later for new investment opportunities
       </ThemedText>
     </View>
   );
 
   const renderHeader = () => (
-    <View style={styles.headerSection}>
+    <View style={[styles.headerSection, { backgroundColor: appColors.surface }]}>
       <View style={styles.statsRow}>
         <View style={styles.statCard}>
           <ThemedText style={styles.statValue}>{deals?.length || 0}</ThemedText>
-          <ThemedText style={styles.statLabel}>Active Deals</ThemedText>
+          <ThemedText style={[styles.statLabel, { color: appColors.textSecondary }]}>Active Deals</ThemedText>
         </View>
         <View style={styles.statCard}>
           <ThemedText style={styles.statValue}>
@@ -220,7 +223,7 @@ export default function DealsScreen() {
               deals?.reduce((sum, d) => sum + (d.raised || 0), 0) || 0
             )}
           </ThemedText>
-          <ThemedText style={styles.statLabel}>Total Raised</ThemedText>
+          <ThemedText style={[styles.statLabel, { color: appColors.textSecondary }]}>Total Raised</ThemedText>
         </View>
       </View>
       {renderCategoryFilter()}
@@ -228,12 +231,12 @@ export default function DealsScreen() {
   );
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: appColors.background }]} edges={['top']}>
       {/* Header */}
-      <View style={styles.header}>
-        <ThemedText style={styles.title}>Investment Deals</ThemedText>
+      <View style={[styles.header, { backgroundColor: appColors.surface, borderBottomColor: appColors.border }]}>
+        <ThemedText style={[styles.title, { color: appColors.textPrimary }]}>Investment Deals</ThemedText>
         <TouchableOpacity style={styles.filterButton}>
-          <Ionicons name="options-outline" size={24} color={Colors.textPrimary} />
+          <Ionicons name="options-outline" size={24} color={appColors.textPrimary} />
         </TouchableOpacity>
       </View>
 
@@ -261,7 +264,6 @@ export default function DealsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
   },
   header: {
     flexDirection: 'row',
@@ -269,13 +271,10 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.md,
-    backgroundColor: Colors.surface,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
   },
   title: {
     ...Typography.title,
-    color: Colors.textPrimary,
   },
   filterButton: {
     padding: Spacing.sm,
@@ -284,7 +283,6 @@ const styles = StyleSheet.create({
     paddingBottom: Spacing.xl,
   },
   headerSection: {
-    backgroundColor: Colors.surface,
     paddingBottom: Spacing.md,
     marginBottom: Spacing.md,
   },
@@ -308,7 +306,6 @@ const styles = StyleSheet.create({
   },
   statLabel: {
     ...Typography.small,
-    color: Colors.textSecondary,
     marginTop: 2,
   },
   categoriesContainer: {
@@ -333,7 +330,6 @@ const styles = StyleSheet.create({
   },
   categoryName: {
     ...Typography.caption,
-    color: Colors.textSecondary,
     fontWeight: '500',
   },
   categoryNameActive: {
@@ -341,7 +337,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   dealCard: {
-    backgroundColor: Colors.surface,
     marginHorizontal: Spacing.lg,
     marginBottom: Spacing.md,
     borderRadius: BorderRadius.md,
@@ -373,14 +368,12 @@ const styles = StyleSheet.create({
   },
   companyName: {
     ...Typography.small,
-    color: Colors.textSecondary,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
   dealTitle: {
     ...Typography.body,
     fontWeight: '600',
-    color: Colors.textPrimary,
     marginTop: 2,
   },
   statusBadge: {
@@ -392,7 +385,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.secondary + '20',
   },
   statusClosed: {
-    backgroundColor: Colors.textSecondary + '20',
+    backgroundColor: Colors.light.textSecondary + '20',
   },
   statusText: {
     ...Typography.small,
@@ -400,7 +393,6 @@ const styles = StyleSheet.create({
   },
   dealDescription: {
     ...Typography.body,
-    color: Colors.textSecondary,
     lineHeight: 20,
   },
   highlights: {
@@ -414,7 +406,6 @@ const styles = StyleSheet.create({
   },
   highlightText: {
     ...Typography.small,
-    color: Colors.textPrimary,
     flex: 1,
   },
   progressContainer: {
@@ -437,7 +428,6 @@ const styles = StyleSheet.create({
   },
   progressAmount: {
     ...Typography.caption,
-    color: Colors.textPrimary,
     fontWeight: '600',
   },
   progressPercent: {
@@ -450,7 +440,6 @@ const styles = StyleSheet.create({
     marginTop: Spacing.lg,
     paddingTop: Spacing.md,
     borderTopWidth: 1,
-    borderTopColor: Colors.border,
   },
   footerItem: {
     flex: 1,
@@ -460,11 +449,6 @@ const styles = StyleSheet.create({
   },
   footerText: {
     ...Typography.small,
-    color: Colors.textSecondary,
-  },
-  urgentText: {
-    color: Colors.error,
-    fontWeight: '600',
   },
   emptyContainer: {
     alignItems: 'center',
@@ -474,12 +458,10 @@ const styles = StyleSheet.create({
   },
   emptyTitle: {
     ...Typography.heading,
-    color: Colors.textPrimary,
     marginTop: Spacing.lg,
   },
   emptySubtitle: {
     ...Typography.body,
-    color: Colors.textSecondary,
     textAlign: 'center',
     marginTop: Spacing.sm,
   },

@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { ThemedText } from '@/components/ThemedText';
 import { Colors, Spacing, BorderRadius, Typography } from '@/constants/theme';
+import { useAppColors } from '@/hooks/useAppColors';
 import { Room } from '@/types';
 
 interface RoomFilterProps {
@@ -22,6 +23,7 @@ interface RoomFilterProps {
 }
 
 function RoomFilter({ rooms, selectedRoom, onSelectRoom }: RoomFilterProps) {
+  const appColors = useAppColors();
   const scrollRef = useRef<ScrollView>(null);
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
@@ -57,6 +59,7 @@ function RoomFilter({ rooms, selectedRoom, onSelectRoom }: RoomFilterProps) {
           <ThemedText
             style={[
               styles.roomName,
+              { color: appColors.textSecondary },
               selectedRoom === null && styles.roomNameActive,
             ]}
           >
@@ -79,6 +82,7 @@ function RoomFilter({ rooms, selectedRoom, onSelectRoom }: RoomFilterProps) {
             <ThemedText
               style={[
                 styles.roomName,
+                { color: appColors.textSecondary },
                 selectedRoom === room.slug && styles.roomNameActive,
                 selectedRoom === room.slug && { color: room.color },
               ]}
@@ -124,7 +128,6 @@ const styles = StyleSheet.create({
   },
   roomName: {
     ...Typography.caption,
-    color: Colors.textSecondary,
     fontWeight: '500',
   },
   roomNameActive: {

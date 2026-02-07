@@ -6,6 +6,7 @@
 import React, { memo, useMemo } from 'react';
 import { Text, StyleSheet, TextStyle, StyleProp } from 'react-native';
 import { Colors, Typography } from '@/constants/theme';
+import { useAppColors } from '@/hooks/useAppColors';
 import { Mention } from '@/types';
 
 interface RichTextContentProps {
@@ -37,17 +38,17 @@ function RichTextContent({
   numberOfLines,
   style,
 }: RichTextContentProps) {
+  const appColors = useAppColors();
+
   const segments = useMemo(() => {
     const result: TextSegment[] = [];
     
-    // Pattern to match @mentions, #hashtags, and URLs
     const pattern = /(@\w+|#\w+|https?:\/\/[^\s]+)/g;
     
     let lastIndex = 0;
     let match;
 
     while ((match = pattern.exec(content)) !== null) {
-      // Add text before match
       if (match.index > lastIndex) {
         result.push({
           type: 'text',
@@ -58,7 +59,6 @@ function RichTextContent({
       const matchedText = match[0];
 
       if (matchedText.startsWith('@')) {
-        // It's a mention
         const username = matchedText.slice(1);
         const mentionData = mentions.find(m => m.username === username);
         result.push({
@@ -67,7 +67,6 @@ function RichTextContent({
           data: { userId: mentionData?.user_id },
         });
       } else if (matchedText.startsWith('#')) {
-        // It's a hashtag
         const tag = matchedText.slice(1);
         result.push({
           type: 'hashtag',
@@ -75,7 +74,6 @@ function RichTextContent({
           data: { tag },
         });
       } else if (matchedText.startsWith('http')) {
-        // It's a URL
         result.push({
           type: 'link',
           content: matchedText,
@@ -86,7 +84,6 @@ function RichTextContent({
       lastIndex = match.index + matchedText.length;
     }
 
-    // Add remaining text
     if (lastIndex < content.length) {
       result.push({
         type: 'text',
@@ -110,7 +107,7 @@ function RichTextContent({
   };
 
   return (
-    <Text style={[styles.text, style]} numberOfLines={numberOfLines}>
+    <Text style={[styles.text, { color: appColors.textPrimary }, style]} numberOfLines={numberOfLines}>
       {segments.map((segment, index) => {
         switch (segment.type) {
           case 'mention':
@@ -150,7 +147,6 @@ function RichTextContent({
 const styles = StyleSheet.create({
   text: {
     ...Typography.body,
-    color: Colors.textPrimary,
     lineHeight: 22,
   },
   mention: {

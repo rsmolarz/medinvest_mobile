@@ -19,6 +19,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { ThemedText } from '@/components/ThemedText';
 import { Colors, Spacing, Typography } from '@/constants/theme';
+import { useAppColors } from '@/hooks/useAppColors';
 import { usersApi, postsApi } from '@/lib/api';
 import { Post } from '@/types';
 import PostCard from '@/components/PostCard';
@@ -26,6 +27,7 @@ import PostCard from '@/components/PostCard';
 export default function BookmarksScreen() {
   const navigation = useNavigation<any>();
   const queryClient = useQueryClient();
+  const appColors = useAppColors();
 
   const {
     data: posts,
@@ -79,9 +81,9 @@ export default function BookmarksScreen() {
     }
     return (
       <View style={styles.emptyContainer}>
-        <Ionicons name="bookmark-outline" size={64} color={Colors.textSecondary} />
-        <ThemedText style={styles.emptyTitle}>No bookmarks yet</ThemedText>
-        <ThemedText style={styles.emptySubtitle}>
+        <Ionicons name="bookmark-outline" size={64} color={appColors.textSecondary} />
+        <ThemedText style={[styles.emptyTitle, { color: appColors.textPrimary }]}>No bookmarks yet</ThemedText>
+        <ThemedText style={[styles.emptySubtitle, { color: appColors.textSecondary }]}>
           Posts you save will appear here
         </ThemedText>
       </View>
@@ -89,13 +91,13 @@ export default function BookmarksScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: appColors.background }]} edges={['top']}>
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { backgroundColor: appColors.surface, borderBottomColor: appColors.border }]}>
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <Ionicons name="chevron-back" size={24} color={Colors.textPrimary} />
+          <Ionicons name="chevron-back" size={24} color={appColors.textPrimary} />
         </TouchableOpacity>
-        <ThemedText style={styles.headerTitle}>Bookmarks</ThemedText>
+        <ThemedText style={[styles.headerTitle, { color: appColors.textPrimary }]}>Bookmarks</ThemedText>
         <View style={styles.backButton} />
       </View>
 
@@ -122,7 +124,6 @@ export default function BookmarksScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
   },
   header: {
     flexDirection: 'row',
@@ -130,9 +131,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.sm,
-    backgroundColor: Colors.surface,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
   },
   backButton: {
     width: 40,
@@ -140,7 +139,6 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     ...Typography.heading,
-    color: Colors.textPrimary,
   },
   loadingContainer: {
     flex: 1,
@@ -159,12 +157,10 @@ const styles = StyleSheet.create({
   },
   emptyTitle: {
     ...Typography.heading,
-    color: Colors.textPrimary,
     marginTop: Spacing.lg,
   },
   emptySubtitle: {
     ...Typography.body,
-    color: Colors.textSecondary,
     textAlign: 'center',
     marginTop: Spacing.sm,
   },

@@ -25,6 +25,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { ThemedText } from '@/components/ThemedText';
 import { Colors, Spacing, BorderRadius, Typography, Shadows } from '@/constants/theme';
+import { useAppColors } from '@/hooks/useAppColors';
 import { postsApi, roomsApi, searchApi } from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
 import { Room } from '@/types';
@@ -51,6 +52,7 @@ export default function CreatePostScreen() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const inputRef = useRef<TextInput>(null);
+  const appColors = useAppColors();
 
   const [content, setContent] = useState('');
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
@@ -266,15 +268,15 @@ export default function CreatePostScreen() {
   const canPost = content.trim().length > 0 && selectedRoom !== null;
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: appColors.surface }]} edges={['top']}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardView}
       >
         {/* Header */}
-        <View style={styles.header}>
+        <View style={[styles.header, { borderBottomColor: appColors.border }]}>
           <TouchableOpacity style={styles.cancelButton} onPress={() => navigation.goBack()}>
-            <ThemedText style={styles.cancelText}>Cancel</ThemedText>
+            <ThemedText style={[styles.cancelText, { color: appColors.textSecondary }]}>Cancel</ThemedText>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.postButton, !canPost && styles.postButtonDisabled]}
@@ -303,19 +305,20 @@ export default function CreatePostScreen() {
                 </ThemedText>
               </>
             ) : (
-              <ThemedText style={styles.roomPlaceholder}>Select a room</ThemedText>
+              <ThemedText style={[styles.roomPlaceholder, { color: appColors.textSecondary }]}>Select a room</ThemedText>
             )}
-            <Ionicons name="chevron-down" size={20} color={Colors.textSecondary} />
+            <Ionicons name="chevron-down" size={20} color={appColors.textSecondary} />
           </TouchableOpacity>
 
           {/* Room Picker Dropdown */}
           {showRoomPicker && (
-            <View style={styles.roomPicker}>
+            <View style={[styles.roomPicker, { backgroundColor: appColors.surface }]}>
               {roomsData?.map((room) => (
                 <TouchableOpacity
                   key={room.id}
                   style={[
                     styles.roomOption,
+                    { borderBottomColor: appColors.border },
                     selectedRoom?.id === room.id && styles.roomOptionSelected,
                   ]}
                   onPress={() => {
@@ -324,7 +327,7 @@ export default function CreatePostScreen() {
                   }}
                 >
                   <ThemedText style={styles.roomIcon}>{room.icon}</ThemedText>
-                  <ThemedText style={styles.roomOptionName}>{room.name}</ThemedText>
+                  <ThemedText style={[styles.roomOptionName, { color: appColors.textPrimary }]}>{room.name}</ThemedText>
                 </TouchableOpacity>
               ))}
             </View>
@@ -334,7 +337,7 @@ export default function CreatePostScreen() {
           <View style={styles.authorRow}>
             {isAnonymous ? (
               <View style={[styles.avatar, styles.anonymousAvatar]}>
-                <Ionicons name="person" size={20} color={Colors.textSecondary} />
+                <Ionicons name="person" size={20} color={appColors.textSecondary} />
               </View>
             ) : user?.avatar_url ? (
               <Image source={{ uri: user.avatar_url }} style={styles.avatar} />
@@ -345,7 +348,7 @@ export default function CreatePostScreen() {
                 </ThemedText>
               </View>
             )}
-            <ThemedText style={styles.authorName}>
+            <ThemedText style={[styles.authorName, { color: appColors.textPrimary }]}>
               {isAnonymous ? 'Anonymous' : user?.full_name}
             </ThemedText>
           </View>
@@ -353,9 +356,9 @@ export default function CreatePostScreen() {
           {/* Content Input */}
           <TextInput
             ref={inputRef}
-            style={styles.input}
+            style={[styles.input, { color: appColors.textPrimary }]}
             placeholder="What's on your mind?"
-            placeholderTextColor={Colors.textSecondary}
+            placeholderTextColor={appColors.textSecondary}
             multiline
             value={content}
             onChangeText={handleContentChange}
@@ -367,7 +370,8 @@ export default function CreatePostScreen() {
           <View style={styles.charCount}>
             <ThemedText style={[
               styles.charCountText,
-              content.length > MAX_CONTENT_LENGTH * 0.9 && styles.charCountWarning,
+              { color: appColors.textSecondary },
+              content.length > MAX_CONTENT_LENGTH * 0.9 && { color: appColors.warning },
             ]}>
               {content.length}/{MAX_CONTENT_LENGTH}
             </ThemedText>
@@ -379,11 +383,11 @@ export default function CreatePostScreen() {
               {mentionSuggestions.map((suggestion, index) => (
                 <TouchableOpacity
                   key={index}
-                  style={styles.suggestionItem}
+                  style={[styles.suggestionItem, { borderBottomColor: appColors.border }]}
                   onPress={() => handleInsertSuggestion(suggestion, 'mention')}
                 >
                   <Ionicons name="at" size={16} color={Colors.primary} />
-                  <ThemedText style={styles.suggestionText}>{suggestion}</ThemedText>
+                  <ThemedText style={[styles.suggestionText, { color: appColors.textPrimary }]}>{suggestion}</ThemedText>
                 </TouchableOpacity>
               ))}
             </View>
@@ -394,11 +398,11 @@ export default function CreatePostScreen() {
               {hashtagSuggestions.map((suggestion, index) => (
                 <TouchableOpacity
                   key={index}
-                  style={styles.suggestionItem}
+                  style={[styles.suggestionItem, { borderBottomColor: appColors.border }]}
                   onPress={() => handleInsertSuggestion(suggestion, 'hashtag')}
                 >
                   <ThemedText style={styles.hashtagIcon}>#</ThemedText>
-                  <ThemedText style={styles.suggestionText}>{suggestion}</ThemedText>
+                  <ThemedText style={[styles.suggestionText, { color: appColors.textPrimary }]}>{suggestion}</ThemedText>
                 </TouchableOpacity>
               ))}
             </View>
@@ -443,7 +447,7 @@ export default function CreatePostScreen() {
         </ScrollView>
 
         {/* Bottom Toolbar */}
-        <View style={styles.toolbar}>
+        <View style={[styles.toolbar, { borderTopColor: appColors.border }]}>
           <View style={styles.toolbarLeft}>
             <TouchableOpacity style={styles.toolbarButton} onPress={handlePickImages}>
               <Ionicons name="image-outline" size={24} color={Colors.primary} />
@@ -461,7 +465,7 @@ export default function CreatePostScreen() {
               <Ionicons 
                 name="videocam-outline" 
                 size={24} 
-                color={videos.length >= MAX_VIDEOS ? Colors.textSecondary : Colors.primary} 
+                color={videos.length >= MAX_VIDEOS ? appColors.textSecondary : Colors.primary} 
               />
               {videos.length > 0 && (
                 <View style={[styles.imageBadge, styles.videoBadge]}>
@@ -481,10 +485,11 @@ export default function CreatePostScreen() {
             <Ionicons
               name={isAnonymous ? 'eye-off' : 'eye-off-outline'}
               size={18}
-              color={isAnonymous ? Colors.primary : Colors.textSecondary}
+              color={isAnonymous ? Colors.primary : appColors.textSecondary}
             />
             <ThemedText style={[
               styles.anonymousText,
+              { color: appColors.textSecondary },
               isAnonymous && styles.anonymousTextActive,
             ]}>
               Anonymous
@@ -499,7 +504,6 @@ export default function CreatePostScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.surface,
   },
   keyboardView: {
     flex: 1,
@@ -511,14 +515,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
   },
   cancelButton: {
     padding: Spacing.sm,
   },
   cancelText: {
     ...Typography.body,
-    color: Colors.textSecondary,
   },
   postButton: {
     backgroundColor: Colors.primary,
@@ -557,11 +559,9 @@ const styles = StyleSheet.create({
   },
   roomPlaceholder: {
     ...Typography.body,
-    color: Colors.textSecondary,
     flex: 1,
   },
   roomPicker: {
-    backgroundColor: Colors.surface,
     borderRadius: BorderRadius.sm,
     marginBottom: Spacing.md,
     ...Shadows.card,
@@ -572,14 +572,12 @@ const styles = StyleSheet.create({
     padding: Spacing.md,
     gap: Spacing.sm,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
   },
   roomOptionSelected: {
     backgroundColor: Colors.primary + '10',
   },
   roomOptionName: {
     ...Typography.body,
-    color: Colors.textPrimary,
   },
   authorRow: {
     flexDirection: 'row',
@@ -610,11 +608,9 @@ const styles = StyleSheet.create({
   authorName: {
     ...Typography.body,
     fontWeight: '500',
-    color: Colors.textPrimary,
   },
   input: {
     ...Typography.body,
-    color: Colors.textPrimary,
     minHeight: 120,
     textAlignVertical: 'top',
   },
@@ -624,10 +620,6 @@ const styles = StyleSheet.create({
   },
   charCountText: {
     ...Typography.small,
-    color: Colors.textSecondary,
-  },
-  charCountWarning: {
-    color: Colors.warning,
   },
   suggestions: {
     backgroundColor: Colors.light.backgroundSecondary,
@@ -640,7 +632,6 @@ const styles = StyleSheet.create({
     padding: Spacing.md,
     gap: Spacing.sm,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
   },
   hashtagIcon: {
     ...Typography.body,
@@ -649,7 +640,6 @@ const styles = StyleSheet.create({
   },
   suggestionText: {
     ...Typography.body,
-    color: Colors.textPrimary,
   },
   imagesContainer: {
     marginTop: Spacing.md,
@@ -695,7 +685,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.md,
     borderTopWidth: 1,
-    borderTopColor: Colors.border,
   },
   toolbarLeft: {
     flexDirection: 'row',
@@ -743,7 +732,6 @@ const styles = StyleSheet.create({
   },
   anonymousText: {
     ...Typography.small,
-    color: Colors.textSecondary,
   },
   anonymousTextActive: {
     color: Colors.primary,

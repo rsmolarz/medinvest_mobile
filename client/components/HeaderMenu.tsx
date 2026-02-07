@@ -18,6 +18,7 @@ import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { ThemedText } from '@/components/ThemedText';
 import { Colors, Spacing, BorderRadius, Typography, Shadows } from '@/constants/theme';
+import { useAppColors } from '@/hooks/useAppColors';
 import { useAuth } from '@/contexts/AuthContext';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
@@ -36,6 +37,7 @@ interface MenuItem {
 }
 
 export default function HeaderMenu({ visible, onClose }: HeaderMenuProps) {
+  const appColors = useAppColors();
   const navigation = useNavigation<any>();
   const { user, signOut } = useAuth();
 
@@ -89,11 +91,11 @@ export default function HeaderMenu({ visible, onClose }: HeaderMenuProps) {
         onPress={handlePress}
       >
         {item.iconType === 'ionicons' ? (
-          <Ionicons name={item.icon as any} size={22} color={Colors.textPrimary} />
+          <Ionicons name={item.icon as any} size={22} color={appColors.textPrimary} />
         ) : (
-          <MaterialCommunityIcons name={item.icon as any} size={22} color={Colors.textPrimary} />
+          <MaterialCommunityIcons name={item.icon as any} size={22} color={appColors.textPrimary} />
         )}
-        <ThemedText style={styles.menuItemText}>{item.label}</ThemedText>
+        <ThemedText style={[styles.menuItemText, { color: appColors.textPrimary }]}>{item.label}</ThemedText>
       </TouchableOpacity>
     );
   };
@@ -107,12 +109,12 @@ export default function HeaderMenu({ visible, onClose }: HeaderMenuProps) {
     >
       <Pressable style={styles.overlay} onPress={onClose}>
         <Pressable 
-          style={styles.menuContainer}
+          style={[styles.menuContainer, { backgroundColor: appColors.surface }]}
           onPress={(e) => e.stopPropagation()}
         >
           {/* User Profile Section */}
           <TouchableOpacity 
-            style={styles.userSection}
+            style={[styles.userSection, { borderBottomColor: appColors.border }]}
             onPress={() => handleNavigate('Main', { screen: 'Profile' })}
           >
             <View style={styles.userAvatar}>
@@ -127,38 +129,38 @@ export default function HeaderMenu({ visible, onClose }: HeaderMenuProps) {
               )}
             </View>
             <View style={styles.userInfo}>
-              <ThemedText style={styles.userName}>
+              <ThemedText style={[styles.userName, { color: appColors.textPrimary }]}>
                 {user?.first_name ? `${user.first_name} ${user.last_name || ''}`.trim() : user?.email?.split('@')[0] || 'User'}
               </ThemedText>
-              <ThemedText style={styles.userHandle}>
+              <ThemedText style={[styles.userHandle, { color: appColors.textSecondary }]}>
                 {user?.email || 'user@email.com'}
               </ThemedText>
             </View>
-            <Ionicons name="chevron-forward" size={20} color={Colors.textSecondary} />
+            <Ionicons name="chevron-forward" size={20} color={appColors.textSecondary} />
           </TouchableOpacity>
 
           {/* Main Navigation */}
-          <View style={styles.menuSection}>
-            <ThemedText style={styles.sectionTitle}>Navigation</ThemedText>
+          <View style={[styles.menuSection, { borderBottomColor: appColors.border }]}>
+            <ThemedText style={[styles.sectionTitle, { color: appColors.textSecondary }]}>Navigation</ThemedText>
             {mainMenuItems.map(renderMenuItem)}
           </View>
 
           {/* Quick Actions */}
-          <View style={styles.menuSection}>
-            <ThemedText style={styles.sectionTitle}>Quick Actions</ThemedText>
+          <View style={[styles.menuSection, { borderBottomColor: appColors.border }]}>
+            <ThemedText style={[styles.sectionTitle, { color: appColors.textSecondary }]}>Quick Actions</ThemedText>
             {quickActions.map(renderMenuItem)}
           </View>
 
           {/* Account */}
-          <View style={styles.menuSection}>
-            <ThemedText style={styles.sectionTitle}>Account</ThemedText>
+          <View style={[styles.menuSection, { borderBottomColor: appColors.border }]}>
+            <ThemedText style={[styles.sectionTitle, { color: appColors.textSecondary }]}>Account</ThemedText>
             {accountItems.map(renderMenuItem)}
           </View>
 
           {/* Logout */}
           <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-            <Ionicons name="log-out-outline" size={22} color={Colors.error} />
-            <ThemedText style={styles.logoutText}>Log Out</ThemedText>
+            <Ionicons name="log-out-outline" size={22} color={appColors.error} />
+            <ThemedText style={[styles.logoutText, { color: appColors.error }]}>Log Out</ThemedText>
           </TouchableOpacity>
         </Pressable>
       </Pressable>
@@ -172,9 +174,10 @@ interface MenuButtonProps {
 }
 
 export function MenuButton({ onPress }: MenuButtonProps) {
+  const appColors = useAppColors();
   return (
     <TouchableOpacity style={styles.menuButton} onPress={onPress}>
-      <Ionicons name="menu" size={26} color={Colors.textPrimary} />
+      <Ionicons name="menu" size={26} color={appColors.textPrimary} />
     </TouchableOpacity>
   );
 }
@@ -189,7 +192,6 @@ const styles = StyleSheet.create({
   menuContainer: {
     width: Math.min(SCREEN_WIDTH * 0.85, 320),
     maxHeight: SCREEN_HEIGHT * 0.9,
-    backgroundColor: Colors.surface,
     borderTopLeftRadius: BorderRadius.xl,
     borderBottomLeftRadius: BorderRadius.xl,
     marginTop: 60,
@@ -202,7 +204,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: Spacing.lg,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
     backgroundColor: Colors.light.backgroundSecondary,
     borderTopLeftRadius: BorderRadius.xl,
   },
@@ -233,21 +234,17 @@ const styles = StyleSheet.create({
   userName: {
     ...Typography.body,
     fontWeight: '600',
-    color: Colors.textPrimary,
   },
   userHandle: {
     ...Typography.small,
-    color: Colors.textSecondary,
   },
   menuSection: {
     paddingVertical: Spacing.sm,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
   },
   sectionTitle: {
     ...Typography.small,
     fontWeight: '600',
-    color: Colors.textSecondary,
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.xs,
     textTransform: 'uppercase',
@@ -261,7 +258,6 @@ const styles = StyleSheet.create({
   },
   menuItemText: {
     ...Typography.body,
-    color: Colors.textPrimary,
     marginLeft: Spacing.md,
   },
   logoutButton: {
@@ -273,7 +269,6 @@ const styles = StyleSheet.create({
   },
   logoutText: {
     ...Typography.body,
-    color: Colors.error,
     marginLeft: Spacing.md,
     fontWeight: '500',
   },

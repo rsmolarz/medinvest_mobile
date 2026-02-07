@@ -23,6 +23,7 @@ import { Picker } from '@react-native-picker/picker';
 
 import { ThemedText } from '@/components/ThemedText';
 import { Colors, Spacing, BorderRadius, Typography, Shadows } from '@/constants/theme';
+import { useAppColors } from '@/hooks/useAppColors';
 import { useAuth } from '@/contexts/AuthContext';
 import { isValidEmail, validatePassword } from '@/lib/utils';
 
@@ -109,6 +110,7 @@ const SPECIALTIES = [
 
 export default function RegisterScreen() {
   const navigation = useNavigation<any>();
+  const appColors = useAppColors();
   const { register, isLoading, error, clearError } = useAuth();
 
   const [firstName, setFirstName] = useState('');
@@ -186,7 +188,7 @@ export default function RegisterScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: appColors.surface }]}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardView}
@@ -199,7 +201,7 @@ export default function RegisterScreen() {
           {/* Header */}
           <View style={styles.header}>
             <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-              <Ionicons name="chevron-back" size={24} color={Colors.textPrimary} />
+              <Ionicons name="chevron-back" size={24} color={appColors.textPrimary} />
             </TouchableOpacity>
             <LinearGradient
               colors={[Colors.primary, Colors.secondary]}
@@ -209,8 +211,8 @@ export default function RegisterScreen() {
             >
               <Ionicons name="medical" size={32} color="white" />
             </LinearGradient>
-            <ThemedText style={styles.title}>Create Account</ThemedText>
-            <ThemedText style={styles.subtitle}>
+            <ThemedText style={[styles.title, { color: appColors.textPrimary }]}>Create Account</ThemedText>
+            <ThemedText style={[styles.subtitle, { color: appColors.textSecondary }]}>
               Join the MedInvest community
             </ThemedText>
           </View>
@@ -220,12 +222,12 @@ export default function RegisterScreen() {
             {/* Name Row */}
             <View style={styles.nameRow}>
               <View style={[styles.inputContainer, { flex: 1 }]}>
-                <ThemedText style={styles.label}>First Name</ThemedText>
-                <View style={[styles.inputWrapper, errors.firstName && styles.inputError]}>
+                <ThemedText style={[styles.label, { color: appColors.textPrimary }]}>First Name</ThemedText>
+                <View style={[styles.inputWrapper, errors.firstName && { borderColor: appColors.error }]}>
                   <TextInput
-                    style={styles.input}
+                    style={[styles.input, { color: appColors.textPrimary }]}
                     placeholder="First"
-                    placeholderTextColor={Colors.textSecondary}
+                    placeholderTextColor={appColors.textSecondary}
                     value={firstName}
                     onChangeText={(text) => {
                       setFirstName(text);
@@ -235,17 +237,17 @@ export default function RegisterScreen() {
                   />
                 </View>
                 {errors.firstName && (
-                  <ThemedText style={styles.errorText}>{errors.firstName}</ThemedText>
+                  <ThemedText style={[styles.errorText, { color: appColors.error }]}>{errors.firstName}</ThemedText>
                 )}
               </View>
 
               <View style={[styles.inputContainer, { flex: 1, marginLeft: Spacing.md }]}>
-                <ThemedText style={styles.label}>Last Name</ThemedText>
-                <View style={[styles.inputWrapper, errors.lastName && styles.inputError]}>
+                <ThemedText style={[styles.label, { color: appColors.textPrimary }]}>Last Name</ThemedText>
+                <View style={[styles.inputWrapper, errors.lastName && { borderColor: appColors.error }]}>
                   <TextInput
-                    style={styles.input}
+                    style={[styles.input, { color: appColors.textPrimary }]}
                     placeholder="Last"
-                    placeholderTextColor={Colors.textSecondary}
+                    placeholderTextColor={appColors.textSecondary}
                     value={lastName}
                     onChangeText={(text) => {
                       setLastName(text);
@@ -255,20 +257,20 @@ export default function RegisterScreen() {
                   />
                 </View>
                 {errors.lastName && (
-                  <ThemedText style={styles.errorText}>{errors.lastName}</ThemedText>
+                  <ThemedText style={[styles.errorText, { color: appColors.error }]}>{errors.lastName}</ThemedText>
                 )}
               </View>
             </View>
 
             {/* Email */}
             <View style={styles.inputContainer}>
-              <ThemedText style={styles.label}>Email</ThemedText>
-              <View style={[styles.inputWrapper, errors.email && styles.inputError]}>
-                <Ionicons name="mail-outline" size={20} color={Colors.textSecondary} />
+              <ThemedText style={[styles.label, { color: appColors.textPrimary }]}>Email</ThemedText>
+              <View style={[styles.inputWrapper, errors.email && { borderColor: appColors.error }]}>
+                <Ionicons name="mail-outline" size={20} color={appColors.textSecondary} />
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, { color: appColors.textPrimary }]}
                   placeholder="Enter your email"
-                  placeholderTextColor={Colors.textSecondary}
+                  placeholderTextColor={appColors.textSecondary}
                   value={email}
                   onChangeText={(text) => {
                     setEmail(text);
@@ -280,19 +282,19 @@ export default function RegisterScreen() {
                 />
               </View>
               {errors.email && (
-                <ThemedText style={styles.errorText}>{errors.email}</ThemedText>
+                <ThemedText style={[styles.errorText, { color: appColors.error }]}>{errors.email}</ThemedText>
               )}
             </View>
 
             {/* Password */}
             <View style={styles.inputContainer}>
-              <ThemedText style={styles.label}>Password</ThemedText>
-              <View style={[styles.inputWrapper, errors.password && styles.inputError]}>
-                <Ionicons name="lock-closed-outline" size={20} color={Colors.textSecondary} />
+              <ThemedText style={[styles.label, { color: appColors.textPrimary }]}>Password</ThemedText>
+              <View style={[styles.inputWrapper, errors.password && { borderColor: appColors.error }]}>
+                <Ionicons name="lock-closed-outline" size={20} color={appColors.textSecondary} />
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, { color: appColors.textPrimary }]}
                   placeholder="Create a password"
-                  placeholderTextColor={Colors.textSecondary}
+                  placeholderTextColor={appColors.textSecondary}
                   value={password}
                   onChangeText={(text) => {
                     setPassword(text);
@@ -305,27 +307,27 @@ export default function RegisterScreen() {
                   <Ionicons
                     name={showPassword ? 'eye-off-outline' : 'eye-outline'}
                     size={20}
-                    color={Colors.textSecondary}
+                    color={appColors.textSecondary}
                   />
                 </TouchableOpacity>
               </View>
               {errors.password && (
-                <ThemedText style={styles.errorText}>{errors.password}</ThemedText>
+                <ThemedText style={[styles.errorText, { color: appColors.error }]}>{errors.password}</ThemedText>
               )}
-              <ThemedText style={styles.passwordHint}>
+              <ThemedText style={[styles.passwordHint, { color: appColors.textSecondary }]}>
                 Min 8 chars, uppercase, lowercase, and number
               </ThemedText>
             </View>
 
             {/* Confirm Password */}
             <View style={styles.inputContainer}>
-              <ThemedText style={styles.label}>Confirm Password</ThemedText>
-              <View style={[styles.inputWrapper, errors.confirmPassword && styles.inputError]}>
-                <Ionicons name="lock-closed-outline" size={20} color={Colors.textSecondary} />
+              <ThemedText style={[styles.label, { color: appColors.textPrimary }]}>Confirm Password</ThemedText>
+              <View style={[styles.inputWrapper, errors.confirmPassword && { borderColor: appColors.error }]}>
+                <Ionicons name="lock-closed-outline" size={20} color={appColors.textSecondary} />
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, { color: appColors.textPrimary }]}
                   placeholder="Confirm your password"
-                  placeholderTextColor={Colors.textSecondary}
+                  placeholderTextColor={appColors.textSecondary}
                   value={confirmPassword}
                   onChangeText={(text) => {
                     setConfirmPassword(text);
@@ -338,27 +340,27 @@ export default function RegisterScreen() {
                   <Ionicons
                     name={showConfirmPassword ? 'eye-off-outline' : 'eye-outline'}
                     size={20}
-                    color={Colors.textSecondary}
+                    color={appColors.textSecondary}
                   />
                 </TouchableOpacity>
               </View>
               {errors.confirmPassword && (
-                <ThemedText style={styles.errorText}>{errors.confirmPassword}</ThemedText>
+                <ThemedText style={[styles.errorText, { color: appColors.error }]}>{errors.confirmPassword}</ThemedText>
               )}
             </View>
 
             {/* Specialty */}
             <View style={styles.inputContainer}>
-              <ThemedText style={styles.label}>Specialty (Optional)</ThemedText>
+              <ThemedText style={[styles.label, { color: appColors.textPrimary }]}>Specialty (Optional)</ThemedText>
               <TouchableOpacity
                 style={styles.inputWrapper}
                 onPress={() => setShowSpecialtyPicker(!showSpecialtyPicker)}
               >
-                <Ionicons name="briefcase-outline" size={20} color={Colors.textSecondary} />
-                <ThemedText style={[styles.pickerText, !specialty && styles.placeholderText]}>
+                <Ionicons name="briefcase-outline" size={20} color={appColors.textSecondary} />
+                <ThemedText style={[styles.pickerText, !specialty && { color: appColors.textSecondary }, specialty ? { color: appColors.textPrimary } : null]}>
                   {specialty || 'Select your specialty'}
                 </ThemedText>
-                <Ionicons name="chevron-down" size={20} color={Colors.textSecondary} />
+                <Ionicons name="chevron-down" size={20} color={appColors.textSecondary} />
               </TouchableOpacity>
             </View>
 
@@ -380,13 +382,13 @@ export default function RegisterScreen() {
 
             {/* Referral Code */}
             <View style={styles.inputContainer}>
-              <ThemedText style={styles.label}>Referral Code (Optional)</ThemedText>
+              <ThemedText style={[styles.label, { color: appColors.textPrimary }]}>Referral Code (Optional)</ThemedText>
               <View style={styles.inputWrapper}>
-                <Ionicons name="gift-outline" size={20} color={Colors.textSecondary} />
+                <Ionicons name="gift-outline" size={20} color={appColors.textSecondary} />
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, { color: appColors.textPrimary }]}
                   placeholder="Enter referral code"
-                  placeholderTextColor={Colors.textSecondary}
+                  placeholderTextColor={appColors.textSecondary}
                   value={referralCode}
                   onChangeText={setReferralCode}
                   autoCapitalize="characters"
@@ -408,7 +410,7 @@ export default function RegisterScreen() {
             </TouchableOpacity>
 
             {/* Terms */}
-            <ThemedText style={styles.terms}>
+            <ThemedText style={[styles.terms, { color: appColors.textSecondary }]}>
               By creating an account, you agree to our{' '}
               <ThemedText style={styles.termsLink}>Terms of Service</ThemedText> and{' '}
               <ThemedText style={styles.termsLink}>Privacy Policy</ThemedText>
@@ -417,7 +419,7 @@ export default function RegisterScreen() {
 
           {/* Login Link */}
           <View style={styles.footer}>
-            <ThemedText style={styles.footerText}>Already have an account?</ThemedText>
+            <ThemedText style={[styles.footerText, { color: appColors.textSecondary }]}>Already have an account?</ThemedText>
             <TouchableOpacity onPress={handleLogin}>
               <ThemedText style={styles.loginText}> Sign In</ThemedText>
             </TouchableOpacity>
@@ -431,7 +433,6 @@ export default function RegisterScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.surface,
   },
   keyboardView: {
     flex: 1,
@@ -460,12 +461,10 @@ const styles = StyleSheet.create({
   },
   title: {
     ...Typography.title,
-    color: Colors.textPrimary,
     marginBottom: Spacing.xs,
   },
   subtitle: {
     ...Typography.body,
-    color: Colors.textSecondary,
   },
   form: {
     flex: 1,
@@ -479,7 +478,6 @@ const styles = StyleSheet.create({
   label: {
     ...Typography.caption,
     fontWeight: '600',
-    color: Colors.textPrimary,
     marginBottom: Spacing.xs,
   },
   inputWrapper: {
@@ -493,22 +491,14 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'transparent',
   },
-  inputError: {
-    borderColor: Colors.error,
-  },
   input: {
     flex: 1,
     ...Typography.body,
-    color: Colors.textPrimary,
     height: '100%',
   },
   pickerText: {
     flex: 1,
     ...Typography.body,
-    color: Colors.textPrimary,
-  },
-  placeholderText: {
-    color: Colors.textSecondary,
   },
   pickerContainer: {
     backgroundColor: Colors.light.backgroundSecondary,
@@ -518,12 +508,10 @@ const styles = StyleSheet.create({
   },
   errorText: {
     ...Typography.small,
-    color: Colors.error,
     marginTop: Spacing.xs,
   },
   passwordHint: {
     ...Typography.small,
-    color: Colors.textSecondary,
     marginTop: Spacing.xs,
   },
   registerButton: {
@@ -545,7 +533,6 @@ const styles = StyleSheet.create({
   },
   terms: {
     ...Typography.small,
-    color: Colors.textSecondary,
     textAlign: 'center',
     marginTop: Spacing.lg,
     lineHeight: 20,
@@ -563,7 +550,6 @@ const styles = StyleSheet.create({
   },
   footerText: {
     ...Typography.body,
-    color: Colors.textSecondary,
   },
   loginText: {
     ...Typography.body,

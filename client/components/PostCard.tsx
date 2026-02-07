@@ -17,6 +17,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 
 import { ThemedText } from '@/components/ThemedText';
 import { Colors, Spacing, BorderRadius, Typography, Shadows } from '@/constants/theme';
+import { useAppColors } from '@/hooks/useAppColors';
 import { Post, VoteDirection } from '@/types';
 import { formatRelativeTime, formatNumber } from '@/lib/utils';
 import RichTextContent from './RichTextContent';
@@ -45,6 +46,7 @@ function PostCard({
   onMentionPress,
   showFullContent = false,
 }: PostCardProps) {
+  const appColors = useAppColors();
   const [imageError, setImageError] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
@@ -64,13 +66,13 @@ function PostCard({
       return (
         <View style={styles.authorContainer}>
           <View style={[styles.avatar, styles.anonymousAvatar]}>
-            <Ionicons name="person" size={20} color={Colors.textSecondary} />
+            <Ionicons name="person" size={20} color={appColors.textSecondary} />
           </View>
           <View style={styles.authorInfo}>
-            <ThemedText style={styles.authorName}>
+            <ThemedText style={[styles.authorName, { color: appColors.textPrimary }]}>
               {post.anonymous_name || 'Anonymous'}
             </ThemedText>
-            <ThemedText style={styles.timestamp}>
+            <ThemedText style={[styles.timestamp, { color: appColors.textSecondary }]}>
               {formatRelativeTime(post.created_at)}
             </ThemedText>
           </View>
@@ -91,19 +93,19 @@ function PostCard({
         )}
         <View style={styles.authorInfo}>
           <View style={styles.authorNameRow}>
-            <ThemedText style={styles.authorName}>{post.author.full_name}</ThemedText>
+            <ThemedText style={[styles.authorName, { color: appColors.textPrimary }]}>{post.author.full_name}</ThemedText>
             {post.author.is_verified && (
               <Ionicons name="checkmark-circle" size={14} color={Colors.primary} />
             )}
             {post.author.is_premium && (
-              <MaterialCommunityIcons name="crown" size={14} color={Colors.warning} />
+              <MaterialCommunityIcons name="crown" size={14} color={appColors.warning} />
             )}
           </View>
           <View style={styles.authorMeta}>
             {post.author.specialty && (
-              <ThemedText style={styles.specialty}>{post.author.specialty}</ThemedText>
+              <ThemedText style={[styles.specialty, { color: appColors.textSecondary }]}>{post.author.specialty}</ThemedText>
             )}
-            <ThemedText style={styles.timestamp}>
+            <ThemedText style={[styles.timestamp, { color: appColors.textSecondary }]}>
               · {formatRelativeTime(post.created_at)}
             </ThemedText>
           </View>
@@ -176,14 +178,15 @@ function PostCard({
           <Ionicons
             name={post.user_vote === 'up' ? 'arrow-up' : 'arrow-up-outline'}
             size={20}
-            color={post.user_vote === 'up' ? Colors.secondary : Colors.textSecondary}
+            color={post.user_vote === 'up' ? Colors.secondary : appColors.textSecondary}
           />
         </TouchableOpacity>
         <ThemedText
           style={[
             styles.voteScore,
+            { color: appColors.textPrimary },
             score > 0 && styles.voteScorePositive,
-            score < 0 && styles.voteScoreNegative,
+            score < 0 && { color: appColors.error },
           ]}
         >
           {formatNumber(score)}
@@ -195,22 +198,22 @@ function PostCard({
           <Ionicons
             name={post.user_vote === 'down' ? 'arrow-down' : 'arrow-down-outline'}
             size={20}
-            color={post.user_vote === 'down' ? Colors.error : Colors.textSecondary}
+            color={post.user_vote === 'down' ? appColors.error : appColors.textSecondary}
           />
         </TouchableOpacity>
       </View>
 
       {/* Comments */}
       <TouchableOpacity style={styles.actionButton} onPress={onPress}>
-        <Ionicons name="chatbubble-outline" size={20} color={Colors.textSecondary} />
-        <ThemedText style={styles.actionText}>
+        <Ionicons name="chatbubble-outline" size={20} color={appColors.textSecondary} />
+        <ThemedText style={[styles.actionText, { color: appColors.textSecondary }]}>
           {formatNumber(post.comments_count)}
         </ThemedText>
       </TouchableOpacity>
 
       {/* Share */}
       <TouchableOpacity style={styles.actionButton}>
-        <Ionicons name="share-outline" size={20} color={Colors.textSecondary} />
+        <Ionicons name="share-outline" size={20} color={appColors.textSecondary} />
       </TouchableOpacity>
 
       {/* Bookmark */}
@@ -218,14 +221,14 @@ function PostCard({
         <Ionicons
           name={post.is_bookmarked ? 'bookmark' : 'bookmark-outline'}
           size={20}
-          color={post.is_bookmarked ? Colors.primary : Colors.textSecondary}
+          color={post.is_bookmarked ? Colors.primary : appColors.textSecondary}
         />
       </TouchableOpacity>
     </View>
   );
 
   return (
-    <Pressable style={styles.container} onPress={onPress}>
+    <Pressable style={[styles.container, { backgroundColor: appColors.surface, borderBottomColor: appColors.border }]} onPress={onPress}>
       <View style={styles.header}>
         {renderAuthor()}
         {renderRoom()}
@@ -249,11 +252,9 @@ function PostCard({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: Colors.surface,
     marginBottom: Spacing.sm,
     padding: Spacing.lg,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
   },
   header: {
     flexDirection: 'row',
@@ -298,7 +299,6 @@ const styles = StyleSheet.create({
   authorName: {
     ...Typography.body,
     fontWeight: '600',
-    color: Colors.textPrimary,
   },
   authorMeta: {
     flexDirection: 'row',
@@ -307,11 +307,9 @@ const styles = StyleSheet.create({
   },
   specialty: {
     ...Typography.small,
-    color: Colors.textSecondary,
   },
   timestamp: {
     ...Typography.small,
-    color: Colors.textSecondary,
     marginLeft: Spacing.xs,
   },
   roomBadge: {
@@ -408,13 +406,9 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     minWidth: 32,
     textAlign: 'center',
-    color: Colors.textPrimary,
   },
   voteScorePositive: {
     color: Colors.secondary,
-  },
-  voteScoreNegative: {
-    color: Colors.error,
   },
   actionButton: {
     flexDirection: 'row',
@@ -425,7 +419,6 @@ const styles = StyleSheet.create({
   },
   actionText: {
     ...Typography.caption,
-    color: Colors.textSecondary,
   },
 });
 

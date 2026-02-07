@@ -23,6 +23,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { ThemedText } from '@/components/ThemedText';
 import { Colors, Spacing, BorderRadius, Typography } from '@/constants/theme';
+import { useAppColors } from '@/hooks/useAppColors';
 import { postsApi } from '@/lib/api';
 import { Post, Comment } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
@@ -43,6 +44,7 @@ export default function PostDetailScreen() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const inputRef = useRef<TextInput>(null);
+  const appColors = useAppColors();
 
   const [commentText, setCommentText] = useState('');
   const [replyingTo, setReplyingTo] = useState<Comment | null>(null);
@@ -148,7 +150,7 @@ export default function PostDetailScreen() {
   }, [navigation]);
 
   const renderComment = ({ item }: { item: Comment }) => (
-    <View style={[styles.commentItem, item.parent_id != null && styles.replyItem]}>
+    <View style={[styles.commentItem, { backgroundColor: appColors.surface, borderBottomColor: appColors.border }, item.parent_id != null && styles.replyItem]}>
       <TouchableOpacity onPress={() => handleUserPress(Number(item.author.id))}>
         {item.author.avatar_url ? (
           <Image source={{ uri: item.author.avatar_url }} style={styles.commentAvatar} />
@@ -164,9 +166,9 @@ export default function PostDetailScreen() {
       <View style={styles.commentContent}>
         <View style={styles.commentHeader}>
           <TouchableOpacity onPress={() => handleUserPress(Number(item.author.id))}>
-            <ThemedText style={styles.commentAuthor}>{item.author.full_name}</ThemedText>
+            <ThemedText style={[styles.commentAuthor, { color: appColors.textPrimary }]}>{item.author.full_name}</ThemedText>
           </TouchableOpacity>
-          <ThemedText style={styles.commentTime}>
+          <ThemedText style={[styles.commentTime, { color: appColors.textSecondary }]}>
             {formatRelativeTime(item.created_at)}
           </ThemedText>
         </View>
@@ -175,7 +177,7 @@ export default function PostDetailScreen() {
           content={item.content}
           onMentionPress={handleUserPress}
           onHashtagPress={handleHashtagPress}
-          style={styles.commentText}
+          style={[styles.commentText, { color: appColors.textPrimary }]}
         />
 
         <View style={styles.commentActions}>
@@ -183,15 +185,15 @@ export default function PostDetailScreen() {
             <Ionicons
               name={item.user_vote === 'up' ? 'arrow-up' : 'arrow-up-outline'}
               size={16}
-              color={item.user_vote === 'up' ? Colors.secondary : Colors.textSecondary}
+              color={item.user_vote === 'up' ? Colors.secondary : appColors.textSecondary}
             />
-            <ThemedText style={styles.commentActionText}>
+            <ThemedText style={[styles.commentActionText, { color: appColors.textSecondary }]}>
               {item.upvotes - item.downvotes}
             </ThemedText>
             <Ionicons
               name={item.user_vote === 'down' ? 'arrow-down' : 'arrow-down-outline'}
               size={16}
-              color={item.user_vote === 'down' ? Colors.error : Colors.textSecondary}
+              color={item.user_vote === 'down' ? appColors.error : appColors.textSecondary}
             />
           </TouchableOpacity>
 
@@ -199,14 +201,14 @@ export default function PostDetailScreen() {
             style={styles.commentAction}
             onPress={() => handleReply(item)}
           >
-            <Ionicons name="chatbubble-outline" size={14} color={Colors.textSecondary} />
-            <ThemedText style={styles.commentActionText}>Reply</ThemedText>
+            <Ionicons name="chatbubble-outline" size={14} color={appColors.textSecondary} />
+            <ThemedText style={[styles.commentActionText, { color: appColors.textSecondary }]}>Reply</ThemedText>
           </TouchableOpacity>
         </View>
 
         {/* Nested replies */}
         {item.replies && item.replies.length > 0 ? (
-          <View style={styles.repliesContainer}>
+          <View style={[styles.repliesContainer, { borderLeftColor: appColors.border }]}>
             {item.replies.map((reply) => (
               <View key={reply.id} style={styles.replyItem}>
                 <TouchableOpacity onPress={() => handleUserPress(Number(reply.author.id))}>
@@ -221,8 +223,8 @@ export default function PostDetailScreen() {
                   )}
                 </TouchableOpacity>
                 <View style={styles.replyContent}>
-                  <ThemedText style={styles.replyAuthor}>{reply.author.full_name}</ThemedText>
-                  <ThemedText style={styles.replyText}>{reply.content}</ThemedText>
+                  <ThemedText style={[styles.replyAuthor, { color: appColors.textPrimary }]}>{reply.author.full_name}</ThemedText>
+                  <ThemedText style={[styles.replyText, { color: appColors.textPrimary }]}>{reply.content}</ThemedText>
                 </View>
               </View>
             ))}
@@ -236,7 +238,7 @@ export default function PostDetailScreen() {
     if (!post) return null;
 
     return (
-      <View style={styles.postContainer}>
+      <View style={[styles.postContainer, { backgroundColor: appColors.surface }]}>
         <PostCard
           post={post}
           onPress={() => {}}
@@ -247,8 +249,8 @@ export default function PostDetailScreen() {
           onMentionPress={handleUserPress}
           showFullContent
         />
-        <View style={styles.commentsHeader}>
-          <ThemedText style={styles.commentsTitle}>
+        <View style={[styles.commentsHeader, { borderTopColor: appColors.border }]}>
+          <ThemedText style={[styles.commentsTitle, { color: appColors.textPrimary }]}>
             Comments ({post.comments_count})
           </ThemedText>
         </View>
@@ -258,27 +260,27 @@ export default function PostDetailScreen() {
 
   if (postLoading) {
     return (
-      <SafeAreaView style={styles.loadingContainer}>
+      <SafeAreaView style={[styles.loadingContainer, { backgroundColor: appColors.background }]}>
         <ActivityIndicator size="large" color={Colors.primary} />
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: appColors.background }]} edges={['top']}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardView}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
       >
         {/* Header */}
-        <View style={styles.header}>
+        <View style={[styles.header, { backgroundColor: appColors.surface, borderBottomColor: appColors.border }]}>
           <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-            <Ionicons name="chevron-back" size={24} color={Colors.textPrimary} />
+            <Ionicons name="chevron-back" size={24} color={appColors.textPrimary} />
           </TouchableOpacity>
-          <ThemedText style={styles.headerTitle}>Post</ThemedText>
+          <ThemedText style={[styles.headerTitle, { color: appColors.textPrimary }]}>Post</ThemedText>
           <TouchableOpacity style={styles.moreButton}>
-            <Ionicons name="ellipsis-horizontal" size={24} color={Colors.textPrimary} />
+            <Ionicons name="ellipsis-horizontal" size={24} color={appColors.textPrimary} />
           </TouchableOpacity>
         </View>
 
@@ -300,14 +302,14 @@ export default function PostDetailScreen() {
         />
 
         {/* Comment Input */}
-        <View style={styles.inputContainer}>
+        <View style={[styles.inputContainer, { backgroundColor: appColors.surface, borderTopColor: appColors.border }]}>
           {replyingTo && (
             <View style={styles.replyingToBar}>
               <ThemedText style={styles.replyingToText}>
                 Replying to {replyingTo.author.full_name}
               </ThemedText>
               <TouchableOpacity onPress={handleCancelReply}>
-                <Ionicons name="close" size={18} color={Colors.textSecondary} />
+                <Ionicons name="close" size={18} color={appColors.textSecondary} />
               </TouchableOpacity>
             </View>
           )}
@@ -324,9 +326,9 @@ export default function PostDetailScreen() {
             <View style={styles.inputWrapper}>
               <TextInput
                 ref={inputRef}
-                style={styles.input}
+                style={[styles.input, { color: appColors.textPrimary }]}
                 placeholder={replyingTo ? 'Write a reply...' : 'Add a comment...'}
-                placeholderTextColor={Colors.textSecondary}
+                placeholderTextColor={appColors.textSecondary}
                 value={commentText}
                 onChangeText={setCommentText}
                 multiline
@@ -344,7 +346,7 @@ export default function PostDetailScreen() {
                 <Ionicons
                   name="send"
                   size={20}
-                  color={commentText.trim() ? Colors.primary : Colors.textSecondary}
+                  color={commentText.trim() ? Colors.primary : appColors.textSecondary}
                 />
               )}
             </TouchableOpacity>
@@ -358,13 +360,11 @@ export default function PostDetailScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
   },
   loadingContainer: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: Colors.background,
   },
   keyboardView: {
     flex: 1,
@@ -375,16 +375,13 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.sm,
-    backgroundColor: Colors.surface,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
   },
   backButton: {
     padding: Spacing.sm,
   },
   headerTitle: {
     ...Typography.heading,
-    color: Colors.textPrimary,
   },
   moreButton: {
     padding: Spacing.sm,
@@ -393,23 +390,18 @@ const styles = StyleSheet.create({
     paddingBottom: Spacing.lg,
   },
   postContainer: {
-    backgroundColor: Colors.surface,
   },
   commentsHeader: {
     padding: Spacing.lg,
     borderTopWidth: 1,
-    borderTopColor: Colors.border,
   },
   commentsTitle: {
     ...Typography.heading,
-    color: Colors.textPrimary,
   },
   commentItem: {
     flexDirection: 'row',
     padding: Spacing.lg,
-    backgroundColor: Colors.surface,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
   },
   replyItem: {
     paddingLeft: Spacing.xl,
@@ -442,16 +434,13 @@ const styles = StyleSheet.create({
   commentAuthor: {
     ...Typography.caption,
     fontWeight: '600',
-    color: Colors.textPrimary,
     marginRight: Spacing.sm,
   },
   commentTime: {
     ...Typography.small,
-    color: Colors.textSecondary,
   },
   commentText: {
     ...Typography.body,
-    color: Colors.textPrimary,
     lineHeight: 20,
   },
   commentActions: {
@@ -466,13 +455,11 @@ const styles = StyleSheet.create({
   },
   commentActionText: {
     ...Typography.small,
-    color: Colors.textSecondary,
   },
   repliesContainer: {
     marginTop: Spacing.md,
     paddingLeft: Spacing.md,
     borderLeftWidth: 2,
-    borderLeftColor: Colors.border,
   },
   replyAvatar: {
     width: 24,
@@ -491,17 +478,13 @@ const styles = StyleSheet.create({
   replyAuthor: {
     ...Typography.small,
     fontWeight: '600',
-    color: Colors.textPrimary,
   },
   replyText: {
     ...Typography.caption,
-    color: Colors.textPrimary,
     marginTop: 2,
   },
   inputContainer: {
-    backgroundColor: Colors.surface,
     borderTopWidth: 1,
-    borderTopColor: Colors.border,
   },
   replyingToBar: {
     flexDirection: 'row',
@@ -536,7 +519,6 @@ const styles = StyleSheet.create({
   },
   input: {
     ...Typography.body,
-    color: Colors.textPrimary,
     maxHeight: 80,
   },
   sendButton: {

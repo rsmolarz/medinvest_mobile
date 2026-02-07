@@ -20,6 +20,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { ThemedText } from '@/components/ThemedText';
 import { Colors, Spacing, BorderRadius, Typography } from '@/constants/theme';
+import { useAppColors } from '@/hooks/useAppColors';
 import { usersApi } from '@/lib/api';
 import { User } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
@@ -37,6 +38,7 @@ export default function FollowersScreen() {
   const { userId, type } = route.params;
   const { user: currentUser } = useAuth();
   const queryClient = useQueryClient();
+  const appColors = useAppColors();
 
   const [activeTab, setActiveTab] = useState<'followers' | 'following'>(type);
 
@@ -85,7 +87,7 @@ export default function FollowersScreen() {
 
     return (
       <TouchableOpacity
-        style={styles.userItem}
+        style={[styles.userItem, { backgroundColor: appColors.surface, borderBottomColor: appColors.border }]}
         onPress={() => handleUserPress(item.id)}
       >
         {item.avatar_url ? (
@@ -99,13 +101,13 @@ export default function FollowersScreen() {
         )}
         <View style={styles.userInfo}>
           <View style={styles.userNameRow}>
-            <ThemedText style={styles.userName}>{item.full_name}</ThemedText>
+            <ThemedText style={[styles.userName, { color: appColors.textPrimary }]}>{item.full_name}</ThemedText>
             {item.is_verified && (
               <Ionicons name="checkmark-circle" size={14} color={Colors.primary} />
             )}
           </View>
           {item.specialty && (
-            <ThemedText style={styles.userSpecialty}>{item.specialty}</ThemedText>
+            <ThemedText style={[styles.userSpecialty, { color: appColors.textSecondary }]}>{item.specialty}</ThemedText>
           )}
         </View>
         {!isCurrentUser && (
@@ -118,7 +120,7 @@ export default function FollowersScreen() {
           >
             <ThemedText style={[
               styles.followButtonText,
-              item.is_following && styles.followingButtonText,
+              item.is_following && { color: appColors.textSecondary },
             ]}>
               {item.is_following ? 'Following' : 'Follow'}
             </ThemedText>
@@ -138,8 +140,8 @@ export default function FollowersScreen() {
     }
     return (
       <View style={styles.emptyContainer}>
-        <Ionicons name="people-outline" size={48} color={Colors.textSecondary} />
-        <ThemedText style={styles.emptyTitle}>
+        <Ionicons name="people-outline" size={48} color={appColors.textSecondary} />
+        <ThemedText style={[styles.emptyTitle, { color: appColors.textPrimary }]}>
           {activeTab === 'followers' ? 'No followers yet' : 'Not following anyone'}
         </ThemedText>
       </View>
@@ -147,24 +149,25 @@ export default function FollowersScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: appColors.background }]} edges={['top']}>
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { backgroundColor: appColors.surface, borderBottomColor: appColors.border }]}>
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <Ionicons name="chevron-back" size={24} color={Colors.textPrimary} />
+          <Ionicons name="chevron-back" size={24} color={appColors.textPrimary} />
         </TouchableOpacity>
-        <ThemedText style={styles.headerTitle}>Connections</ThemedText>
+        <ThemedText style={[styles.headerTitle, { color: appColors.textPrimary }]}>Connections</ThemedText>
         <View style={styles.backButton} />
       </View>
 
       {/* Tabs */}
-      <View style={styles.tabsContainer}>
+      <View style={[styles.tabsContainer, { backgroundColor: appColors.surface, borderBottomColor: appColors.border }]}>
         <TouchableOpacity
           style={[styles.tab, activeTab === 'followers' && styles.tabActive]}
           onPress={() => setActiveTab('followers')}
         >
           <ThemedText style={[
             styles.tabText,
+            { color: appColors.textSecondary },
             activeTab === 'followers' && styles.tabTextActive,
           ]}>
             Followers
@@ -176,6 +179,7 @@ export default function FollowersScreen() {
         >
           <ThemedText style={[
             styles.tabText,
+            { color: appColors.textSecondary },
             activeTab === 'following' && styles.tabTextActive,
           ]}>
             Following
@@ -206,7 +210,6 @@ export default function FollowersScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
   },
   header: {
     flexDirection: 'row',
@@ -214,9 +217,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.sm,
-    backgroundColor: Colors.surface,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
   },
   backButton: {
     width: 40,
@@ -224,13 +225,10 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     ...Typography.heading,
-    color: Colors.textPrimary,
   },
   tabsContainer: {
     flexDirection: 'row',
-    backgroundColor: Colors.surface,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
   },
   tab: {
     flex: 1,
@@ -243,7 +241,6 @@ const styles = StyleSheet.create({
   },
   tabText: {
     ...Typography.body,
-    color: Colors.textSecondary,
   },
   tabTextActive: {
     color: Colors.primary,
@@ -253,9 +250,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     padding: Spacing.lg,
-    backgroundColor: Colors.surface,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
   },
   avatar: {
     width: 48,
@@ -284,11 +279,9 @@ const styles = StyleSheet.create({
   userName: {
     ...Typography.body,
     fontWeight: '600',
-    color: Colors.textPrimary,
   },
   userSpecialty: {
     ...Typography.small,
-    color: Colors.textSecondary,
     marginTop: 2,
   },
   followButton: {
@@ -304,9 +297,6 @@ const styles = StyleSheet.create({
     ...Typography.caption,
     color: 'white',
     fontWeight: '600',
-  },
-  followingButtonText: {
-    color: Colors.textSecondary,
   },
   loadingContainer: {
     flex: 1,
@@ -325,7 +315,6 @@ const styles = StyleSheet.create({
   },
   emptyTitle: {
     ...Typography.heading,
-    color: Colors.textPrimary,
     marginTop: Spacing.lg,
   },
 });

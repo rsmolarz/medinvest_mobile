@@ -20,6 +20,7 @@ import * as Haptics from 'expo-haptics';
 
 import { ThemedText } from '@/components/ThemedText';
 import { Colors, Spacing, BorderRadius, Typography } from '@/constants/theme';
+import { useAppColors } from '@/hooks/useAppColors';
 import { videoCallService, CallType } from '@/lib/video/VideoCallService';
 
 type VoiceCallRouteParams = {
@@ -35,6 +36,7 @@ type CallStatus = 'connecting' | 'ringing' | 'connected' | 'ended';
 
 export default function VoiceCallScreen() {
   const navigation = useNavigation<any>();
+  const appColors = useAppColors();
   const route = useRoute<RouteProp<VoiceCallRouteParams, 'VoiceCall'>>();
   const { recipientId, recipientName, recipientAvatar, callType } = route.params;
 
@@ -227,7 +229,7 @@ export default function VoiceCallScreen() {
             )}
           </View>
 
-          <TouchableOpacity style={styles.endCallButton} onPress={endCall}>
+          <TouchableOpacity style={[styles.endCallButton, { backgroundColor: appColors.error }]} onPress={endCall}>
             <Ionicons name="call" size={32} color="white" style={styles.endCallIcon} />
           </TouchableOpacity>
         </View>
@@ -337,7 +339,6 @@ const styles = StyleSheet.create({
     width: 72,
     height: 72,
     borderRadius: 36,
-    backgroundColor: Colors.error,
     alignItems: 'center',
     justifyContent: 'center',
   },

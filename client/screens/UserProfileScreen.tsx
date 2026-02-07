@@ -21,6 +21,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 
 import { ThemedText } from '@/components/ThemedText';
 import { Colors, Spacing, BorderRadius, Typography, Shadows } from '@/constants/theme';
+import { useAppColors } from '@/hooks/useAppColors';
 import { usersApi, feedApi } from '@/lib/api';
 import { User, Post } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
@@ -41,6 +42,7 @@ export default function UserProfileScreen() {
   const { userId } = route.params;
   const { user: currentUser } = useAuth();
   const queryClient = useQueryClient();
+  const appColors = useAppColors();
 
   const [activeTab, setActiveTab] = useState<TabType>('posts');
 
@@ -131,25 +133,25 @@ export default function UserProfileScreen() {
         />
         <View style={styles.avatarContainer}>
           {user.avatar_url ? (
-            <Image source={{ uri: user.avatar_url }} style={styles.avatar} />
+            <Image source={{ uri: user.avatar_url }} style={[styles.avatar, { borderColor: appColors.surface }]} />
           ) : (
-            <View style={[styles.avatar, styles.avatarPlaceholder]}>
+            <View style={[styles.avatar, styles.avatarPlaceholder, { borderColor: appColors.surface }]}>
               <ThemedText style={styles.avatarText}>
                 {user.first_name[0]}{user.last_name[0]}
               </ThemedText>
             </View>
           )}
           {user.is_premium && (
-            <View style={styles.premiumBadge}>
-              <MaterialCommunityIcons name="crown" size={14} color={Colors.warning} />
+            <View style={[styles.premiumBadge, { backgroundColor: appColors.surface }]}>
+              <MaterialCommunityIcons name="crown" size={14} color={appColors.warning} />
             </View>
           )}
         </View>
 
         {/* User Info */}
-        <View style={styles.userInfo}>
+        <View style={[styles.userInfo, { backgroundColor: appColors.surface }]}>
           <View style={styles.nameRow}>
-            <ThemedText style={styles.userName}>{user.full_name}</ThemedText>
+            <ThemedText style={[styles.userName, { color: appColors.textPrimary }]}>{user.full_name}</ThemedText>
             {user.is_verified && (
               <Ionicons name="checkmark-circle" size={20} color={Colors.primary} />
             )}
@@ -158,26 +160,26 @@ export default function UserProfileScreen() {
             <ThemedText style={styles.userSpecialty}>{user.specialty}</ThemedText>
           )}
           {user.bio && (
-            <ThemedText style={styles.userBio}>{user.bio}</ThemedText>
+            <ThemedText style={[styles.userBio, { color: appColors.textSecondary }]}>{user.bio}</ThemedText>
           )}
 
           {/* Stats */}
-          <View style={styles.statsRow}>
+          <View style={[styles.statsRow, { borderTopColor: appColors.border }]}>
             <TouchableOpacity style={styles.statItem} onPress={handleFollowers}>
-              <ThemedText style={styles.statValue}>{formatNumber(user.followers_count)}</ThemedText>
-              <ThemedText style={styles.statLabel}>Followers</ThemedText>
+              <ThemedText style={[styles.statValue, { color: appColors.textPrimary }]}>{formatNumber(user.followers_count)}</ThemedText>
+              <ThemedText style={[styles.statLabel, { color: appColors.textSecondary }]}>Followers</ThemedText>
             </TouchableOpacity>
             <TouchableOpacity style={styles.statItem} onPress={handleFollowing}>
-              <ThemedText style={styles.statValue}>{formatNumber(user.following_count)}</ThemedText>
-              <ThemedText style={styles.statLabel}>Following</ThemedText>
+              <ThemedText style={[styles.statValue, { color: appColors.textPrimary }]}>{formatNumber(user.following_count)}</ThemedText>
+              <ThemedText style={[styles.statLabel, { color: appColors.textSecondary }]}>Following</ThemedText>
             </TouchableOpacity>
             <View style={styles.statItem}>
-              <ThemedText style={styles.statValue}>{formatNumber(user.posts_count)}</ThemedText>
-              <ThemedText style={styles.statLabel}>Posts</ThemedText>
+              <ThemedText style={[styles.statValue, { color: appColors.textPrimary }]}>{formatNumber(user.posts_count)}</ThemedText>
+              <ThemedText style={[styles.statLabel, { color: appColors.textSecondary }]}>Posts</ThemedText>
             </View>
             <View style={styles.statItem}>
-              <ThemedText style={styles.statValue}>{formatNumber(user.points)}</ThemedText>
-              <ThemedText style={styles.statLabel}>Points</ThemedText>
+              <ThemedText style={[styles.statValue, { color: appColors.textPrimary }]}>{formatNumber(user.points)}</ThemedText>
+              <ThemedText style={[styles.statLabel, { color: appColors.textSecondary }]}>Points</ThemedText>
             </View>
           </View>
 
@@ -193,17 +195,17 @@ export default function UserProfileScreen() {
                 disabled={followMutation.isPending}
               >
                 {followMutation.isPending ? (
-                  <ActivityIndicator size="small" color={user.is_following ? Colors.textSecondary : 'white'} />
+                  <ActivityIndicator size="small" color={user.is_following ? appColors.textSecondary : 'white'} />
                 ) : (
                   <>
                     <Ionicons
                       name={user.is_following ? 'checkmark' : 'person-add-outline'}
                       size={18}
-                      color={user.is_following ? Colors.textSecondary : 'white'}
+                      color={user.is_following ? appColors.textSecondary : 'white'}
                     />
                     <ThemedText style={[
                       styles.followButtonText,
-                      user.is_following && styles.followingButtonText,
+                      user.is_following && { color: appColors.textSecondary },
                     ]}>
                       {user.is_following ? 'Following' : 'Follow'}
                     </ThemedText>
@@ -220,21 +222,21 @@ export default function UserProfileScreen() {
 
           {/* Gamification */}
           <View style={styles.gamificationRow}>
-            <View style={styles.levelBadge}>
-              <MaterialCommunityIcons name="star-circle" size={16} color={Colors.warning} />
-              <ThemedText style={styles.levelText}>Level {user.level}</ThemedText>
+            <View style={[styles.levelBadge, { backgroundColor: appColors.warning + '15' }]}>
+              <MaterialCommunityIcons name="star-circle" size={16} color={appColors.warning} />
+              <ThemedText style={[styles.levelText, { color: appColors.warning }]}>Level {user.level}</ThemedText>
             </View>
             {user.streak_days > 0 && (
-              <View style={styles.streakBadge}>
-                <Ionicons name="flame" size={16} color={Colors.error} />
-                <ThemedText style={styles.streakText}>{user.streak_days} day streak</ThemedText>
+              <View style={[styles.streakBadge, { backgroundColor: appColors.error + '15' }]}>
+                <Ionicons name="flame" size={16} color={appColors.error} />
+                <ThemedText style={[styles.streakText, { color: appColors.error }]}>{user.streak_days} day streak</ThemedText>
               </View>
             )}
           </View>
         </View>
 
         {/* Tabs */}
-        <View style={styles.tabsContainer}>
+        <View style={[styles.tabsContainer, { backgroundColor: appColors.surface, borderBottomColor: appColors.border }]}>
           {(['posts', 'comments', 'likes'] as TabType[]).map((tab) => (
             <TouchableOpacity
               key={tab}
@@ -247,9 +249,9 @@ export default function UserProfileScreen() {
                   tab === 'comments' ? 'chatbox-outline' : 'heart-outline'
                 }
                 size={20}
-                color={activeTab === tab ? Colors.primary : Colors.textSecondary}
+                color={activeTab === tab ? Colors.primary : appColors.textSecondary}
               />
-              <ThemedText style={[styles.tabText, activeTab === tab && styles.tabTextActive]}>
+              <ThemedText style={[styles.tabText, { color: appColors.textSecondary }, activeTab === tab && styles.tabTextActive]}>
                 {tab.charAt(0).toUpperCase() + tab.slice(1)}
               </ThemedText>
             </TouchableOpacity>
@@ -277,9 +279,9 @@ export default function UserProfileScreen() {
           activeTab === 'comments' ? 'chatbox-outline' : 'heart-outline'
         }
         size={48}
-        color={Colors.textSecondary}
+        color={appColors.textSecondary}
       />
-      <ThemedText style={styles.emptyTitle}>
+      <ThemedText style={[styles.emptyTitle, { color: appColors.textPrimary }]}>
         No {activeTab} yet
       </ThemedText>
     </View>
@@ -287,24 +289,24 @@ export default function UserProfileScreen() {
 
   if (isLoading) {
     return (
-      <SafeAreaView style={styles.loadingContainer}>
+      <SafeAreaView style={[styles.loadingContainer, { backgroundColor: appColors.background }]}>
         <ActivityIndicator size="large" color={Colors.primary} />
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: appColors.background }]} edges={['top']}>
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { backgroundColor: appColors.surface, borderBottomColor: appColors.border }]}>
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <Ionicons name="chevron-back" size={24} color={Colors.textPrimary} />
+          <Ionicons name="chevron-back" size={24} color={appColors.textPrimary} />
         </TouchableOpacity>
-        <ThemedText style={styles.headerTitle} numberOfLines={1}>
+        <ThemedText style={[styles.headerTitle, { color: appColors.textPrimary }]} numberOfLines={1}>
           {user?.full_name || 'Profile'}
         </ThemedText>
         <TouchableOpacity style={styles.moreButton}>
-          <Ionicons name="ellipsis-horizontal" size={24} color={Colors.textPrimary} />
+          <Ionicons name="ellipsis-horizontal" size={24} color={appColors.textPrimary} />
         </TouchableOpacity>
       </View>
 
@@ -331,13 +333,11 @@ export default function UserProfileScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
   },
   loadingContainer: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: Colors.background,
   },
   header: {
     flexDirection: 'row',
@@ -345,16 +345,13 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.sm,
-    backgroundColor: Colors.surface,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
   },
   backButton: {
     padding: Spacing.sm,
   },
   headerTitle: {
     ...Typography.heading,
-    color: Colors.textPrimary,
     flex: 1,
     textAlign: 'center',
   },
@@ -373,7 +370,6 @@ const styles = StyleSheet.create({
     height: 100,
     borderRadius: 50,
     borderWidth: 4,
-    borderColor: Colors.surface,
   },
   avatarPlaceholder: {
     backgroundColor: Colors.primary + '20',
@@ -391,14 +387,12 @@ const styles = StyleSheet.create({
     width: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: Colors.surface,
     alignItems: 'center',
     justifyContent: 'center',
     ...Shadows.card,
   },
   userInfo: {
     padding: Spacing.lg,
-    backgroundColor: Colors.surface,
     alignItems: 'center',
   },
   nameRow: {
@@ -408,7 +402,6 @@ const styles = StyleSheet.create({
   },
   userName: {
     ...Typography.title,
-    color: Colors.textPrimary,
   },
   userSpecialty: {
     ...Typography.caption,
@@ -417,7 +410,6 @@ const styles = StyleSheet.create({
   },
   userBio: {
     ...Typography.body,
-    color: Colors.textSecondary,
     textAlign: 'center',
     marginTop: Spacing.sm,
     lineHeight: 22,
@@ -427,7 +419,6 @@ const styles = StyleSheet.create({
     marginTop: Spacing.lg,
     paddingTop: Spacing.lg,
     borderTopWidth: 1,
-    borderTopColor: Colors.border,
   },
   statItem: {
     flex: 1,
@@ -435,11 +426,9 @@ const styles = StyleSheet.create({
   },
   statValue: {
     ...Typography.heading,
-    color: Colors.textPrimary,
   },
   statLabel: {
     ...Typography.small,
-    color: Colors.textSecondary,
     marginTop: 2,
   },
   actionsRow: {
@@ -465,9 +454,6 @@ const styles = StyleSheet.create({
     color: 'white',
     fontWeight: '600',
   },
-  followingButtonText: {
-    color: Colors.textSecondary,
-  },
   messageButton: {
     flex: 1,
     flexDirection: 'row',
@@ -491,7 +477,6 @@ const styles = StyleSheet.create({
   levelBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.warning + '15',
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.xs,
     borderRadius: BorderRadius.full,
@@ -499,13 +484,11 @@ const styles = StyleSheet.create({
   },
   levelText: {
     ...Typography.small,
-    color: Colors.warning,
     fontWeight: '600',
   },
   streakBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.error + '15',
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.xs,
     borderRadius: BorderRadius.full,
@@ -513,14 +496,11 @@ const styles = StyleSheet.create({
   },
   streakText: {
     ...Typography.small,
-    color: Colors.error,
     fontWeight: '600',
   },
   tabsContainer: {
     flexDirection: 'row',
-    backgroundColor: Colors.surface,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
   },
   tab: {
     flex: 1,
@@ -536,7 +516,6 @@ const styles = StyleSheet.create({
   },
   tabText: {
     ...Typography.caption,
-    color: Colors.textSecondary,
   },
   tabTextActive: {
     color: Colors.primary,
@@ -549,7 +528,6 @@ const styles = StyleSheet.create({
   },
   emptyTitle: {
     ...Typography.heading,
-    color: Colors.textPrimary,
     marginTop: Spacing.lg,
   },
 });

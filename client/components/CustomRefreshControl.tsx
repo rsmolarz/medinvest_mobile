@@ -17,8 +17,8 @@ import Svg, { Circle, Path, G } from 'react-native-svg';
 
 import { ThemedText } from '@/components/ThemedText';
 import { Colors, Spacing, Typography } from '@/constants/theme';
+import { useAppColors } from '@/hooks/useAppColors';
 
-// Animated SVG components
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 const AnimatedPath = Animated.createAnimatedComponent(Path);
 const AnimatedG = Animated.createAnimatedComponent(G);
@@ -29,33 +29,26 @@ interface CustomRefreshControlProps extends Omit<RefreshControlProps, 'colors' |
   pullProgress?: number;
 }
 
-/**
- * Custom Refresh Control wrapper
- * Uses native RefreshControl but with custom colors
- */
 export default function CustomRefreshControl({
   refreshing,
   onRefresh,
   ...props
 }: CustomRefreshControlProps) {
+  const appColors = useAppColors();
   return (
     <RNRefreshControl
       refreshing={refreshing}
       onRefresh={onRefresh}
       tintColor={Colors.primary}
       colors={[Colors.primary, Colors.secondary]}
-      progressBackgroundColor={Colors.surface}
+      progressBackgroundColor={appColors.surface}
       {...props}
     />
   );
 }
 
-/**
- * MedInvest Logo Refresh Animation
- * Custom animated logo for pull-to-refresh
- */
 interface LogoRefreshAnimationProps {
-  progress: Animated.Value; // 0-1 for pull progress
+  progress: Animated.Value;
   isRefreshing: boolean;
 }
 
@@ -63,7 +56,6 @@ export function LogoRefreshAnimation({ progress, isRefreshing }: LogoRefreshAnim
   const spinValue = useRef(new Animated.Value(0)).current;
   const pulseValue = useRef(new Animated.Value(1)).current;
 
-  // Spin animation when refreshing
   useEffect(() => {
     if (isRefreshing) {
       const spinAnimation = Animated.loop(
@@ -139,10 +131,6 @@ export function LogoRefreshAnimation({ progress, isRefreshing }: LogoRefreshAnim
   );
 }
 
-/**
- * Pulse Dots Animation
- * Three pulsing dots for loading state
- */
 interface PulseDotsProps {
   isActive: boolean;
   color?: string;
@@ -195,10 +183,6 @@ export function PulseDots({ isActive, color = Colors.primary }: PulseDotsProps) 
   );
 }
 
-/**
- * Heartbeat Animation
- * Medical-themed heartbeat line animation
- */
 interface HeartbeatAnimationProps {
   isActive: boolean;
 }
@@ -241,12 +225,8 @@ export function HeartbeatAnimation({ isActive }: HeartbeatAnimationProps) {
   );
 }
 
-/**
- * Circular Progress Indicator
- * Shows pull progress as a circular indicator
- */
 interface CircularProgressProps {
-  progress: number; // 0-1
+  progress: number;
   size?: number;
   strokeWidth?: number;
   color?: string;
@@ -258,6 +238,7 @@ export function CircularProgress({
   strokeWidth = 3,
   color = Colors.primary,
 }: CircularProgressProps) {
+  const appColors = useAppColors();
   const radius = (size - strokeWidth) / 2;
   const circumference = radius * 2 * Math.PI;
   const strokeDashoffset = circumference - progress * circumference;
@@ -270,7 +251,7 @@ export function CircularProgress({
           cx={size / 2}
           cy={size / 2}
           r={radius}
-          stroke={Colors.border}
+          stroke={appColors.border}
           strokeWidth={strokeWidth}
           fill="none"
         />
@@ -296,10 +277,6 @@ export function CircularProgress({
   );
 }
 
-/**
- * Refresh Header Component
- * Full header component for custom refresh implementations
- */
 interface RefreshHeaderProps {
   progress: number;
   isRefreshing: boolean;
@@ -315,6 +292,8 @@ export function RefreshHeader({
   releaseText = 'Release to refresh',
   refreshingText = 'Refreshing...',
 }: RefreshHeaderProps) {
+  const appColors = useAppColors();
+
   const getText = () => {
     if (isRefreshing) return refreshingText;
     if (progress >= 1) return releaseText;
@@ -322,21 +301,20 @@ export function RefreshHeader({
   };
 
   return (
-    <View style={styles.refreshHeader}>
+    <View style={[styles.refreshHeader, { backgroundColor: appColors.background }]}>
       <View style={styles.refreshContent}>
         {isRefreshing ? (
           <PulseDots isActive={true} />
         ) : (
           <CircularProgress progress={Math.min(progress, 1)} />
         )}
-        <ThemedText style={styles.refreshText}>{getText()}</ThemedText>
+        <ThemedText style={[styles.refreshText, { color: appColors.textSecondary }]}>{getText()}</ThemedText>
       </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  // Logo animation
   logoContainer: {
     alignItems: 'center',
     justifyContent: 'center',
@@ -355,7 +333,6 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
 
-  // Pulse dots
   dotsContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -368,7 +345,6 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
 
-  // Heartbeat
   heartbeatContainer: {
     width: 100,
     height: 40,
@@ -380,19 +356,16 @@ const styles = StyleSheet.create({
     position: 'absolute',
   },
 
-  // Circular progress
   circularProgressIcon: {
     ...StyleSheet.absoluteFillObject,
     alignItems: 'center',
     justifyContent: 'center',
   },
 
-  // Refresh header
   refreshHeader: {
     height: 60,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: Colors.background,
   },
   refreshContent: {
     flexDirection: 'row',
@@ -401,6 +374,5 @@ const styles = StyleSheet.create({
   },
   refreshText: {
     ...Typography.caption,
-    color: Colors.textSecondary,
   },
 });

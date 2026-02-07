@@ -17,6 +17,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 
 import { ThemedText } from '@/components/ThemedText';
 import { Colors, Spacing, BorderRadius, Typography } from '@/constants/theme';
+import { useAppColors } from '@/hooks/useAppColors';
 import { authApi } from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -29,6 +30,7 @@ type VerifyEmailRouteParams = {
 
 export default function VerifyEmailScreen() {
   const navigation = useNavigation<any>();
+  const appColors = useAppColors();
   const route = useRoute<RouteProp<VerifyEmailRouteParams, 'VerifyEmail'>>();
   const { token, email } = route.params || {};
   const { refreshUser } = useAuth();
@@ -38,14 +40,12 @@ export default function VerifyEmailScreen() {
   const [isResending, setIsResending] = useState(false);
   const [resendCooldown, setResendCooldown] = useState(0);
 
-  // Auto-verify if token provided
   useEffect(() => {
     if (token) {
       verifyEmail(token);
     }
   }, [token]);
 
-  // Cooldown timer
   useEffect(() => {
     if (resendCooldown > 0) {
       const timer = setTimeout(() => setResendCooldown(resendCooldown - 1), 1000);
@@ -77,10 +77,9 @@ export default function VerifyEmailScreen() {
     try {
       const response = await authApi.resendVerificationEmail(email);
       if (response.success) {
-        setResendCooldown(60); // 60 second cooldown
+        setResendCooldown(60);
       }
     } catch (error) {
-      // Handle error
     }
     setIsResending(false);
   };
@@ -100,8 +99,8 @@ export default function VerifyEmailScreen() {
             <View style={styles.iconContainer}>
               <ActivityIndicator size="large" color={Colors.primary} />
             </View>
-            <ThemedText style={styles.title}>Verifying Your Email</ThemedText>
-            <ThemedText style={styles.subtitle}>
+            <ThemedText style={[styles.title, { color: appColors.textPrimary }]}>Verifying Your Email</ThemedText>
+            <ThemedText style={[styles.subtitle, { color: appColors.textSecondary }]}>
               Please wait while we verify your email address...
             </ThemedText>
           </>
@@ -116,8 +115,8 @@ export default function VerifyEmailScreen() {
             >
               <Ionicons name="checkmark" size={48} color="white" />
             </LinearGradient>
-            <ThemedText style={styles.title}>Email Verified!</ThemedText>
-            <ThemedText style={styles.subtitle}>
+            <ThemedText style={[styles.title, { color: appColors.textPrimary }]}>Email Verified!</ThemedText>
+            <ThemedText style={[styles.subtitle, { color: appColors.textSecondary }]}>
               Your email has been successfully verified. You now have full access to all features.
             </ThemedText>
             <TouchableOpacity style={styles.primaryButton} onPress={handleContinue}>
@@ -130,10 +129,10 @@ export default function VerifyEmailScreen() {
         return (
           <>
             <View style={[styles.iconContainer, styles.errorIcon]}>
-              <Ionicons name="close" size={48} color={Colors.error} />
+              <Ionicons name="close" size={48} color={appColors.error} />
             </View>
-            <ThemedText style={styles.title}>Verification Failed</ThemedText>
-            <ThemedText style={styles.subtitle}>{errorMessage}</ThemedText>
+            <ThemedText style={[styles.title, { color: appColors.textPrimary }]}>Verification Failed</ThemedText>
+            <ThemedText style={[styles.subtitle, { color: appColors.textSecondary }]}>{errorMessage}</ThemedText>
             {email && (
               <TouchableOpacity
                 style={styles.primaryButton}
@@ -162,8 +161,8 @@ export default function VerifyEmailScreen() {
             <View style={styles.iconContainer}>
               <Ionicons name="mail-outline" size={48} color={Colors.primary} />
             </View>
-            <ThemedText style={styles.title}>Verify Your Email</ThemedText>
-            <ThemedText style={styles.subtitle}>
+            <ThemedText style={[styles.title, { color: appColors.textPrimary }]}>Verify Your Email</ThemedText>
+            <ThemedText style={[styles.subtitle, { color: appColors.textSecondary }]}>
               We've sent a verification link to{'\n'}
               <ThemedText style={styles.emailText}>{email || 'your email'}</ThemedText>
             </ThemedText>
@@ -173,7 +172,7 @@ export default function VerifyEmailScreen() {
                 <View style={styles.instructionNumber}>
                   <ThemedText style={styles.instructionNumberText}>1</ThemedText>
                 </View>
-                <ThemedText style={styles.instructionText}>
+                <ThemedText style={[styles.instructionText, { color: appColors.textPrimary }]}>
                   Check your email inbox
                 </ThemedText>
               </View>
@@ -181,7 +180,7 @@ export default function VerifyEmailScreen() {
                 <View style={styles.instructionNumber}>
                   <ThemedText style={styles.instructionNumberText}>2</ThemedText>
                 </View>
-                <ThemedText style={styles.instructionText}>
+                <ThemedText style={[styles.instructionText, { color: appColors.textPrimary }]}>
                   Click the verification link
                 </ThemedText>
               </View>
@@ -189,7 +188,7 @@ export default function VerifyEmailScreen() {
                 <View style={styles.instructionNumber}>
                   <ThemedText style={styles.instructionNumberText}>3</ThemedText>
                 </View>
-                <ThemedText style={styles.instructionText}>
+                <ThemedText style={[styles.instructionText, { color: appColors.textPrimary }]}>
                   Return to the app
                 </ThemedText>
               </View>
@@ -210,7 +209,7 @@ export default function VerifyEmailScreen() {
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.skipButton} onPress={handleContinue}>
-              <ThemedText style={styles.skipButtonText}>Skip for now</ThemedText>
+              <ThemedText style={[styles.skipButtonText, { color: appColors.textSecondary }]}>Skip for now</ThemedText>
             </TouchableOpacity>
           </>
         );
@@ -218,7 +217,7 @@ export default function VerifyEmailScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: appColors.surface }]}>
       <View style={styles.content}>
         {renderContent()}
       </View>
@@ -229,7 +228,6 @@ export default function VerifyEmailScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.surface,
   },
   content: {
     flex: 1,
@@ -247,17 +245,15 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.xl,
   },
   errorIcon: {
-    backgroundColor: Colors.error + '15',
+    backgroundColor: Colors.light.backgroundSecondary,
   },
   title: {
     ...Typography.title,
-    color: Colors.textPrimary,
     textAlign: 'center',
     marginBottom: Spacing.sm,
   },
   subtitle: {
     ...Typography.body,
-    color: Colors.textSecondary,
     textAlign: 'center',
     lineHeight: 24,
     marginBottom: Spacing.xl,
@@ -294,7 +290,6 @@ const styles = StyleSheet.create({
   },
   instructionText: {
     ...Typography.body,
-    color: Colors.textPrimary,
   },
   primaryButton: {
     width: '100%',
@@ -330,6 +325,5 @@ const styles = StyleSheet.create({
   },
   skipButtonText: {
     ...Typography.body,
-    color: Colors.textSecondary,
   },
 });

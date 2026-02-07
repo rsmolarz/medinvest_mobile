@@ -21,6 +21,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { ThemedText } from '@/components/ThemedText';
 import { Colors, Spacing, BorderRadius, Typography, Shadows } from '@/constants/theme';
+import { useAppColors } from '@/hooks/useAppColors';
 import { notificationsApi, Notification } from '@/lib/api';
 import { formatRelativeTime } from '@/lib/utils';
 
@@ -32,7 +33,6 @@ interface NotificationsDropdownProps {
   anchorPosition?: { top: number; right: number };
 }
 
-// Group notifications by time period
 type NotificationGroup = {
   title: string;
   items: Notification[];
@@ -70,10 +70,10 @@ export default function NotificationsDropdown({
   onClose,
   anchorPosition = { top: 60, right: 16 },
 }: NotificationsDropdownProps) {
+  const appColors = useAppColors();
   const navigation = useNavigation<any>();
   const queryClient = useQueryClient();
 
-  // Fetch notifications
   const { data, isLoading } = useQuery({
     queryKey: ['notifications', 'dropdown'],
     queryFn: async () => {
@@ -86,7 +86,6 @@ export default function NotificationsDropdown({
     enabled: visible,
   });
 
-  // Mark as read mutation
   const markReadMutation = useMutation({
     mutationFn: async (id: number) => {
       await notificationsApi.markAsRead(id);
@@ -97,12 +96,10 @@ export default function NotificationsDropdown({
   });
 
   const handleNotificationPress = useCallback((notification: Notification) => {
-    // Mark as read
     if (!notification.is_read) {
       markReadMutation.mutate(notification.id);
     }
 
-    // Navigate based on notification type
     const data = notification.data as any;
     
     switch (notification.type) {
@@ -155,14 +152,14 @@ export default function NotificationsDropdown({
     >
       <Pressable style={styles.overlay} onPress={onClose}>
         <Pressable 
-          style={[styles.dropdown, { top: anchorPosition.top, right: anchorPosition.right }]}
+          style={[styles.dropdown, { backgroundColor: appColors.surface, top: anchorPosition.top, right: anchorPosition.right }]}
           onPress={(e) => e.stopPropagation()}
         >
           {/* Header */}
-          <View style={styles.header}>
+          <View style={[styles.header, { borderBottomColor: appColors.border }]}>
             <View style={styles.headerLeft}>
-              <Ionicons name="notifications" size={20} color={Colors.textPrimary} />
-              <ThemedText style={styles.headerTitle}>Notifications</ThemedText>
+              <Ionicons name="notifications" size={20} color={appColors.textPrimary} />
+              <ThemedText style={[styles.headerTitle, { color: appColors.textPrimary }]}>Notifications</ThemedText>
             </View>
             <TouchableOpacity style={styles.settingsButton} onPress={handleSettings}>
               <Ionicons name="settings-outline" size={20} color={Colors.primary} />
@@ -177,13 +174,13 @@ export default function NotificationsDropdown({
               </View>
             ) : groups.length === 0 ? (
               <View style={styles.emptyContainer}>
-                <Ionicons name="notifications-off-outline" size={32} color={Colors.textSecondary} />
-                <ThemedText style={styles.emptyText}>No notifications yet</ThemedText>
+                <Ionicons name="notifications-off-outline" size={32} color={appColors.textSecondary} />
+                <ThemedText style={[styles.emptyText, { color: appColors.textSecondary }]}>No notifications yet</ThemedText>
               </View>
             ) : (
               groups.map((group, groupIndex) => (
                 <View key={groupIndex} style={styles.group}>
-                  <ThemedText style={styles.groupTitle}>{group.title}</ThemedText>
+                  <ThemedText style={[styles.groupTitle, { color: appColors.textSecondary }]}>{group.title}</ThemedText>
                   {group.items.map((notification) => (
                     <NotificationItem
                       key={notification.id}
@@ -197,8 +194,8 @@ export default function NotificationsDropdown({
           </ScrollView>
 
           {/* Footer */}
-          <TouchableOpacity style={styles.footer} onPress={handleViewAll}>
-            <ThemedText style={styles.footerText}>View all notifications</ThemedText>
+          <TouchableOpacity style={[styles.footer, { borderTopColor: appColors.border }]} onPress={handleViewAll}>
+            <ThemedText style={[styles.footerText, { color: appColors.textSecondary }]}>View all notifications</ThemedText>
           </TouchableOpacity>
         </Pressable>
       </Pressable>
@@ -206,13 +203,14 @@ export default function NotificationsDropdown({
   );
 }
 
-// Individual notification item
 interface NotificationItemProps {
   notification: Notification;
   onPress: () => void;
 }
 
 function NotificationItem({ notification, onPress }: NotificationItemProps) {
+  const appColors = useAppColors();
+
   const getNotificationIcon = () => {
     switch (notification.type) {
       case 'publication_match':
@@ -220,17 +218,17 @@ function NotificationItem({ notification, onPress }: NotificationItemProps) {
       case 'peer_update':
         return { icon: 'people', color: Colors.secondary, bg: Colors.secondary + '20' };
       case 'highlight':
-        return { icon: 'star', color: Colors.warning, bg: Colors.warning + '20' };
+        return { icon: 'star', color: appColors.warning, bg: appColors.warning + '20' };
       case 'mention':
         return { icon: 'at', color: Colors.primary, bg: Colors.primary + '20' };
       case 'follow':
         return { icon: 'person-add', color: Colors.secondary, bg: Colors.secondary + '20' };
       case 'like':
-        return { icon: 'heart', color: Colors.error, bg: Colors.error + '20' };
+        return { icon: 'heart', color: appColors.error, bg: appColors.error + '20' };
       case 'comment':
         return { icon: 'chatbubble', color: Colors.primary, bg: Colors.primary + '20' };
       default:
-        return { icon: 'notifications', color: Colors.textSecondary, bg: Colors.light.backgroundSecondary };
+        return { icon: 'notifications', color: appColors.textSecondary, bg: Colors.light.backgroundSecondary };
     }
   };
 
@@ -239,7 +237,7 @@ function NotificationItem({ notification, onPress }: NotificationItemProps) {
 
   return (
     <TouchableOpacity
-      style={[styles.notificationItem, !notification.is_read && styles.unreadItem]}
+      style={[styles.notificationItem, { backgroundColor: appColors.surface }, !notification.is_read && styles.unreadItem]}
       onPress={onPress}
     >
       {/* Icon */}
@@ -249,39 +247,39 @@ function NotificationItem({ notification, onPress }: NotificationItemProps) {
 
       {/* Content */}
       <View style={styles.notificationContent}>
-        <ThemedText style={styles.notificationTitle} numberOfLines={2}>
+        <ThemedText style={[styles.notificationTitle, { color: appColors.textPrimary }]} numberOfLines={2}>
           {notification.title}
         </ThemedText>
         {notification.body && (
-          <ThemedText style={styles.notificationBody} numberOfLines={2}>
+          <ThemedText style={[styles.notificationBody, { color: appColors.textSecondary }]} numberOfLines={2}>
             {notification.body}
           </ThemedText>
         )}
-        <ThemedText style={styles.notificationTime}>
+        <ThemedText style={[styles.notificationTime, { color: appColors.textSecondary }]}>
           {formatRelativeTime(notification.created_at)}
         </ThemedText>
       </View>
 
       {/* More button */}
       <TouchableOpacity style={styles.moreButton}>
-        <Ionicons name="ellipsis-horizontal" size={16} color={Colors.textSecondary} />
+        <Ionicons name="ellipsis-horizontal" size={16} color={appColors.textSecondary} />
       </TouchableOpacity>
     </TouchableOpacity>
   );
 }
 
-// Notification bell with badge
 interface NotificationBellProps {
   onPress: () => void;
   unreadCount?: number;
 }
 
 export function NotificationBell({ onPress, unreadCount = 0 }: NotificationBellProps) {
+  const appColors = useAppColors();
   return (
     <TouchableOpacity style={styles.bellContainer} onPress={onPress}>
-      <Ionicons name="notifications-outline" size={24} color={Colors.textPrimary} />
+      <Ionicons name="notifications-outline" size={24} color={appColors.textPrimary} />
       {unreadCount > 0 && (
-        <View style={styles.badge}>
+        <View style={[styles.badge, { backgroundColor: appColors.error }]}>
           <ThemedText style={styles.badgeText}>
             {unreadCount > 99 ? '99+' : unreadCount}
           </ThemedText>
@@ -300,7 +298,6 @@ const styles = StyleSheet.create({
     position: 'absolute',
     width: Math.min(SCREEN_WIDTH - 32, 380),
     maxHeight: 480,
-    backgroundColor: Colors.surface,
     borderRadius: BorderRadius.lg,
     ...Shadows.card,
     shadowOpacity: 0.2,
@@ -313,7 +310,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
   },
   headerLeft: {
     flexDirection: 'row',
@@ -323,7 +319,6 @@ const styles = StyleSheet.create({
   headerTitle: {
     ...Typography.body,
     fontWeight: '600',
-    color: Colors.textPrimary,
   },
   settingsButton: {
     padding: Spacing.xs,
@@ -341,7 +336,6 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     ...Typography.body,
-    color: Colors.textSecondary,
     marginTop: Spacing.sm,
   },
   group: {
@@ -350,7 +344,6 @@ const styles = StyleSheet.create({
   groupTitle: {
     ...Typography.small,
     fontWeight: '600',
-    color: Colors.textSecondary,
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.sm,
     backgroundColor: Colors.light.backgroundSecondary,
@@ -360,7 +353,6 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.md,
-    backgroundColor: Colors.surface,
   },
   unreadItem: {
     backgroundColor: Colors.primary + '08',
@@ -379,18 +371,15 @@ const styles = StyleSheet.create({
   notificationTitle: {
     ...Typography.body,
     fontWeight: '600',
-    color: Colors.textPrimary,
     lineHeight: 20,
   },
   notificationBody: {
     ...Typography.small,
-    color: Colors.textSecondary,
     marginTop: 4,
     lineHeight: 18,
   },
   notificationTime: {
     ...Typography.small,
-    color: Colors.textSecondary,
     marginTop: 4,
   },
   moreButton: {
@@ -400,14 +389,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: Spacing.md,
     borderTopWidth: 1,
-    borderTopColor: Colors.border,
   },
   footerText: {
     ...Typography.caption,
-    color: Colors.textSecondary,
   },
 
-  // Bell with badge
   bellContainer: {
     position: 'relative',
     padding: Spacing.xs,
@@ -419,7 +405,6 @@ const styles = StyleSheet.create({
     minWidth: 18,
     height: 18,
     borderRadius: 9,
-    backgroundColor: Colors.error,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 4,

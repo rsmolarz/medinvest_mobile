@@ -19,6 +19,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { ThemedText } from '@/components/ThemedText';
 import { Colors, Spacing, BorderRadius, Typography } from '@/constants/theme';
+import { useAppColors } from '@/hooks/useAppColors';
 import { notificationsApi } from '@/lib/api';
 import { Notification, NotificationType } from '@/types';
 import { formatRelativeTime } from '@/lib/utils';
@@ -47,6 +48,7 @@ export default function NotificationsScreen() {
   const navigation = useNavigation<any>();
   const queryClient = useQueryClient();
   const [filter, setFilter] = useState<FilterType>('all');
+  const appColors = useAppColors();
 
   const {
     data: notificationsData,
@@ -166,18 +168,18 @@ export default function NotificationsScreen() {
 
   const renderNotification = ({ item }: { item: Notification }) => (
     <TouchableOpacity
-      style={[styles.notificationItem, !item.is_read && styles.notificationUnread]}
+      style={[styles.notificationItem, { backgroundColor: appColors.surface, borderBottomColor: appColors.border }, !item.is_read && styles.notificationUnread]}
       onPress={() => handleNotificationPress(item)}
     >
       {getNotificationIcon(item.type)}
       <View style={styles.notificationContent}>
-        <ThemedText style={styles.notificationTitle} numberOfLines={2}>
+        <ThemedText style={[styles.notificationTitle, { color: appColors.textPrimary }]} numberOfLines={2}>
           {item.title}
         </ThemedText>
-        <ThemedText style={styles.notificationBody} numberOfLines={2}>
+        <ThemedText style={[styles.notificationBody, { color: appColors.textSecondary }]} numberOfLines={2}>
           {item.body}
         </ThemedText>
-        <ThemedText style={styles.notificationTime}>
+        <ThemedText style={[styles.notificationTime, { color: appColors.textSecondary }]}>
           {formatRelativeTime(item.created_at)}
         </ThemedText>
       </View>
@@ -186,14 +188,14 @@ export default function NotificationsScreen() {
   );
 
   const renderHeader = () => (
-    <View style={styles.filterContainer}>
+    <View style={[styles.filterContainer, { backgroundColor: appColors.surface }]}>
       {(['all', 'unread', 'mentions'] as FilterType[]).map((f) => (
         <TouchableOpacity
           key={f}
           style={[styles.filterButton, filter === f && styles.filterButtonActive]}
           onPress={() => setFilter(f)}
         >
-          <ThemedText style={[styles.filterText, filter === f && styles.filterTextActive]}>
+          <ThemedText style={[styles.filterText, { color: appColors.textSecondary }, filter === f && styles.filterTextActive]}>
             {f.charAt(0).toUpperCase() + f.slice(1)}
             {f === 'unread' && unreadCount > 0 && ` (${unreadCount})`}
           </ThemedText>
@@ -204,9 +206,9 @@ export default function NotificationsScreen() {
 
   const renderEmpty = () => (
     <View style={styles.emptyContainer}>
-      <Ionicons name="notifications-off-outline" size={64} color={Colors.textSecondary} />
-      <ThemedText style={styles.emptyTitle}>No notifications</ThemedText>
-      <ThemedText style={styles.emptySubtitle}>
+      <Ionicons name="notifications-off-outline" size={64} color={appColors.textSecondary} />
+      <ThemedText style={[styles.emptyTitle, { color: appColors.textPrimary }]}>No notifications</ThemedText>
+      <ThemedText style={[styles.emptySubtitle, { color: appColors.textSecondary }]}>
         {filter === 'unread' 
           ? "You're all caught up!"
           : filter === 'mentions'
@@ -217,13 +219,13 @@ export default function NotificationsScreen() {
   );
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: appColors.background }]} edges={['top']}>
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { backgroundColor: appColors.surface, borderBottomColor: appColors.border }]}>
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <Ionicons name="chevron-back" size={24} color={Colors.textPrimary} />
+          <Ionicons name="chevron-back" size={24} color={appColors.textPrimary} />
         </TouchableOpacity>
-        <ThemedText style={styles.headerTitle}>Notifications</ThemedText>
+        <ThemedText style={[styles.headerTitle, { color: appColors.textPrimary }]}>Notifications</ThemedText>
         {unreadCount > 0 && (
           <TouchableOpacity 
             style={styles.markAllButton}
@@ -258,16 +260,13 @@ export default function NotificationsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.md,
-    backgroundColor: Colors.surface,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
   },
   backButton: {
     padding: Spacing.sm,
@@ -275,7 +274,6 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     ...Typography.title,
-    color: Colors.textPrimary,
     flex: 1,
   },
   markAllButton: {
@@ -289,7 +287,6 @@ const styles = StyleSheet.create({
   filterContainer: {
     flexDirection: 'row',
     padding: Spacing.md,
-    backgroundColor: Colors.surface,
     gap: Spacing.sm,
   },
   filterButton: {
@@ -303,7 +300,6 @@ const styles = StyleSheet.create({
   },
   filterText: {
     ...Typography.caption,
-    color: Colors.textSecondary,
   },
   filterTextActive: {
     color: Colors.primary,
@@ -313,9 +309,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-start',
     padding: Spacing.lg,
-    backgroundColor: Colors.surface,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
   },
   notificationUnread: {
     backgroundColor: Colors.primary + '05',
@@ -334,16 +328,13 @@ const styles = StyleSheet.create({
   notificationTitle: {
     ...Typography.body,
     fontWeight: '600',
-    color: Colors.textPrimary,
   },
   notificationBody: {
     ...Typography.caption,
-    color: Colors.textSecondary,
     marginTop: 2,
   },
   notificationTime: {
     ...Typography.small,
-    color: Colors.textSecondary,
     marginTop: Spacing.xs,
   },
   unreadDot: {
@@ -366,12 +357,10 @@ const styles = StyleSheet.create({
   },
   emptyTitle: {
     ...Typography.heading,
-    color: Colors.textPrimary,
     marginTop: Spacing.lg,
   },
   emptySubtitle: {
     ...Typography.body,
-    color: Colors.textSecondary,
     textAlign: 'center',
     marginTop: Spacing.sm,
   },

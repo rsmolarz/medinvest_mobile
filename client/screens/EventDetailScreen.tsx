@@ -23,6 +23,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 
 import { ThemedText } from '@/components/ThemedText';
 import { Colors, Spacing, BorderRadius, Typography, Shadows } from '@/constants/theme';
+import { useAppColors } from '@/hooks/useAppColors';
 import { contentApi } from '@/lib/api';
 import { Event } from '@/types';
 import { formatDate, formatNumber } from '@/lib/utils';
@@ -38,6 +39,7 @@ export default function EventDetailScreen() {
   const route = useRoute<RouteProp<EventDetailRouteParams, 'EventDetail'>>();
   const { eventId } = route.params;
   const queryClient = useQueryClient();
+  const appColors = useAppColors();
 
   // Fetch event details
   const {
@@ -96,14 +98,14 @@ export default function EventDetailScreen() {
     switch (type) {
       case 'virtual': return Colors.primary;
       case 'in-person': return Colors.secondary;
-      case 'hybrid': return Colors.warning;
+      case 'hybrid': return appColors.warning;
       default: return Colors.primary;
     }
   };
 
   if (isLoading) {
     return (
-      <SafeAreaView style={styles.loadingContainer}>
+      <SafeAreaView style={[styles.loadingContainer, { backgroundColor: appColors.background }]}>
         <ActivityIndicator size="large" color={Colors.primary} />
       </SafeAreaView>
     );
@@ -111,7 +113,7 @@ export default function EventDetailScreen() {
 
   if (!event) {
     return (
-      <SafeAreaView style={styles.loadingContainer}>
+      <SafeAreaView style={[styles.loadingContainer, { backgroundColor: appColors.background }]}>
         <ThemedText>Event not found</ThemedText>
       </SafeAreaView>
     );
@@ -121,15 +123,15 @@ export default function EventDetailScreen() {
   const isPast = eventDate < new Date();
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: appColors.background }]} edges={['top']}>
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { backgroundColor: appColors.surface, borderBottomColor: appColors.border }]}>
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <Ionicons name="chevron-back" size={24} color={Colors.textPrimary} />
+          <Ionicons name="chevron-back" size={24} color={appColors.textPrimary} />
         </TouchableOpacity>
-        <ThemedText style={styles.headerTitle}>Event</ThemedText>
+        <ThemedText style={[styles.headerTitle, { color: appColors.textPrimary }]}>Event</ThemedText>
         <TouchableOpacity style={styles.shareButton} onPress={handleShare}>
-          <Ionicons name="share-outline" size={24} color={Colors.textPrimary} />
+          <Ionicons name="share-outline" size={24} color={appColors.textPrimary} />
         </TouchableOpacity>
       </View>
 
@@ -159,7 +161,7 @@ export default function EventDetailScreen() {
         )}
 
         {/* Event Info */}
-        <View style={styles.eventInfo}>
+        <View style={[styles.eventInfo, { backgroundColor: appColors.surface }]}>
           {/* Type Badge */}
           <View style={[styles.typeBadge, { backgroundColor: getEventTypeColor(event.type) + '20' }]}>
             <Ionicons
@@ -172,7 +174,7 @@ export default function EventDetailScreen() {
             </ThemedText>
           </View>
 
-          <ThemedText style={styles.eventTitle}>{event.title}</ThemedText>
+          <ThemedText style={[styles.eventTitle, { color: appColors.textPrimary }]}>{event.title}</ThemedText>
 
           {/* Date & Time */}
           <View style={styles.dateTimeSection}>
@@ -183,10 +185,10 @@ export default function EventDetailScreen() {
               <ThemedText style={styles.dateDay}>{eventDate.getDate()}</ThemedText>
             </View>
             <View style={styles.timeInfo}>
-              <ThemedText style={styles.timeText}>
+              <ThemedText style={[styles.timeText, { color: appColors.textPrimary }]}>
                 {eventDate.toLocaleString('default', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
               </ThemedText>
-              <ThemedText style={styles.timeDetail}>
+              <ThemedText style={[styles.timeDetail, { color: appColors.textSecondary }]}>
                 {eventDate.toLocaleTimeString('default', { hour: '2-digit', minute: '2-digit' })}
                 {event.end_time && ` - ${new Date(event.end_time).toLocaleTimeString('default', { hour: '2-digit', minute: '2-digit' })}`}
               </ThemedText>
@@ -200,10 +202,10 @@ export default function EventDetailScreen() {
                 <Ionicons name="location-outline" size={20} color={Colors.primary} />
               </View>
               <View style={styles.locationInfo}>
-                <ThemedText style={styles.locationLabel}>Location</ThemedText>
-                <ThemedText style={styles.locationText}>{event.location}</ThemedText>
+                <ThemedText style={[styles.locationLabel, { color: appColors.textSecondary }]}>Location</ThemedText>
+                <ThemedText style={[styles.locationText, { color: appColors.textPrimary }]}>{event.location}</ThemedText>
               </View>
-              <Ionicons name="open-outline" size={18} color={Colors.textSecondary} />
+              <Ionicons name="open-outline" size={18} color={appColors.textSecondary} />
             </TouchableOpacity>
           )}
 
@@ -217,7 +219,7 @@ export default function EventDetailScreen() {
                 <Ionicons name="videocam-outline" size={20} color={Colors.primary} />
               </View>
               <View style={styles.locationInfo}>
-                <ThemedText style={styles.locationLabel}>Join Online</ThemedText>
+                <ThemedText style={[styles.locationLabel, { color: appColors.textSecondary }]}>Join Online</ThemedText>
                 <ThemedText style={styles.virtualLink}>Click to join meeting</ThemedText>
               </View>
               <Ionicons name="open-outline" size={18} color={Colors.primary} />
@@ -228,11 +230,11 @@ export default function EventDetailScreen() {
           <View style={styles.attendeesSection}>
             <View style={styles.attendeesAvatars}>
               {/* Placeholder for attendee avatars */}
-              <View style={[styles.attendeeAvatar, { backgroundColor: Colors.primary + '20' }]} />
-              <View style={[styles.attendeeAvatar, { backgroundColor: Colors.secondary + '20', marginLeft: -8 }]} />
-              <View style={[styles.attendeeAvatar, { backgroundColor: Colors.warning + '20', marginLeft: -8 }]} />
+              <View style={[styles.attendeeAvatar, { backgroundColor: Colors.primary + '20', borderColor: appColors.surface }]} />
+              <View style={[styles.attendeeAvatar, { backgroundColor: Colors.secondary + '20', marginLeft: -8, borderColor: appColors.surface }]} />
+              <View style={[styles.attendeeAvatar, { backgroundColor: Colors.warning + '20', marginLeft: -8, borderColor: appColors.surface }]} />
             </View>
-            <ThemedText style={styles.attendeesText}>
+            <ThemedText style={[styles.attendeesText, { color: appColors.textSecondary }]}>
               {formatNumber(event.attendees_count)} attending
             </ThemedText>
           </View>
@@ -252,27 +254,27 @@ export default function EventDetailScreen() {
               </View>
             )}
             <View style={styles.hostInfo}>
-              <ThemedText style={styles.hostLabel}>Hosted by</ThemedText>
-              <ThemedText style={styles.hostName}>{event.host.full_name}</ThemedText>
+              <ThemedText style={[styles.hostLabel, { color: appColors.textSecondary }]}>Hosted by</ThemedText>
+              <ThemedText style={[styles.hostName, { color: appColors.textPrimary }]}>{event.host.full_name}</ThemedText>
             </View>
-            <Ionicons name="chevron-forward" size={20} color={Colors.textSecondary} />
+            <Ionicons name="chevron-forward" size={20} color={appColors.textSecondary} />
           </TouchableOpacity>
         </View>
 
         {/* Description */}
-        <View style={styles.descriptionSection}>
-          <ThemedText style={styles.sectionTitle}>About This Event</ThemedText>
-          <ThemedText style={styles.descriptionText}>{event.description}</ThemedText>
+        <View style={[styles.descriptionSection, { backgroundColor: appColors.surface }]}>
+          <ThemedText style={[styles.sectionTitle, { color: appColors.textPrimary }]}>About This Event</ThemedText>
+          <ThemedText style={[styles.descriptionText, { color: appColors.textSecondary }]}>{event.description}</ThemedText>
         </View>
 
         {/* Tags */}
         {event.tags && event.tags.length > 0 && (
-          <View style={styles.tagsSection}>
-            <ThemedText style={styles.sectionTitle}>Topics</ThemedText>
+          <View style={[styles.tagsSection, { backgroundColor: appColors.surface }]}>
+            <ThemedText style={[styles.sectionTitle, { color: appColors.textPrimary }]}>Topics</ThemedText>
             <View style={styles.tagsContainer}>
               {event.tags.map((tag, index) => (
                 <View key={index} style={styles.tag}>
-                  <ThemedText style={styles.tagText}>#{tag}</ThemedText>
+                  <ThemedText style={[styles.tagText, { color: appColors.textSecondary }]}>#{tag}</ThemedText>
                 </View>
               ))}
             </View>
@@ -282,7 +284,7 @@ export default function EventDetailScreen() {
 
       {/* RSVP Button */}
       {!isPast && (
-        <View style={styles.footer}>
+        <View style={[styles.footer, { backgroundColor: appColors.surface, borderTopColor: appColors.border }]}>
           <TouchableOpacity
             style={[
               styles.rsvpButton,
@@ -292,7 +294,7 @@ export default function EventDetailScreen() {
             disabled={attendMutation.isPending}
           >
             {attendMutation.isPending ? (
-              <ActivityIndicator color={event.is_attending ? Colors.textSecondary : 'white'} />
+              <ActivityIndicator color={event.is_attending ? appColors.textSecondary : 'white'} />
             ) : (
               <>
                 <Ionicons
@@ -318,13 +320,11 @@ export default function EventDetailScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
   },
   loadingContainer: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: Colors.background,
   },
   header: {
     flexDirection: 'row',
@@ -332,16 +332,13 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.sm,
-    backgroundColor: Colors.surface,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
   },
   backButton: {
     padding: Spacing.sm,
   },
   headerTitle: {
     ...Typography.heading,
-    color: Colors.textPrimary,
   },
   shareButton: {
     padding: Spacing.sm,
@@ -362,7 +359,6 @@ const styles = StyleSheet.create({
   },
   eventInfo: {
     padding: Spacing.lg,
-    backgroundColor: Colors.surface,
   },
   typeBadge: {
     flexDirection: 'row',
@@ -380,7 +376,6 @@ const styles = StyleSheet.create({
   },
   eventTitle: {
     ...Typography.title,
-    color: Colors.textPrimary,
     marginBottom: Spacing.lg,
   },
   dateTimeSection: {
@@ -412,12 +407,10 @@ const styles = StyleSheet.create({
   },
   timeText: {
     ...Typography.body,
-    color: Colors.textPrimary,
     fontWeight: '500',
   },
   timeDetail: {
     ...Typography.caption,
-    color: Colors.textSecondary,
     marginTop: 2,
   },
   locationSection: {
@@ -442,11 +435,9 @@ const styles = StyleSheet.create({
   },
   locationLabel: {
     ...Typography.small,
-    color: Colors.textSecondary,
   },
   locationText: {
     ...Typography.body,
-    color: Colors.textPrimary,
     fontWeight: '500',
   },
   virtualSection: {
@@ -476,11 +467,9 @@ const styles = StyleSheet.create({
     height: 28,
     borderRadius: 14,
     borderWidth: 2,
-    borderColor: Colors.surface,
   },
   attendeesText: {
     ...Typography.caption,
-    color: Colors.textSecondary,
   },
   hostSection: {
     flexDirection: 'row',
@@ -510,31 +499,25 @@ const styles = StyleSheet.create({
   },
   hostLabel: {
     ...Typography.small,
-    color: Colors.textSecondary,
   },
   hostName: {
     ...Typography.body,
     fontWeight: '600',
-    color: Colors.textPrimary,
   },
   descriptionSection: {
     padding: Spacing.lg,
-    backgroundColor: Colors.surface,
     marginTop: Spacing.md,
   },
   sectionTitle: {
     ...Typography.heading,
-    color: Colors.textPrimary,
     marginBottom: Spacing.md,
   },
   descriptionText: {
     ...Typography.body,
-    color: Colors.textSecondary,
     lineHeight: 24,
   },
   tagsSection: {
     padding: Spacing.lg,
-    backgroundColor: Colors.surface,
     marginTop: Spacing.md,
     marginBottom: Spacing.xl,
   },
@@ -551,13 +534,10 @@ const styles = StyleSheet.create({
   },
   tagText: {
     ...Typography.caption,
-    color: Colors.textSecondary,
   },
   footer: {
     padding: Spacing.lg,
-    backgroundColor: Colors.surface,
     borderTopWidth: 1,
-    borderTopColor: Colors.border,
   },
   rsvpButton: {
     flexDirection: 'row',

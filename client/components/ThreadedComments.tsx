@@ -20,10 +20,10 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { ThemedText } from '@/components/ThemedText';
 import { Colors, Spacing, BorderRadius, Typography } from '@/constants/theme';
+import { useAppColors } from '@/hooks/useAppColors';
 import { commentsApi } from '@/lib/api';
 import { formatRelativeTime } from '@/lib/utils';
 
-// Enable LayoutAnimation on Android
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
   UIManager.setLayoutAnimationEnabledExperimental(true);
 }
@@ -76,7 +76,6 @@ export default function ThreadedComments({
   );
 }
 
-// Individual comment with replies
 interface CommentThreadProps {
   comment: Comment;
   postId: number;
@@ -92,12 +91,12 @@ const CommentThread = memo(function CommentThread({
   depth,
   maxDepth,
 }: CommentThreadProps) {
+  const appColors = useAppColors();
   const queryClient = useQueryClient();
   const [isExpanded, setIsExpanded] = useState(depth < 2);
   const [showReplyInput, setShowReplyInput] = useState(false);
   const [replyText, setReplyText] = useState('');
 
-  // Like mutation
   const likeMutation = useMutation({
     mutationFn: async () => {
       if (comment.is_liked) {
@@ -111,7 +110,6 @@ const CommentThread = memo(function CommentThread({
     },
   });
 
-  // Reply mutation
   const replyMutation = useMutation({
     mutationFn: async () => {
       if (!replyText.trim()) return;
@@ -148,13 +146,10 @@ const CommentThread = memo(function CommentThread({
   const isMaxDepth = depth >= maxDepth;
 
   return (
-    <View style={[styles.threadContainer, depth > 0 && styles.nestedThread]}>
-      {/* Thread line for nested comments */}
-      {depth > 0 && <View style={styles.threadLine} />}
+    <View style={[styles.threadContainer, depth > 0 && [styles.nestedThread, { borderLeftColor: appColors.border }]]}>
+      {depth > 0 && <View style={[styles.threadLine, { backgroundColor: appColors.border }]} />}
       
-      {/* Comment */}
       <View style={styles.commentContainer}>
-        {/* Avatar */}
         <TouchableOpacity onPress={() => onUserPress(comment.author.id)}>
           {comment.author.avatar_url ? (
             <Image source={{ uri: comment.author.avatar_url }} style={styles.avatar} />
@@ -167,25 +162,21 @@ const CommentThread = memo(function CommentThread({
           )}
         </TouchableOpacity>
 
-        {/* Content */}
         <View style={styles.contentContainer}>
-          {/* Header */}
           <View style={styles.commentHeader}>
             <TouchableOpacity onPress={() => onUserPress(comment.author.id)}>
-              <ThemedText style={styles.authorName}>{comment.author.full_name}</ThemedText>
+              <ThemedText style={[styles.authorName, { color: appColors.textPrimary }]}>{comment.author.full_name}</ThemedText>
             </TouchableOpacity>
-            <ThemedText style={styles.timestamp}>
+            <ThemedText style={[styles.timestamp, { color: appColors.textSecondary }]}>
               {formatRelativeTime(comment.created_at)}
             </ThemedText>
             {comment.updated_at && comment.updated_at !== comment.created_at && (
-              <ThemedText style={styles.editedBadge}>(edited)</ThemedText>
+              <ThemedText style={[styles.editedBadge, { color: appColors.textSecondary }]}>(edited)</ThemedText>
             )}
           </View>
 
-          {/* Comment text */}
-          <ThemedText style={styles.commentText}>{comment.content}</ThemedText>
+          <ThemedText style={[styles.commentText, { color: appColors.textPrimary }]}>{comment.content}</ThemedText>
 
-          {/* Actions */}
           <View style={styles.actions}>
             <TouchableOpacity 
               style={styles.actionButton} 
@@ -195,12 +186,13 @@ const CommentThread = memo(function CommentThread({
               <Ionicons
                 name={comment.is_liked ? 'heart' : 'heart-outline'}
                 size={16}
-                color={comment.is_liked ? Colors.error : Colors.textSecondary}
+                color={comment.is_liked ? appColors.error : appColors.textSecondary}
               />
               {comment.likes_count > 0 && (
                 <ThemedText style={[
                   styles.actionText,
-                  comment.is_liked && styles.actionTextActive
+                  { color: appColors.textSecondary },
+                  comment.is_liked && { color: appColors.error }
                 ]}>
                   {comment.likes_count}
                 </ThemedText>
@@ -209,8 +201,8 @@ const CommentThread = memo(function CommentThread({
 
             {!isMaxDepth && (
               <TouchableOpacity style={styles.actionButton} onPress={handleReply}>
-                <Ionicons name="chatbubble-outline" size={16} color={Colors.textSecondary} />
-                <ThemedText style={styles.actionText}>Reply</ThemedText>
+                <Ionicons name="chatbubble-outline" size={16} color={appColors.textSecondary} />
+                <ThemedText style={[styles.actionText, { color: appColors.textSecondary }]}>Reply</ThemedText>
               </TouchableOpacity>
             )}
 
@@ -228,13 +220,12 @@ const CommentThread = memo(function CommentThread({
             )}
           </View>
 
-          {/* Reply Input */}
           {showReplyInput && (
             <View style={styles.replyInputContainer}>
               <TextInput
-                style={styles.replyInput}
+                style={[styles.replyInput, { color: appColors.textPrimary }]}
                 placeholder={`Reply to ${comment.author.full_name.split(' ')[0]}...`}
-                placeholderTextColor={Colors.textSecondary}
+                placeholderTextColor={appColors.textSecondary}
                 value={replyText}
                 onChangeText={setReplyText}
                 multiline
@@ -248,12 +239,12 @@ const CommentThread = memo(function CommentThread({
                     setReplyText('');
                   }}
                 >
-                  <ThemedText style={styles.cancelReplyText}>Cancel</ThemedText>
+                  <ThemedText style={[styles.cancelReplyText, { color: appColors.textSecondary }]}>Cancel</ThemedText>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={[
                     styles.submitReplyButton,
-                    (!replyText.trim() || replyMutation.isPending) && styles.submitReplyButtonDisabled
+                    (!replyText.trim() || replyMutation.isPending) && [styles.submitReplyButtonDisabled, { backgroundColor: appColors.textSecondary }]
                   ]}
                   onPress={handleSubmitReply}
                   disabled={!replyText.trim() || replyMutation.isPending}
@@ -270,7 +261,6 @@ const CommentThread = memo(function CommentThread({
         </View>
       </View>
 
-      {/* Nested Replies */}
       {hasReplies && isExpanded && (
         <View style={styles.repliesContainer}>
           {comment.replies!.map((reply) => (
@@ -286,7 +276,6 @@ const CommentThread = memo(function CommentThread({
         </View>
       )}
 
-      {/* "View more replies" for max depth */}
       {hasReplies && isMaxDepth && (
         <TouchableOpacity style={styles.viewMoreButton}>
           <ThemedText style={styles.viewMoreText}>
@@ -299,16 +288,16 @@ const CommentThread = memo(function CommentThread({
   );
 });
 
-// Collapsed thread indicator
 interface CollapsedThreadProps {
   count: number;
   onExpand: () => void;
 }
 
 export function CollapsedThread({ count, onExpand }: CollapsedThreadProps) {
+  const appColors = useAppColors();
   return (
     <TouchableOpacity style={styles.collapsedThread} onPress={onExpand}>
-      <View style={styles.collapsedLine} />
+      <View style={[styles.collapsedLine, { backgroundColor: appColors.border }]} />
       <ThemedText style={styles.collapsedText}>
         {count} hidden {count === 1 ? 'reply' : 'replies'}
       </ThemedText>
@@ -328,7 +317,6 @@ const styles = StyleSheet.create({
     marginLeft: Spacing.md,
     paddingLeft: Spacing.md,
     borderLeftWidth: 2,
-    borderLeftColor: Colors.border,
   },
   threadLine: {
     position: 'absolute',
@@ -336,7 +324,6 @@ const styles = StyleSheet.create({
     top: 0,
     bottom: 0,
     width: 2,
-    backgroundColor: Colors.border,
   },
   commentContainer: {
     flexDirection: 'row',
@@ -369,20 +356,16 @@ const styles = StyleSheet.create({
   authorName: {
     ...Typography.caption,
     fontWeight: '600',
-    color: Colors.textPrimary,
   },
   timestamp: {
     ...Typography.small,
-    color: Colors.textSecondary,
   },
   editedBadge: {
     ...Typography.small,
-    color: Colors.textSecondary,
     fontStyle: 'italic',
   },
   commentText: {
     ...Typography.body,
-    color: Colors.textPrimary,
     marginTop: Spacing.xs,
     lineHeight: 22,
   },
@@ -398,10 +381,6 @@ const styles = StyleSheet.create({
   },
   actionText: {
     ...Typography.small,
-    color: Colors.textSecondary,
-  },
-  actionTextActive: {
-    color: Colors.error,
   },
   actionTextPrimary: {
     color: Colors.primary,
@@ -417,7 +396,6 @@ const styles = StyleSheet.create({
   },
   replyInput: {
     ...Typography.body,
-    color: Colors.textPrimary,
     minHeight: 60,
     textAlignVertical: 'top',
   },
@@ -433,7 +411,6 @@ const styles = StyleSheet.create({
   },
   cancelReplyText: {
     ...Typography.caption,
-    color: Colors.textSecondary,
   },
   submitReplyButton: {
     backgroundColor: Colors.primary,
@@ -444,13 +421,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   submitReplyButtonDisabled: {
-    backgroundColor: Colors.textSecondary,
+    opacity: 0.6,
   },
   viewMoreButton: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: Spacing.sm,
-    paddingLeft: 44, // Align with content (avatar + margin)
+    paddingLeft: 44,
     gap: 4,
   },
   viewMoreText: {
@@ -468,7 +445,6 @@ const styles = StyleSheet.create({
   collapsedLine: {
     width: 20,
     height: 2,
-    backgroundColor: Colors.border,
   },
   collapsedText: {
     ...Typography.small,

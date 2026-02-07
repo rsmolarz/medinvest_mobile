@@ -20,6 +20,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 
 import { ThemedText } from '@/components/ThemedText';
 import { Colors, Spacing, BorderRadius, Typography, Shadows } from '@/constants/theme';
+import { useAppColors } from '@/hooks/useAppColors';
 import { roomsApi, feedApi } from '@/lib/api';
 import { Room, Post } from '@/types';
 import { formatNumber } from '@/lib/utils';
@@ -36,6 +37,7 @@ export default function RoomDetailScreen() {
   const route = useRoute<RouteProp<RoomDetailRouteParams, 'RoomDetail'>>();
   const { roomSlug } = route.params;
   const queryClient = useQueryClient();
+  const appColors = useAppColors();
 
   // Fetch room details
   const {
@@ -108,7 +110,7 @@ export default function RoomDetailScreen() {
     if (!room) return null;
 
     return (
-      <View style={styles.header}>
+      <View style={[styles.header, { backgroundColor: appColors.surface }]}>
         {/* Room Banner */}
         <LinearGradient
           colors={[room.color, room.color + 'CC']}
@@ -121,23 +123,23 @@ export default function RoomDetailScreen() {
 
         {/* Room Info */}
         <View style={styles.roomInfo}>
-          <ThemedText style={styles.roomName}>{room.name}</ThemedText>
-          <ThemedText style={styles.roomDescription}>{room.description}</ThemedText>
+          <ThemedText style={[styles.roomName, { color: appColors.textPrimary }]}>{room.name}</ThemedText>
+          <ThemedText style={[styles.roomDescription, { color: appColors.textSecondary }]}>{room.description}</ThemedText>
 
           {/* Stats */}
-          <View style={styles.statsRow}>
+          <View style={[styles.statsRow, { borderColor: appColors.border }]}>
             <View style={styles.statItem}>
-              <ThemedText style={styles.statValue}>
+              <ThemedText style={[styles.statValue, { color: appColors.textPrimary }]}>
                 {formatNumber(room.members_count)}
               </ThemedText>
-              <ThemedText style={styles.statLabel}>Members</ThemedText>
+              <ThemedText style={[styles.statLabel, { color: appColors.textSecondary }]}>Members</ThemedText>
             </View>
-            <View style={styles.statDivider} />
+            <View style={[styles.statDivider, { backgroundColor: appColors.border }]} />
             <View style={styles.statItem}>
-              <ThemedText style={styles.statValue}>
+              <ThemedText style={[styles.statValue, { color: appColors.textPrimary }]}>
                 {formatNumber(room.posts_count)}
               </ThemedText>
-              <ThemedText style={styles.statLabel}>Posts</ThemedText>
+              <ThemedText style={[styles.statLabel, { color: appColors.textSecondary }]}>Posts</ThemedText>
             </View>
           </View>
 
@@ -152,17 +154,17 @@ export default function RoomDetailScreen() {
               disabled={membershipMutation.isPending}
             >
               {membershipMutation.isPending ? (
-                <ActivityIndicator size="small" color={room.is_member ? Colors.textSecondary : 'white'} />
+                <ActivityIndicator size="small" color={room.is_member ? appColors.textSecondary : 'white'} />
               ) : (
                 <>
                   <Ionicons
                     name={room.is_member ? 'checkmark' : 'add'}
                     size={18}
-                    color={room.is_member ? Colors.textSecondary : 'white'}
+                    color={room.is_member ? appColors.textSecondary : 'white'}
                   />
                   <ThemedText style={[
                     styles.joinButtonText,
-                    room.is_member && styles.joinedButtonText,
+                    room.is_member && [styles.joinedButtonText, { color: appColors.textSecondary }],
                   ]}>
                     {room.is_member ? 'Joined' : 'Join'}
                   </ThemedText>
@@ -181,11 +183,11 @@ export default function RoomDetailScreen() {
           {/* Rules */}
           {room.rules && room.rules.length > 0 && (
             <View style={styles.rulesSection}>
-              <ThemedText style={styles.rulesTitle}>Room Rules</ThemedText>
+              <ThemedText style={[styles.rulesTitle, { color: appColors.textSecondary }]}>Room Rules</ThemedText>
               {room.rules.map((rule, index) => (
                 <View key={index} style={styles.ruleItem}>
-                  <ThemedText style={styles.ruleNumber}>{index + 1}.</ThemedText>
-                  <ThemedText style={styles.ruleText}>{rule}</ThemedText>
+                  <ThemedText style={[styles.ruleNumber, { color: appColors.textSecondary }]}>{index + 1}.</ThemedText>
+                  <ThemedText style={[styles.ruleText, { color: appColors.textPrimary }]}>{rule}</ThemedText>
                 </View>
               ))}
             </View>
@@ -193,8 +195,8 @@ export default function RoomDetailScreen() {
         </View>
 
         {/* Posts Header */}
-        <View style={styles.postsHeader}>
-          <ThemedText style={styles.postsTitle}>Posts</ThemedText>
+        <View style={[styles.postsHeader, { borderTopColor: appColors.border }]}>
+          <ThemedText style={[styles.postsTitle, { color: appColors.textPrimary }]}>Posts</ThemedText>
         </View>
       </View>
     );
@@ -221,9 +223,9 @@ export default function RoomDetailScreen() {
 
   const renderEmpty = () => (
     <View style={styles.emptyContainer}>
-      <Ionicons name="document-text-outline" size={48} color={Colors.textSecondary} />
-      <ThemedText style={styles.emptyTitle}>No posts yet</ThemedText>
-      <ThemedText style={styles.emptySubtitle}>
+      <Ionicons name="document-text-outline" size={48} color={appColors.textSecondary} />
+      <ThemedText style={[styles.emptyTitle, { color: appColors.textPrimary }]}>No posts yet</ThemedText>
+      <ThemedText style={[styles.emptySubtitle, { color: appColors.textSecondary }]}>
         Be the first to post in this room!
       </ThemedText>
       {room?.is_member && (
@@ -236,24 +238,24 @@ export default function RoomDetailScreen() {
 
   if (roomLoading) {
     return (
-      <SafeAreaView style={styles.loadingContainer}>
+      <SafeAreaView style={[styles.loadingContainer, { backgroundColor: appColors.background }]}>
         <ActivityIndicator size="large" color={Colors.primary} />
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: appColors.background }]} edges={['top']}>
       {/* Navigation Header */}
-      <View style={styles.navHeader}>
+      <View style={[styles.navHeader, { backgroundColor: appColors.surface, borderBottomColor: appColors.border }]}>
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <Ionicons name="chevron-back" size={24} color={Colors.textPrimary} />
+          <Ionicons name="chevron-back" size={24} color={appColors.textPrimary} />
         </TouchableOpacity>
-        <ThemedText style={styles.navTitle} numberOfLines={1}>
+        <ThemedText style={[styles.navTitle, { color: appColors.textPrimary }]} numberOfLines={1}>
           {room?.name}
         </ThemedText>
         <TouchableOpacity style={styles.moreButton}>
-          <Ionicons name="ellipsis-horizontal" size={24} color={Colors.textPrimary} />
+          <Ionicons name="ellipsis-horizontal" size={24} color={appColors.textPrimary} />
         </TouchableOpacity>
       </View>
 
@@ -283,13 +285,11 @@ export default function RoomDetailScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
   },
   loadingContainer: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: Colors.background,
   },
   navHeader: {
     flexDirection: 'row',
@@ -297,16 +297,13 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.sm,
-    backgroundColor: Colors.surface,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
   },
   backButton: {
     padding: Spacing.sm,
   },
   navTitle: {
     ...Typography.heading,
-    color: Colors.textPrimary,
     flex: 1,
     textAlign: 'center',
   },
@@ -314,7 +311,6 @@ const styles = StyleSheet.create({
     padding: Spacing.sm,
   },
   header: {
-    backgroundColor: Colors.surface,
     marginBottom: Spacing.md,
   },
   banner: {
@@ -330,12 +326,10 @@ const styles = StyleSheet.create({
   },
   roomName: {
     ...Typography.title,
-    color: Colors.textPrimary,
     marginBottom: Spacing.xs,
   },
   roomDescription: {
     ...Typography.body,
-    color: Colors.textSecondary,
     lineHeight: 22,
   },
   statsRow: {
@@ -345,7 +339,6 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.md,
     borderTopWidth: 1,
     borderBottomWidth: 1,
-    borderColor: Colors.border,
   },
   statItem: {
     flex: 1,
@@ -354,15 +347,12 @@ const styles = StyleSheet.create({
   statDivider: {
     width: 1,
     height: 32,
-    backgroundColor: Colors.border,
   },
   statValue: {
     ...Typography.heading,
-    color: Colors.textPrimary,
   },
   statLabel: {
     ...Typography.small,
-    color: Colors.textSecondary,
     marginTop: 2,
   },
   actionsRow: {
@@ -389,7 +379,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   joinedButtonText: {
-    color: Colors.textSecondary,
   },
   createButton: {
     flex: 1,
@@ -415,7 +404,6 @@ const styles = StyleSheet.create({
   rulesTitle: {
     ...Typography.caption,
     fontWeight: '600',
-    color: Colors.textSecondary,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
     marginBottom: Spacing.sm,
@@ -426,22 +414,18 @@ const styles = StyleSheet.create({
   },
   ruleNumber: {
     ...Typography.caption,
-    color: Colors.textSecondary,
     width: 20,
   },
   ruleText: {
     ...Typography.caption,
-    color: Colors.textPrimary,
     flex: 1,
   },
   postsHeader: {
     padding: Spacing.lg,
     borderTopWidth: 1,
-    borderTopColor: Colors.border,
   },
   postsTitle: {
     ...Typography.heading,
-    color: Colors.textPrimary,
   },
   loadingFooter: {
     paddingVertical: Spacing.xl,
@@ -455,12 +439,10 @@ const styles = StyleSheet.create({
   },
   emptyTitle: {
     ...Typography.heading,
-    color: Colors.textPrimary,
     marginTop: Spacing.lg,
   },
   emptySubtitle: {
     ...Typography.body,
-    color: Colors.textSecondary,
     textAlign: 'center',
     marginTop: Spacing.sm,
   },

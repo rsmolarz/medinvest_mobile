@@ -17,50 +17,49 @@ import { Ionicons } from '@expo/vector-icons';
 
 import { ThemedText } from '@/components/ThemedText';
 import { Colors, Spacing, BorderRadius, Typography } from '@/constants/theme';
+import { useAppColors } from '@/hooks/useAppColors';
 
 const TERMS_URL = 'https://medinvest.com/terms';
 const SUPPORT_EMAIL = 'legal@medinvest.com';
 
 export default function TermsOfServiceScreen() {
   const navigation = useNavigation<any>();
+  const appColors = useAppColors();
 
   const handleOpenWebsite = () => {
     Linking.openURL(TERMS_URL);
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: appColors.background }]} edges={['top']}>
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { backgroundColor: appColors.surface, borderBottomColor: appColors.border }]}>
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <Ionicons name="chevron-back" size={24} color={Colors.textPrimary} />
+          <Ionicons name="chevron-back" size={24} color={appColors.textPrimary} />
         </TouchableOpacity>
-        <ThemedText style={styles.headerTitle}>Terms of Service</ThemedText>
+        <ThemedText style={[styles.headerTitle, { color: appColors.textPrimary }]}>Terms of Service</ThemedText>
         <TouchableOpacity style={styles.webButton} onPress={handleOpenWebsite}>
           <Ionicons name="open-outline" size={20} color={Colors.primary} />
         </TouchableOpacity>
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        <ThemedText style={styles.lastUpdated}>Last updated: January 2026</ThemedText>
+        <ThemedText style={[styles.lastUpdated, { color: appColors.textSecondary }]}>Last updated: January 2026</ThemedText>
 
-        {/* Introduction */}
         <Section title="1. Agreement to Terms">
-          <ThemedText style={styles.paragraph}>
+          <ThemedText style={[styles.paragraph, { color: appColors.textSecondary }]}>
             By accessing or using MedInvest, you agree to be bound by these Terms of Service. If you do not agree to these terms, please do not use our services.
           </ThemedText>
         </Section>
 
-        {/* Eligibility */}
         <Section title="2. Eligibility">
-          <ThemedText style={styles.paragraph}>
+          <ThemedText style={[styles.paragraph, { color: appColors.textSecondary }]}>
             You must be at least 18 years old to use MedInvest. By using our services, you represent that you meet this requirement and have the legal capacity to enter into this agreement.
           </ThemedText>
         </Section>
 
-        {/* Account */}
         <Section title="3. Your Account">
-          <ThemedText style={styles.paragraph}>
+          <ThemedText style={[styles.paragraph, { color: appColors.textSecondary }]}>
             You are responsible for maintaining the confidentiality of your account credentials and for all activities under your account. You agree to:
           </ThemedText>
           <BulletList items={[
@@ -71,9 +70,8 @@ export default function TermsOfServiceScreen() {
           ]} />
         </Section>
 
-        {/* Acceptable Use */}
         <Section title="4. Acceptable Use">
-          <ThemedText style={styles.paragraph}>
+          <ThemedText style={[styles.paragraph, { color: appColors.textSecondary }]}>
             You agree not to:
           </ThemedText>
           <BulletList items={[
@@ -88,64 +86,56 @@ export default function TermsOfServiceScreen() {
           ]} />
         </Section>
 
-        {/* Content */}
         <Section title="5. User Content">
-          <ThemedText style={styles.paragraph}>
+          <ThemedText style={[styles.paragraph, { color: appColors.textSecondary }]}>
             You retain ownership of content you post but grant us a license to use, display, and distribute it on our platform. You are solely responsible for your content and must ensure it does not infringe on others' rights.
           </ThemedText>
         </Section>
 
-        {/* Investment Disclaimer */}
         <Section title="6. Investment Disclaimer">
           <View style={styles.warningBox}>
-            <Ionicons name="warning-outline" size={24} color={Colors.warning} />
-            <ThemedText style={styles.warningText}>
+            <Ionicons name="warning-outline" size={24} color={appColors.warning} />
+            <ThemedText style={[styles.warningText, { color: appColors.textPrimary }]}>
               MedInvest does not provide investment advice. All investment information is for educational purposes only. Always consult with qualified financial professionals before making investment decisions.
             </ThemedText>
           </View>
-          <ThemedText style={styles.paragraph}>
+          <ThemedText style={[styles.paragraph, { color: appColors.textSecondary }]}>
             We do not guarantee the accuracy of any investment-related content posted by users or third parties. Investment in healthcare ventures involves significant risk, including potential loss of capital.
           </ThemedText>
         </Section>
 
-        {/* Premium */}
         <Section title="7. Premium Subscription">
-          <ThemedText style={styles.paragraph}>
+          <ThemedText style={[styles.paragraph, { color: appColors.textSecondary }]}>
             Premium subscriptions are billed according to the plan selected. Subscriptions auto-renew unless cancelled 24 hours before the renewal date. Refunds are subject to our refund policy and app store guidelines.
           </ThemedText>
         </Section>
 
-        {/* Termination */}
         <Section title="8. Termination">
-          <ThemedText style={styles.paragraph}>
+          <ThemedText style={[styles.paragraph, { color: appColors.textSecondary }]}>
             We may suspend or terminate your account for violations of these terms. You may delete your account at any time through the app settings.
           </ThemedText>
         </Section>
 
-        {/* Limitation of Liability */}
         <Section title="9. Limitation of Liability">
-          <ThemedText style={styles.paragraph}>
+          <ThemedText style={[styles.paragraph, { color: appColors.textSecondary }]}>
             To the maximum extent permitted by law, MedInvest shall not be liable for any indirect, incidental, special, consequential, or punitive damages arising from your use of our services.
           </ThemedText>
         </Section>
 
-        {/* Changes */}
         <Section title="10. Changes to Terms">
-          <ThemedText style={styles.paragraph}>
+          <ThemedText style={[styles.paragraph, { color: appColors.textSecondary }]}>
             We reserve the right to modify these terms at any time. We will notify you of significant changes. Continued use of the service after changes constitutes acceptance of the new terms.
           </ThemedText>
         </Section>
 
-        {/* Governing Law */}
         <Section title="11. Governing Law">
-          <ThemedText style={styles.paragraph}>
+          <ThemedText style={[styles.paragraph, { color: appColors.textSecondary }]}>
             These terms are governed by the laws of the State of Delaware, United States, without regard to conflict of law principles.
           </ThemedText>
         </Section>
 
-        {/* Contact */}
         <Section title="12. Contact">
-          <ThemedText style={styles.paragraph}>
+          <ThemedText style={[styles.paragraph, { color: appColors.textSecondary }]}>
             For questions about these terms, contact us at:
           </ThemedText>
           <TouchableOpacity 
@@ -163,24 +153,24 @@ export default function TermsOfServiceScreen() {
   );
 }
 
-// Section component
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
+  const appColors = useAppColors();
   return (
     <View style={styles.section}>
-      <ThemedText style={styles.sectionTitle}>{title}</ThemedText>
+      <ThemedText style={[styles.sectionTitle, { color: appColors.textPrimary }]}>{title}</ThemedText>
       {children}
     </View>
   );
 }
 
-// Bullet list component
 function BulletList({ items }: { items: string[] }) {
+  const appColors = useAppColors();
   return (
     <View style={styles.bulletList}>
       {items.map((item, index) => (
         <View key={index} style={styles.bulletItem}>
           <View style={styles.bullet} />
-          <ThemedText style={styles.bulletText}>{item}</ThemedText>
+          <ThemedText style={[styles.bulletText, { color: appColors.textSecondary }]}>{item}</ThemedText>
         </View>
       ))}
     </View>
@@ -190,7 +180,6 @@ function BulletList({ items }: { items: string[] }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
   },
   header: {
     flexDirection: 'row',
@@ -198,16 +187,13 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.sm,
-    backgroundColor: Colors.surface,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
   },
   backButton: {
     padding: Spacing.sm,
   },
   headerTitle: {
     ...Typography.heading,
-    color: Colors.textPrimary,
   },
   webButton: {
     padding: Spacing.sm,
@@ -218,7 +204,6 @@ const styles = StyleSheet.create({
   },
   lastUpdated: {
     ...Typography.small,
-    color: Colors.textSecondary,
     marginTop: Spacing.lg,
     marginBottom: Spacing.xl,
   },
@@ -227,12 +212,10 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     ...Typography.heading,
-    color: Colors.textPrimary,
     marginBottom: Spacing.md,
   },
   paragraph: {
     ...Typography.body,
-    color: Colors.textSecondary,
     lineHeight: 24,
     marginBottom: Spacing.md,
   },
@@ -255,14 +238,13 @@ const styles = StyleSheet.create({
   },
   bulletText: {
     ...Typography.body,
-    color: Colors.textSecondary,
     flex: 1,
     lineHeight: 22,
   },
   warningBox: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    backgroundColor: Colors.warning + '15',
+    backgroundColor: Colors.light.backgroundSecondary,
     padding: Spacing.lg,
     borderRadius: BorderRadius.md,
     marginBottom: Spacing.lg,
@@ -270,7 +252,6 @@ const styles = StyleSheet.create({
   },
   warningText: {
     ...Typography.body,
-    color: Colors.textPrimary,
     flex: 1,
     lineHeight: 22,
   },

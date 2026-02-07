@@ -17,6 +17,7 @@ import { BlurView } from 'expo-blur';
 import { Ionicons } from '@expo/vector-icons';
 import { ThemedText } from '@/components/ThemedText';
 import { Colors, Spacing, BorderRadius, Typography, Shadows } from '@/constants/theme';
+import { useAppColors } from '@/hooks/useAppColors';
 import { TrendingTopic } from '@/types';
 import { formatNumber } from '@/lib/utils';
 
@@ -29,38 +30,40 @@ interface TrendingSidebarProps {
 }
 
 function TrendingSidebar({ topics, onTopicPress, onClose }: TrendingSidebarProps) {
+  const appColors = useAppColors();
+
   const renderTrendIcon = (trend: 'up' | 'down' | 'stable') => {
     switch (trend) {
       case 'up':
         return <Ionicons name="trending-up" size={16} color={Colors.secondary} />;
       case 'down':
-        return <Ionicons name="trending-down" size={16} color={Colors.error} />;
+        return <Ionicons name="trending-down" size={16} color={appColors.error} />;
       default:
-        return <Ionicons name="remove" size={16} color={Colors.textSecondary} />;
+        return <Ionicons name="remove" size={16} color={appColors.textSecondary} />;
     }
   };
 
   const renderTopic = ({ item, index }: { item: TrendingTopic; index: number }) => (
     <TouchableOpacity
-      style={styles.topicItem}
+      style={[styles.topicItem, { borderBottomColor: appColors.border }]}
       onPress={() => {
         onTopicPress(item.hashtag);
         onClose();
       }}
     >
       <View style={styles.topicRank}>
-        <ThemedText style={styles.rankText}>{index + 1}</ThemedText>
+        <ThemedText style={[styles.rankText, { color: appColors.textSecondary }]}>{index + 1}</ThemedText>
       </View>
       <View style={styles.topicInfo}>
         <View style={styles.topicHeader}>
-          <ThemedText style={styles.topicTag}>#{item.hashtag}</ThemedText>
+          <ThemedText style={[styles.topicTag, { color: appColors.textPrimary }]}>#{item.hashtag}</ThemedText>
           {renderTrendIcon(item.trend)}
         </View>
-        <ThemedText style={styles.topicCount}>
+        <ThemedText style={[styles.topicCount, { color: appColors.textSecondary }]}>
           {formatNumber(item.count)} posts
         </ThemedText>
       </View>
-      <Ionicons name="chevron-forward" size={20} color={Colors.textSecondary} />
+      <Ionicons name="chevron-forward" size={20} color={appColors.textSecondary} />
     </TouchableOpacity>
   );
 
@@ -75,14 +78,14 @@ function TrendingSidebar({ topics, onTopicPress, onClose }: TrendingSidebarProps
         <BlurView intensity={20} style={StyleSheet.absoluteFill} />
       </Pressable>
       
-      <View style={styles.container}>
-        <View style={styles.header}>
+      <View style={[styles.container, { backgroundColor: appColors.surface }]}>
+        <View style={[styles.header, { borderBottomColor: appColors.border }]}>
           <View style={styles.headerLeft}>
             <Ionicons name="trending-up" size={24} color={Colors.primary} />
-            <ThemedText style={styles.headerTitle}>Trending</ThemedText>
+            <ThemedText style={[styles.headerTitle, { color: appColors.textPrimary }]}>Trending</ThemedText>
           </View>
           <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-            <Ionicons name="close" size={24} color={Colors.textPrimary} />
+            <Ionicons name="close" size={24} color={appColors.textPrimary} />
           </TouchableOpacity>
         </View>
 
@@ -94,14 +97,14 @@ function TrendingSidebar({ topics, onTopicPress, onClose }: TrendingSidebarProps
           contentContainerStyle={styles.listContent}
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
-              <Ionicons name="analytics-outline" size={48} color={Colors.textSecondary} />
-              <ThemedText style={styles.emptyText}>No trending topics yet</ThemedText>
+              <Ionicons name="analytics-outline" size={48} color={appColors.textSecondary} />
+              <ThemedText style={[styles.emptyText, { color: appColors.textSecondary }]}>No trending topics yet</ThemedText>
             </View>
           }
         />
 
-        <View style={styles.footer}>
-          <ThemedText style={styles.footerText}>
+        <View style={[styles.footer, { borderTopColor: appColors.border }]}>
+          <ThemedText style={[styles.footerText, { color: appColors.textSecondary }]}>
             Updated every 15 minutes
           </ThemedText>
         </View>
@@ -120,7 +123,6 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: Colors.surface,
     borderTopLeftRadius: BorderRadius.lg,
     borderTopRightRadius: BorderRadius.lg,
     maxHeight: height * 0.7,
@@ -133,7 +135,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
   },
   headerLeft: {
     flexDirection: 'row',
@@ -142,7 +143,6 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     ...Typography.heading,
-    color: Colors.textPrimary,
   },
   closeButton: {
     padding: Spacing.xs,
@@ -155,7 +155,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: Spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
   },
   topicRank: {
     width: 28,
@@ -169,7 +168,6 @@ const styles = StyleSheet.create({
   rankText: {
     ...Typography.caption,
     fontWeight: '700',
-    color: Colors.textSecondary,
   },
   topicInfo: {
     flex: 1,
@@ -182,11 +180,9 @@ const styles = StyleSheet.create({
   topicTag: {
     ...Typography.body,
     fontWeight: '600',
-    color: Colors.textPrimary,
   },
   topicCount: {
     ...Typography.small,
-    color: Colors.textSecondary,
     marginTop: 2,
   },
   emptyContainer: {
@@ -196,18 +192,15 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     ...Typography.body,
-    color: Colors.textSecondary,
     marginTop: Spacing.md,
   },
   footer: {
     padding: Spacing.md,
     borderTopWidth: 1,
-    borderTopColor: Colors.border,
     alignItems: 'center',
   },
   footerText: {
     ...Typography.small,
-    color: Colors.textSecondary,
   },
 });
 

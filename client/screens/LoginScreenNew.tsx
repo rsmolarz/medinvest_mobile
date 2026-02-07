@@ -25,6 +25,7 @@ import { useMutation } from '@tanstack/react-query';
 
 import { ThemedText } from '@/components/ThemedText';
 import { Colors, Spacing, BorderRadius, Typography, Shadows } from '@/constants/theme';
+import { useAppColors } from '@/hooks/useAppColors';
 import { apiClient } from '@/api/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { biometricAuth, BiometricStatus } from '@/lib/biometric-auth';
@@ -32,6 +33,7 @@ import type { User } from '@/types';
 
 export default function LoginScreen() {
   const navigation = useNavigation<any>();
+  const appColors = useAppColors();
   const { setAuthSession, signInWithGoogle, signInWithGithub, signInWithFacebook, signInWithApple, isAppleAuthAvailable, mockSignIn } = useAuth();
 
   const [email, setEmail] = useState('');
@@ -131,7 +133,7 @@ export default function LoginScreen() {
     : 'Biometric';
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: appColors.surface }]}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardView}
@@ -153,20 +155,20 @@ export default function LoginScreen() {
             </LinearGradient>
           </View>
 
-          <ThemedText style={styles.title}>Welcome Back</ThemedText>
-          <ThemedText style={styles.subtitle}>
+          <ThemedText style={[styles.title, { color: appColors.textPrimary }]}>Welcome Back</ThemedText>
+          <ThemedText style={[styles.subtitle, { color: appColors.textSecondary }]}>
             Sign in to continue to MedInvest
           </ThemedText>
 
           {/* Form */}
           <View style={styles.form}>
             {/* Email Input */}
-            <View style={styles.inputContainer}>
-              <Ionicons name="mail-outline" size={20} color={Colors.textSecondary} style={styles.inputIcon} />
+            <View style={[styles.inputContainer, { borderColor: appColors.border }]}>
+              <Ionicons name="mail-outline" size={20} color={appColors.textSecondary} style={styles.inputIcon} />
               <TextInput
-                style={styles.input}
+                style={[styles.input, { color: appColors.textPrimary }]}
                 placeholder="Email address"
-                placeholderTextColor={Colors.textSecondary}
+                placeholderTextColor={appColors.textSecondary}
                 value={email}
                 onChangeText={setEmail}
                 keyboardType="email-address"
@@ -177,12 +179,12 @@ export default function LoginScreen() {
             </View>
 
             {/* Password Input */}
-            <View style={styles.inputContainer}>
-              <Ionicons name="lock-closed-outline" size={20} color={Colors.textSecondary} style={styles.inputIcon} />
+            <View style={[styles.inputContainer, { borderColor: appColors.border }]}>
+              <Ionicons name="lock-closed-outline" size={20} color={appColors.textSecondary} style={styles.inputIcon} />
               <TextInput
-                style={styles.input}
+                style={[styles.input, { color: appColors.textPrimary }]}
                 placeholder="Password"
-                placeholderTextColor={Colors.textSecondary}
+                placeholderTextColor={appColors.textSecondary}
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry={!showPassword}
@@ -195,7 +197,7 @@ export default function LoginScreen() {
                 <Ionicons
                   name={showPassword ? 'eye-off-outline' : 'eye-outline'}
                   size={20}
-                  color={Colors.textSecondary}
+                  color={appColors.textSecondary}
                 />
               </TouchableOpacity>
             </View>
@@ -245,46 +247,46 @@ export default function LoginScreen() {
 
             {/* Divider */}
             <View style={styles.divider}>
-              <View style={styles.dividerLine} />
-              <ThemedText style={styles.dividerText}>or continue with</ThemedText>
-              <View style={styles.dividerLine} />
+              <View style={[styles.dividerLine, { backgroundColor: appColors.border }]} />
+              <ThemedText style={[styles.dividerText, { color: appColors.textSecondary }]}>or continue with</ThemedText>
+              <View style={[styles.dividerLine, { backgroundColor: appColors.border }]} />
             </View>
 
             {/* Social Login */}
             <View style={styles.socialButtons}>
               <TouchableOpacity 
-                style={styles.socialButton}
+                style={[styles.socialButton, { borderColor: appColors.border }]}
                 onPress={() => {
                   console.log('Google button pressed');
                   signInWithGoogle();
                 }}
               >
-                <Ionicons name="logo-google" size={20} color={Colors.textPrimary} />
+                <Ionicons name="logo-google" size={20} color={appColors.textPrimary} />
               </TouchableOpacity>
               <TouchableOpacity 
-                style={styles.socialButton}
+                style={[styles.socialButton, { borderColor: appColors.border }]}
                 onPress={() => {
                   console.log('GitHub button pressed');
                   signInWithGithub();
                 }}
               >
-                <Ionicons name="logo-github" size={20} color={Colors.textPrimary} />
+                <Ionicons name="logo-github" size={20} color={appColors.textPrimary} />
               </TouchableOpacity>
               <TouchableOpacity 
-                style={styles.socialButton}
+                style={[styles.socialButton, { borderColor: appColors.border }]}
                 onPress={() => {
                   console.log('Facebook button pressed');
                   signInWithFacebook();
                 }}
               >
-                <Ionicons name="logo-facebook" size={20} color={Colors.textPrimary} />
+                <Ionicons name="logo-facebook" size={20} color={appColors.textPrimary} />
               </TouchableOpacity>
               {isAppleAuthAvailable && Platform.OS === 'ios' ? (
                 <TouchableOpacity 
-                  style={styles.socialButton}
+                  style={[styles.socialButton, { borderColor: appColors.border }]}
                   onPress={signInWithApple}
                 >
-                  <Ionicons name="logo-apple" size={20} color={Colors.textPrimary} />
+                  <Ionicons name="logo-apple" size={20} color={appColors.textPrimary} />
                 </TouchableOpacity>
               ) : null}
             </View>
@@ -292,7 +294,7 @@ export default function LoginScreen() {
 
           {/* Register Link */}
           <View style={styles.registerContainer}>
-            <ThemedText style={styles.registerText}>Don't have an account? </ThemedText>
+            <ThemedText style={[styles.registerText, { color: appColors.textSecondary }]}>Don't have an account? </ThemedText>
             <TouchableOpacity onPress={handleRegister}>
               <ThemedText style={styles.registerLink}>Sign Up</ThemedText>
             </TouchableOpacity>
@@ -300,12 +302,12 @@ export default function LoginScreen() {
 
           {/* Demo Login */}
           <TouchableOpacity
-            style={styles.demoButton}
+            style={[styles.demoButton, { borderColor: appColors.border }]}
             onPress={mockSignIn}
             testID="button-demo-login"
           >
-            <Ionicons name="flask-outline" size={18} color={Colors.textSecondary} />
-            <ThemedText style={styles.demoButtonText}>Try Demo Account</ThemedText>
+            <Ionicons name="flask-outline" size={18} color={appColors.textSecondary} />
+            <ThemedText style={[styles.demoButtonText, { color: appColors.textSecondary }]}>Try Demo Account</ThemedText>
           </TouchableOpacity>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -316,7 +318,6 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.surface,
   },
   keyboardView: {
     flex: 1,
@@ -341,12 +342,10 @@ const styles = StyleSheet.create({
   },
   title: {
     ...Typography.hero,
-    color: Colors.textPrimary,
     textAlign: 'center',
   },
   subtitle: {
     ...Typography.body,
-    color: Colors.textSecondary,
     textAlign: 'center',
     marginTop: Spacing.sm,
     marginBottom: Spacing.xl,
@@ -361,7 +360,6 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.md,
     marginBottom: Spacing.md,
     borderWidth: 1,
-    borderColor: Colors.border,
   },
   inputIcon: {
     marginLeft: Spacing.md,
@@ -369,7 +367,6 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     ...Typography.body,
-    color: Colors.textPrimary,
     paddingVertical: Spacing.lg,
     paddingHorizontal: Spacing.md,
   },
@@ -425,11 +422,9 @@ const styles = StyleSheet.create({
   dividerLine: {
     flex: 1,
     height: 1,
-    backgroundColor: Colors.border,
   },
   dividerText: {
     ...Typography.caption,
-    color: Colors.textSecondary,
     marginHorizontal: Spacing.md,
   },
   socialButtons: {
@@ -445,7 +440,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: Colors.border,
   },
   registerContainer: {
     flexDirection: 'row',
@@ -454,7 +448,6 @@ const styles = StyleSheet.create({
   },
   registerText: {
     ...Typography.body,
-    color: Colors.textSecondary,
   },
   registerLink: {
     ...Typography.body,
@@ -471,12 +464,10 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
     borderRadius: BorderRadius.md,
     borderWidth: 1,
-    borderColor: Colors.border,
     borderStyle: 'dashed',
   },
   demoButtonText: {
     ...Typography.caption,
-    color: Colors.textSecondary,
     fontWeight: '500',
   },
 });

@@ -19,6 +19,7 @@ import { useInfiniteQuery } from '@tanstack/react-query';
 
 import { ThemedText } from '@/components/ThemedText';
 import { Colors, Spacing, BorderRadius, Typography } from '@/constants/theme';
+import { useAppColors } from '@/hooks/useAppColors';
 import { searchApi } from '@/lib/api';
 import { Post } from '@/types';
 import PostCard from '@/components/PostCard';
@@ -33,6 +34,7 @@ export default function HashtagScreen() {
   const navigation = useNavigation<any>();
   const route = useRoute<RouteProp<HashtagRouteParams, 'Hashtag'>>();
   const { tag } = route.params;
+  const appColors = useAppColors();
 
   const {
     data: feedData,
@@ -48,7 +50,7 @@ export default function HashtagScreen() {
       const response = await searchApi.search(`#${tag}`, 'posts');
       return response.data;
     },
-    getNextPageParam: () => undefined, // Pagination not implemented for search
+    getNextPageParam: () => undefined,
     initialPageParam: undefined,
   });
 
@@ -73,13 +75,13 @@ export default function HashtagScreen() {
   );
 
   const renderHeader = () => (
-    <View style={styles.hashtagHeader}>
+    <View style={[styles.hashtagHeader, { backgroundColor: appColors.surface }]}>
       <View style={styles.hashtagIcon}>
         <ThemedText style={styles.hashtagSymbol}>#</ThemedText>
       </View>
       <View style={styles.hashtagInfo}>
-        <ThemedText style={styles.hashtagName}>{tag}</ThemedText>
-        <ThemedText style={styles.hashtagCount}>
+        <ThemedText style={[styles.hashtagName, { color: appColors.textPrimary }]}>{tag}</ThemedText>
+        <ThemedText style={[styles.hashtagCount, { color: appColors.textSecondary }]}>
           {posts.length} posts
         </ThemedText>
       </View>
@@ -96,9 +98,9 @@ export default function HashtagScreen() {
     }
     return (
       <View style={styles.emptyContainer}>
-        <Ionicons name="search-outline" size={48} color={Colors.textSecondary} />
-        <ThemedText style={styles.emptyTitle}>No posts found</ThemedText>
-        <ThemedText style={styles.emptySubtitle}>
+        <Ionicons name="search-outline" size={48} color={appColors.textSecondary} />
+        <ThemedText style={[styles.emptyTitle, { color: appColors.textPrimary }]}>No posts found</ThemedText>
+        <ThemedText style={[styles.emptySubtitle, { color: appColors.textSecondary }]}>
           No posts with #{tag} yet
         </ThemedText>
       </View>
@@ -106,12 +108,12 @@ export default function HashtagScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      <View style={styles.navHeader}>
+    <SafeAreaView style={[styles.container, { backgroundColor: appColors.background }]} edges={['top']}>
+      <View style={[styles.navHeader, { backgroundColor: appColors.surface, borderBottomColor: appColors.border }]}>
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <Ionicons name="chevron-back" size={24} color={Colors.textPrimary} />
+          <Ionicons name="chevron-back" size={24} color={appColors.textPrimary} />
         </TouchableOpacity>
-        <ThemedText style={styles.navTitle}>#{tag}</ThemedText>
+        <ThemedText style={[styles.navTitle, { color: appColors.textPrimary }]}>#{tag}</ThemedText>
         <View style={styles.backButton} />
       </View>
 
@@ -137,7 +139,6 @@ export default function HashtagScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
   },
   navHeader: {
     flexDirection: 'row',
@@ -145,9 +146,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.sm,
-    backgroundColor: Colors.surface,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
   },
   backButton: {
     width: 40,
@@ -155,13 +154,11 @@ const styles = StyleSheet.create({
   },
   navTitle: {
     ...Typography.heading,
-    color: Colors.textPrimary,
   },
   hashtagHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: Spacing.lg,
-    backgroundColor: Colors.surface,
     marginBottom: Spacing.md,
   },
   hashtagIcon: {
@@ -182,11 +179,9 @@ const styles = StyleSheet.create({
   },
   hashtagName: {
     ...Typography.title,
-    color: Colors.textPrimary,
   },
   hashtagCount: {
     ...Typography.caption,
-    color: Colors.textSecondary,
     marginTop: 2,
   },
   loadingContainer: {
@@ -203,12 +198,10 @@ const styles = StyleSheet.create({
   },
   emptyTitle: {
     ...Typography.heading,
-    color: Colors.textPrimary,
     marginTop: Spacing.lg,
   },
   emptySubtitle: {
     ...Typography.body,
-    color: Colors.textSecondary,
     textAlign: 'center',
     marginTop: Spacing.sm,
   },

@@ -18,6 +18,7 @@ import { useMutation } from '@tanstack/react-query';
 
 import { ThemedText } from '@/components/ThemedText';
 import { Colors, Spacing, BorderRadius, Typography, Shadows } from '@/constants/theme';
+import { useAppColors } from '@/hooks/useAppColors';
 import { moderationApi } from '@/lib/api';
 
 export type ReportType = 'post' | 'comment' | 'user' | 'message';
@@ -53,6 +54,7 @@ export default function ReportModal({
   targetId,
   targetName,
 }: ReportModalProps) {
+  const appColors = useAppColors();
   const [selectedReason, setSelectedReason] = useState<string | null>(null);
   const [additionalInfo, setAdditionalInfo] = useState('');
 
@@ -117,21 +119,21 @@ export default function ReportModal({
       onRequestClose={handleClose}
     >
       <View style={styles.overlay}>
-        <View style={styles.container}>
+        <View style={[styles.container, { backgroundColor: appColors.surface }]}>
           {/* Header */}
-          <View style={styles.header}>
+          <View style={[styles.header, { borderBottomColor: appColors.border }]}>
             <TouchableOpacity style={styles.closeButton} onPress={handleClose}>
-              <Ionicons name="close" size={24} color={Colors.textPrimary} />
+              <Ionicons name="close" size={24} color={appColors.textPrimary} />
             </TouchableOpacity>
-            <ThemedText style={styles.title}>{getTitle()}</ThemedText>
+            <ThemedText style={[styles.title, { color: appColors.textPrimary }]}>{getTitle()}</ThemedText>
             <View style={styles.closeButton} />
           </View>
 
           {/* Target Info */}
           {targetName && (
             <View style={styles.targetInfo}>
-              <Ionicons name="flag-outline" size={16} color={Colors.textSecondary} />
-              <ThemedText style={styles.targetText}>
+              <Ionicons name="flag-outline" size={16} color={appColors.textSecondary} />
+              <ThemedText style={[styles.targetText, { color: appColors.textSecondary }]}>
                 Reporting: {targetName}
               </ThemedText>
             </View>
@@ -139,7 +141,7 @@ export default function ReportModal({
 
           {/* Reason Selection */}
           <View style={styles.reasonsContainer}>
-            <ThemedText style={styles.sectionTitle}>
+            <ThemedText style={[styles.sectionTitle, { color: appColors.textSecondary }]}>
               What's the issue?
             </ThemedText>
             {REPORT_REASONS.map((reason) => (
@@ -147,6 +149,7 @@ export default function ReportModal({
                 key={reason.id}
                 style={[
                   styles.reasonItem,
+                  { borderColor: appColors.border },
                   selectedReason === reason.id && styles.reasonItemSelected,
                 ]}
                 onPress={() => setSelectedReason(reason.id)}
@@ -154,16 +157,18 @@ export default function ReportModal({
                 <View style={styles.reasonContent}>
                   <ThemedText style={[
                     styles.reasonLabel,
+                    { color: appColors.textPrimary },
                     selectedReason === reason.id && styles.reasonLabelSelected,
                   ]}>
                     {reason.label}
                   </ThemedText>
-                  <ThemedText style={styles.reasonDescription}>
+                  <ThemedText style={[styles.reasonDescription, { color: appColors.textSecondary }]}>
                     {reason.description}
                   </ThemedText>
                 </View>
                 <View style={[
                   styles.radioButton,
+                  { borderColor: appColors.border },
                   selectedReason === reason.id && styles.radioButtonSelected,
                 ]}>
                   {selectedReason === reason.id && (
@@ -177,20 +182,20 @@ export default function ReportModal({
           {/* Additional Info */}
           {selectedReason && (
             <View style={styles.additionalInfoContainer}>
-              <ThemedText style={styles.sectionTitle}>
+              <ThemedText style={[styles.sectionTitle, { color: appColors.textSecondary }]}>
                 Additional details (optional)
               </ThemedText>
               <TextInput
-                style={styles.textInput}
+                style={[styles.textInput, { color: appColors.textPrimary, borderColor: appColors.border }]}
                 placeholder="Provide more context about this report..."
-                placeholderTextColor={Colors.textSecondary}
+                placeholderTextColor={appColors.textSecondary}
                 value={additionalInfo}
                 onChangeText={setAdditionalInfo}
                 multiline
                 maxLength={500}
                 textAlignVertical="top"
               />
-              <ThemedText style={styles.charCount}>
+              <ThemedText style={[styles.charCount, { color: appColors.textSecondary }]}>
                 {additionalInfo.length}/500
               </ThemedText>
             </View>
@@ -200,7 +205,8 @@ export default function ReportModal({
           <TouchableOpacity
             style={[
               styles.submitButton,
-              !selectedReason && styles.submitButtonDisabled,
+              { backgroundColor: appColors.error },
+              !selectedReason && [styles.submitButtonDisabled, { backgroundColor: appColors.textSecondary }],
             ]}
             onPress={handleSubmit}
             disabled={!selectedReason || reportMutation.isPending}
@@ -213,7 +219,7 @@ export default function ReportModal({
           </TouchableOpacity>
 
           {/* Disclaimer */}
-          <ThemedText style={styles.disclaimer}>
+          <ThemedText style={[styles.disclaimer, { color: appColors.textSecondary }]}>
             False reports may result in action against your account. Please only report genuine violations.
           </ThemedText>
         </View>
@@ -229,7 +235,6 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   container: {
-    backgroundColor: Colors.surface,
     borderTopLeftRadius: BorderRadius.xl,
     borderTopRightRadius: BorderRadius.xl,
     paddingBottom: Spacing.xl,
@@ -242,7 +247,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
   },
   closeButton: {
     width: 40,
@@ -252,7 +256,6 @@ const styles = StyleSheet.create({
   },
   title: {
     ...Typography.heading,
-    color: Colors.textPrimary,
   },
   targetInfo: {
     flexDirection: 'row',
@@ -264,7 +267,6 @@ const styles = StyleSheet.create({
   },
   targetText: {
     ...Typography.caption,
-    color: Colors.textSecondary,
   },
   reasonsContainer: {
     paddingHorizontal: Spacing.lg,
@@ -273,7 +275,6 @@ const styles = StyleSheet.create({
   sectionTitle: {
     ...Typography.caption,
     fontWeight: '600',
-    color: Colors.textSecondary,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
     marginBottom: Spacing.md,
@@ -286,7 +287,6 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.md,
     marginBottom: Spacing.sm,
     borderWidth: 1,
-    borderColor: Colors.border,
   },
   reasonItemSelected: {
     borderColor: Colors.primary,
@@ -298,14 +298,12 @@ const styles = StyleSheet.create({
   reasonLabel: {
     ...Typography.body,
     fontWeight: '600',
-    color: Colors.textPrimary,
   },
   reasonLabelSelected: {
     color: Colors.primary,
   },
   reasonDescription: {
     ...Typography.small,
-    color: Colors.textSecondary,
     marginTop: 2,
   },
   radioButton: {
@@ -313,7 +311,6 @@ const styles = StyleSheet.create({
     height: 22,
     borderRadius: 11,
     borderWidth: 2,
-    borderColor: Colors.border,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -332,30 +329,25 @@ const styles = StyleSheet.create({
   },
   textInput: {
     ...Typography.body,
-    color: Colors.textPrimary,
     backgroundColor: Colors.light.backgroundSecondary,
     borderRadius: BorderRadius.md,
     padding: Spacing.md,
     minHeight: 100,
     borderWidth: 1,
-    borderColor: Colors.border,
   },
   charCount: {
     ...Typography.small,
-    color: Colors.textSecondary,
     textAlign: 'right',
     marginTop: Spacing.xs,
   },
   submitButton: {
     marginHorizontal: Spacing.lg,
     marginTop: Spacing.xl,
-    backgroundColor: Colors.error,
     paddingVertical: Spacing.lg,
     borderRadius: BorderRadius.md,
     alignItems: 'center',
   },
   submitButtonDisabled: {
-    backgroundColor: Colors.textSecondary,
     opacity: 0.5,
   },
   submitButtonText: {
@@ -365,7 +357,6 @@ const styles = StyleSheet.create({
   },
   disclaimer: {
     ...Typography.small,
-    color: Colors.textSecondary,
     textAlign: 'center',
     paddingHorizontal: Spacing.xl,
     paddingTop: Spacing.lg,

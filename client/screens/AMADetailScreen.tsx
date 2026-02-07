@@ -24,6 +24,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 
 import { ThemedText } from '@/components/ThemedText';
 import { Colors, Spacing, BorderRadius, Typography, Shadows } from '@/constants/theme';
+import { useAppColors } from '@/hooks/useAppColors';
 import { contentApi } from '@/lib/api';
 import { AMA } from '@/types';
 import { formatRelativeTime, formatDate } from '@/lib/utils';
@@ -55,6 +56,7 @@ export default function AMADetailScreen() {
   const { amaId } = route.params;
   const queryClient = useQueryClient();
   const inputRef = useRef<TextInput>(null);
+  const appColors = useAppColors();
 
   const [questionText, setQuestionText] = useState('');
 
@@ -98,9 +100,9 @@ export default function AMADetailScreen() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'live': return Colors.error;
-      case 'upcoming': return Colors.warning;
-      case 'completed': return Colors.textSecondary;
+      case 'live': return appColors.error;
+      case 'upcoming': return appColors.warning;
+      case 'completed': return appColors.textSecondary;
       default: return Colors.primary;
     }
   };
@@ -118,7 +120,7 @@ export default function AMADetailScreen() {
     if (!ama) return null;
 
     return (
-      <View style={styles.headerContainer}>
+      <View style={[styles.headerContainer, { backgroundColor: appColors.surface }]}>
         {/* Hero */}
         <LinearGradient
           colors={[Colors.primary, Colors.secondary]}
@@ -132,7 +134,7 @@ export default function AMADetailScreen() {
         </LinearGradient>
 
         {/* Host Info */}
-        <View style={styles.hostSection}>
+        <View style={[styles.hostSection, { borderBottomColor: appColors.border }]}>
           <TouchableOpacity
             style={styles.hostInfo}
             onPress={() => handleUserPress(ama.host.id)}
@@ -147,9 +149,9 @@ export default function AMADetailScreen() {
               </View>
             )}
             <View style={styles.hostDetails}>
-              <ThemedText style={styles.hostName}>{ama.host.full_name}</ThemedText>
+              <ThemedText style={[styles.hostName, { color: appColors.textPrimary }]}>{ama.host.full_name}</ThemedText>
               {ama.host.specialty && (
-                <ThemedText style={styles.hostSpecialty}>{ama.host.specialty}</ThemedText>
+                <ThemedText style={[styles.hostSpecialty, { color: appColors.textSecondary }]}>{ama.host.specialty}</ThemedText>
               )}
             </View>
           </TouchableOpacity>
@@ -157,20 +159,20 @@ export default function AMADetailScreen() {
 
         {/* AMA Info */}
         <View style={styles.amaInfo}>
-          <ThemedText style={styles.amaTitle}>{ama.title}</ThemedText>
-          <ThemedText style={styles.amaDescription}>{ama.description}</ThemedText>
+          <ThemedText style={[styles.amaTitle, { color: appColors.textPrimary }]}>{ama.title}</ThemedText>
+          <ThemedText style={[styles.amaDescription, { color: appColors.textSecondary }]}>{ama.description}</ThemedText>
 
           {/* Meta Info */}
           <View style={styles.metaRow}>
             <View style={styles.metaItem}>
-              <Ionicons name="calendar-outline" size={16} color={Colors.textSecondary} />
-              <ThemedText style={styles.metaText}>
+              <Ionicons name="calendar-outline" size={16} color={appColors.textSecondary} />
+              <ThemedText style={[styles.metaText, { color: appColors.textSecondary }]}>
                 {formatDate(ama.scheduled_at)}
               </ThemedText>
             </View>
             <View style={styles.metaItem}>
-              <Ionicons name="help-circle-outline" size={16} color={Colors.textSecondary} />
-              <ThemedText style={styles.metaText}>
+              <Ionicons name="help-circle-outline" size={16} color={appColors.textSecondary} />
+              <ThemedText style={[styles.metaText, { color: appColors.textSecondary }]}>
                 {ama.questions_count} questions
               </ThemedText>
             </View>
@@ -178,9 +180,9 @@ export default function AMADetailScreen() {
         </View>
 
         {/* Questions Header */}
-        <View style={styles.questionsHeader}>
-          <ThemedText style={styles.questionsTitle}>Questions</ThemedText>
-          <ThemedText style={styles.questionsSubtitle}>
+        <View style={[styles.questionsHeader, { borderTopColor: appColors.border }]}>
+          <ThemedText style={[styles.questionsTitle, { color: appColors.textPrimary }]}>Questions</ThemedText>
+          <ThemedText style={[styles.questionsSubtitle, { color: appColors.textSecondary }]}>
             Upvote questions you want answered
           </ThemedText>
         </View>
@@ -189,7 +191,7 @@ export default function AMADetailScreen() {
   };
 
   const renderQuestion = ({ item }: { item: Question }) => (
-    <View style={styles.questionCard}>
+    <View style={[styles.questionCard, { backgroundColor: appColors.surface }]}>
       <TouchableOpacity
         style={styles.questionAuthor}
         onPress={() => handleUserPress(item.author.id)}
@@ -204,12 +206,12 @@ export default function AMADetailScreen() {
           </View>
         )}
         <View>
-          <ThemedText style={styles.questionAuthorName}>{item.author.full_name}</ThemedText>
-          <ThemedText style={styles.questionTime}>{formatRelativeTime(item.created_at)}</ThemedText>
+          <ThemedText style={[styles.questionAuthorName, { color: appColors.textPrimary }]}>{item.author.full_name}</ThemedText>
+          <ThemedText style={[styles.questionTime, { color: appColors.textSecondary }]}>{formatRelativeTime(item.created_at)}</ThemedText>
         </View>
       </TouchableOpacity>
 
-      <ThemedText style={styles.questionContent}>{item.content}</ThemedText>
+      <ThemedText style={[styles.questionContent, { color: appColors.textPrimary }]}>{item.content}</ThemedText>
 
       {item.answer && (
         <View style={styles.answerContainer}>
@@ -217,19 +219,20 @@ export default function AMADetailScreen() {
             <MaterialCommunityIcons name="check-circle" size={14} color={Colors.secondary} />
             <ThemedText style={styles.answerBadgeText}>Answered</ThemedText>
           </View>
-          <ThemedText style={styles.answerText}>{item.answer}</ThemedText>
+          <ThemedText style={[styles.answerText, { color: appColors.textPrimary }]}>{item.answer}</ThemedText>
         </View>
       )}
 
-      <View style={styles.questionActions}>
+      <View style={[styles.questionActions, { borderTopColor: appColors.border }]}>
         <TouchableOpacity style={styles.upvoteButton}>
           <Ionicons
             name={item.user_voted ? 'arrow-up' : 'arrow-up-outline'}
             size={20}
-            color={item.user_voted ? Colors.primary : Colors.textSecondary}
+            color={item.user_voted ? Colors.primary : appColors.textSecondary}
           />
           <ThemedText style={[
             styles.upvoteCount,
+            { color: appColors.textSecondary },
             item.user_voted && styles.upvoteCountActive,
           ]}>
             {item.upvotes}
@@ -241,9 +244,9 @@ export default function AMADetailScreen() {
 
   const renderEmpty = () => (
     <View style={styles.emptyContainer}>
-      <Ionicons name="help-circle-outline" size={48} color={Colors.textSecondary} />
-      <ThemedText style={styles.emptyTitle}>No questions yet</ThemedText>
-      <ThemedText style={styles.emptySubtitle}>
+      <Ionicons name="help-circle-outline" size={48} color={appColors.textSecondary} />
+      <ThemedText style={[styles.emptyTitle, { color: appColors.textPrimary }]}>No questions yet</ThemedText>
+      <ThemedText style={[styles.emptySubtitle, { color: appColors.textSecondary }]}>
         Be the first to ask a question!
       </ThemedText>
     </View>
@@ -251,7 +254,7 @@ export default function AMADetailScreen() {
 
   if (isLoading) {
     return (
-      <SafeAreaView style={styles.loadingContainer}>
+      <SafeAreaView style={[styles.loadingContainer, { backgroundColor: appColors.background }]}>
         <ActivityIndicator size="large" color={Colors.primary} />
       </SafeAreaView>
     );
@@ -261,19 +264,19 @@ export default function AMADetailScreen() {
   const isUpcoming = ama?.status === 'upcoming';
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: appColors.background }]} edges={['top']}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardView}
       >
         {/* Header */}
-        <View style={styles.navHeader}>
+        <View style={[styles.navHeader, { backgroundColor: appColors.surface, borderBottomColor: appColors.border }]}>
           <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-            <Ionicons name="chevron-back" size={24} color={Colors.textPrimary} />
+            <Ionicons name="chevron-back" size={24} color={appColors.textPrimary} />
           </TouchableOpacity>
-          <ThemedText style={styles.navTitle}>AMA Session</ThemedText>
+          <ThemedText style={[styles.navTitle, { color: appColors.textPrimary }]}>AMA Session</ThemedText>
           <TouchableOpacity style={styles.shareButton}>
-            <Ionicons name="share-outline" size={24} color={Colors.textPrimary} />
+            <Ionicons name="share-outline" size={24} color={appColors.textPrimary} />
           </TouchableOpacity>
         </View>
 
@@ -297,12 +300,12 @@ export default function AMADetailScreen() {
 
         {/* Ask Question Input */}
         {(isLive || isUpcoming) && (
-          <View style={styles.inputContainer}>
+          <View style={[styles.inputContainer, { backgroundColor: appColors.surface, borderTopColor: appColors.border }]}>
             <TextInput
               ref={inputRef}
-              style={styles.input}
+              style={[styles.input, { color: appColors.textPrimary }]}
               placeholder="Ask a question..."
-              placeholderTextColor={Colors.textSecondary}
+              placeholderTextColor={appColors.textSecondary}
               value={questionText}
               onChangeText={setQuestionText}
               multiline
@@ -319,7 +322,7 @@ export default function AMADetailScreen() {
                 <Ionicons
                   name="send"
                   size={20}
-                  color={questionText.trim() ? Colors.primary : Colors.textSecondary}
+                  color={questionText.trim() ? Colors.primary : appColors.textSecondary}
                 />
               )}
             </TouchableOpacity>
@@ -333,13 +336,11 @@ export default function AMADetailScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
   },
   loadingContainer: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: Colors.background,
   },
   keyboardView: {
     flex: 1,
@@ -350,16 +351,13 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.sm,
-    backgroundColor: Colors.surface,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
   },
   backButton: {
     padding: Spacing.sm,
   },
   navTitle: {
     ...Typography.heading,
-    color: Colors.textPrimary,
   },
   shareButton: {
     padding: Spacing.sm,
@@ -368,7 +366,6 @@ const styles = StyleSheet.create({
     paddingBottom: Spacing.xl,
   },
   headerContainer: {
-    backgroundColor: Colors.surface,
     marginBottom: Spacing.md,
   },
   heroBanner: {
@@ -391,7 +388,6 @@ const styles = StyleSheet.create({
   hostSection: {
     padding: Spacing.lg,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
   },
   hostInfo: {
     flexDirection: 'row',
@@ -417,11 +413,9 @@ const styles = StyleSheet.create({
   },
   hostName: {
     ...Typography.heading,
-    color: Colors.textPrimary,
   },
   hostSpecialty: {
     ...Typography.caption,
-    color: Colors.textSecondary,
     marginTop: 2,
   },
   amaInfo: {
@@ -429,12 +423,10 @@ const styles = StyleSheet.create({
   },
   amaTitle: {
     ...Typography.title,
-    color: Colors.textPrimary,
     marginBottom: Spacing.sm,
   },
   amaDescription: {
     ...Typography.body,
-    color: Colors.textSecondary,
     lineHeight: 22,
   },
   metaRow: {
@@ -449,25 +441,20 @@ const styles = StyleSheet.create({
   },
   metaText: {
     ...Typography.caption,
-    color: Colors.textSecondary,
   },
   questionsHeader: {
     padding: Spacing.lg,
     borderTopWidth: 1,
-    borderTopColor: Colors.border,
   },
   questionsTitle: {
     ...Typography.heading,
-    color: Colors.textPrimary,
   },
   questionsSubtitle: {
     ...Typography.caption,
-    color: Colors.textSecondary,
     marginTop: 2,
   },
   questionCard: {
     padding: Spacing.lg,
-    backgroundColor: Colors.surface,
     marginHorizontal: Spacing.md,
     marginBottom: Spacing.sm,
     borderRadius: BorderRadius.md,
@@ -497,15 +484,12 @@ const styles = StyleSheet.create({
   questionAuthorName: {
     ...Typography.caption,
     fontWeight: '600',
-    color: Colors.textPrimary,
   },
   questionTime: {
     ...Typography.small,
-    color: Colors.textSecondary,
   },
   questionContent: {
     ...Typography.body,
-    color: Colors.textPrimary,
     lineHeight: 22,
   },
   answerContainer: {
@@ -529,14 +513,12 @@ const styles = StyleSheet.create({
   },
   answerText: {
     ...Typography.body,
-    color: Colors.textPrimary,
     lineHeight: 22,
   },
   questionActions: {
     marginTop: Spacing.md,
     paddingTop: Spacing.md,
     borderTopWidth: 1,
-    borderTopColor: Colors.border,
   },
   upvoteButton: {
     flexDirection: 'row',
@@ -545,7 +527,6 @@ const styles = StyleSheet.create({
   },
   upvoteCount: {
     ...Typography.caption,
-    color: Colors.textSecondary,
   },
   upvoteCountActive: {
     color: Colors.primary,
@@ -558,27 +539,22 @@ const styles = StyleSheet.create({
   },
   emptyTitle: {
     ...Typography.heading,
-    color: Colors.textPrimary,
     marginTop: Spacing.lg,
   },
   emptySubtitle: {
     ...Typography.body,
-    color: Colors.textSecondary,
     marginTop: Spacing.sm,
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'flex-end',
     padding: Spacing.md,
-    backgroundColor: Colors.surface,
     borderTopWidth: 1,
-    borderTopColor: Colors.border,
     gap: Spacing.sm,
   },
   input: {
     flex: 1,
     ...Typography.body,
-    color: Colors.textPrimary,
     backgroundColor: Colors.light.backgroundSecondary,
     borderRadius: BorderRadius.lg,
     paddingHorizontal: Spacing.md,

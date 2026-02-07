@@ -22,6 +22,7 @@ import { useMutation } from '@tanstack/react-query';
 
 import { ThemedText } from '@/components/ThemedText';
 import { Colors, Spacing, BorderRadius, Typography } from '@/constants/theme';
+import { useAppColors } from '@/hooks/useAppColors';
 import { authApi } from '@/lib/api';
 
 interface PasswordRequirement {
@@ -39,6 +40,7 @@ const PASSWORD_REQUIREMENTS: PasswordRequirement[] = [
 
 export default function ChangePasswordScreen() {
   const navigation = useNavigation<any>();
+  const appColors = useAppColors();
 
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -80,29 +82,29 @@ export default function ChangePasswordScreen() {
   }, [canSubmit, changePasswordMutation]);
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: appColors.background }]} edges={['top']}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardView}
       >
         {/* Header */}
-        <View style={styles.header}>
+        <View style={[styles.header, { backgroundColor: appColors.surface, borderBottomColor: appColors.border }]}>
           <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-            <Ionicons name="chevron-back" size={24} color={Colors.textPrimary} />
+            <Ionicons name="chevron-back" size={24} color={appColors.textPrimary} />
           </TouchableOpacity>
-          <ThemedText style={styles.headerTitle}>Change Password</ThemedText>
+          <ThemedText style={[styles.headerTitle, { color: appColors.textPrimary }]}>Change Password</ThemedText>
           <View style={styles.backButton} />
         </View>
 
         <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
           {/* Current Password */}
           <View style={styles.inputGroup}>
-            <ThemedText style={styles.label}>Current Password</ThemedText>
-            <View style={styles.inputContainer}>
+            <ThemedText style={[styles.label, { color: appColors.textSecondary }]}>Current Password</ThemedText>
+            <View style={[styles.inputContainer, { backgroundColor: appColors.surface, borderColor: appColors.border }]}>
               <TextInput
-                style={styles.input}
+                style={[styles.input, { color: appColors.textPrimary }]}
                 placeholder="Enter current password"
-                placeholderTextColor={Colors.textSecondary}
+                placeholderTextColor={appColors.textSecondary}
                 value={currentPassword}
                 onChangeText={setCurrentPassword}
                 secureTextEntry={!showCurrentPassword}
@@ -116,7 +118,7 @@ export default function ChangePasswordScreen() {
                 <Ionicons
                   name={showCurrentPassword ? 'eye-off-outline' : 'eye-outline'}
                   size={20}
-                  color={Colors.textSecondary}
+                  color={appColors.textSecondary}
                 />
               </TouchableOpacity>
             </View>
@@ -124,12 +126,12 @@ export default function ChangePasswordScreen() {
 
           {/* New Password */}
           <View style={styles.inputGroup}>
-            <ThemedText style={styles.label}>New Password</ThemedText>
-            <View style={styles.inputContainer}>
+            <ThemedText style={[styles.label, { color: appColors.textSecondary }]}>New Password</ThemedText>
+            <View style={[styles.inputContainer, { backgroundColor: appColors.surface, borderColor: appColors.border }]}>
               <TextInput
-                style={styles.input}
+                style={[styles.input, { color: appColors.textPrimary }]}
                 placeholder="Enter new password"
-                placeholderTextColor={Colors.textSecondary}
+                placeholderTextColor={appColors.textSecondary}
                 value={newPassword}
                 onChangeText={setNewPassword}
                 secureTextEntry={!showNewPassword}
@@ -143,12 +145,11 @@ export default function ChangePasswordScreen() {
                 <Ionicons
                   name={showNewPassword ? 'eye-off-outline' : 'eye-outline'}
                   size={20}
-                  color={Colors.textSecondary}
+                  color={appColors.textSecondary}
                 />
               </TouchableOpacity>
             </View>
 
-            {/* Password Requirements */}
             <View style={styles.requirementsContainer}>
               {PASSWORD_REQUIREMENTS.map((req, index) => {
                 const isMet = req.check(newPassword);
@@ -157,11 +158,12 @@ export default function ChangePasswordScreen() {
                     <Ionicons
                       name={isMet ? 'checkmark-circle' : 'ellipse-outline'}
                       size={16}
-                      color={isMet ? Colors.secondary : Colors.textSecondary}
+                      color={isMet ? Colors.secondary : appColors.textSecondary}
                     />
                     <ThemedText
                       style={[
                         styles.requirementText,
+                        { color: appColors.textSecondary },
                         isMet && styles.requirementMet,
                       ]}
                     >
@@ -175,12 +177,12 @@ export default function ChangePasswordScreen() {
 
           {/* Confirm Password */}
           <View style={styles.inputGroup}>
-            <ThemedText style={styles.label}>Confirm New Password</ThemedText>
-            <View style={styles.inputContainer}>
+            <ThemedText style={[styles.label, { color: appColors.textSecondary }]}>Confirm New Password</ThemedText>
+            <View style={[styles.inputContainer, { backgroundColor: appColors.surface, borderColor: appColors.border }]}>
               <TextInput
-                style={styles.input}
+                style={[styles.input, { color: appColors.textPrimary }]}
                 placeholder="Confirm new password"
-                placeholderTextColor={Colors.textSecondary}
+                placeholderTextColor={appColors.textSecondary}
                 value={confirmPassword}
                 onChangeText={setConfirmPassword}
                 secureTextEntry={!showConfirmPassword}
@@ -194,7 +196,7 @@ export default function ChangePasswordScreen() {
                 <Ionicons
                   name={showConfirmPassword ? 'eye-off-outline' : 'eye-outline'}
                   size={20}
-                  color={Colors.textSecondary}
+                  color={appColors.textSecondary}
                 />
               </TouchableOpacity>
             </View>
@@ -203,12 +205,12 @@ export default function ChangePasswordScreen() {
                 <Ionicons
                   name={passwordsMatch ? 'checkmark-circle' : 'close-circle'}
                   size={16}
-                  color={passwordsMatch ? Colors.secondary : Colors.error}
+                  color={passwordsMatch ? Colors.secondary : appColors.error}
                 />
                 <ThemedText
                   style={[
                     styles.matchText,
-                    { color: passwordsMatch ? Colors.secondary : Colors.error },
+                    { color: passwordsMatch ? Colors.secondary : appColors.error },
                   ]}
                 >
                   {passwordsMatch ? 'Passwords match' : 'Passwords do not match'}
@@ -219,7 +221,7 @@ export default function ChangePasswordScreen() {
 
           {/* Submit Button */}
           <TouchableOpacity
-            style={[styles.submitButton, !canSubmit && styles.submitButtonDisabled]}
+            style={[styles.submitButton, !canSubmit && [styles.submitButtonDisabled, { backgroundColor: appColors.textSecondary }]]}
             onPress={handleChangePassword}
             disabled={!canSubmit || changePasswordMutation.isPending}
           >
@@ -232,8 +234,8 @@ export default function ChangePasswordScreen() {
 
           {/* Security Note */}
           <View style={styles.securityNote}>
-            <Ionicons name="shield-checkmark-outline" size={20} color={Colors.textSecondary} />
-            <ThemedText style={styles.securityNoteText}>
+            <Ionicons name="shield-checkmark-outline" size={20} color={appColors.textSecondary} />
+            <ThemedText style={[styles.securityNoteText, { color: appColors.textSecondary }]}>
               For your security, you'll be logged out of all other devices after changing your password.
             </ThemedText>
           </View>
@@ -246,7 +248,6 @@ export default function ChangePasswordScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
   },
   keyboardView: {
     flex: 1,
@@ -257,9 +258,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.sm,
-    backgroundColor: Colors.surface,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
   },
   backButton: {
     width: 40,
@@ -269,7 +268,6 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     ...Typography.heading,
-    color: Colors.textPrimary,
   },
   content: {
     flex: 1,
@@ -281,7 +279,6 @@ const styles = StyleSheet.create({
   label: {
     ...Typography.caption,
     fontWeight: '600',
-    color: Colors.textSecondary,
     marginBottom: Spacing.sm,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
@@ -289,15 +286,12 @@ const styles = StyleSheet.create({
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.surface,
     borderRadius: BorderRadius.md,
     borderWidth: 1,
-    borderColor: Colors.border,
   },
   input: {
     flex: 1,
     ...Typography.body,
-    color: Colors.textPrimary,
     padding: Spacing.md,
   },
   eyeButton: {
@@ -314,7 +308,6 @@ const styles = StyleSheet.create({
   },
   requirementText: {
     ...Typography.small,
-    color: Colors.textSecondary,
   },
   requirementMet: {
     color: Colors.secondary,
@@ -336,7 +329,6 @@ const styles = StyleSheet.create({
     marginTop: Spacing.md,
   },
   submitButtonDisabled: {
-    backgroundColor: Colors.textSecondary,
     opacity: 0.5,
   },
   submitButtonText: {
@@ -355,7 +347,6 @@ const styles = StyleSheet.create({
   },
   securityNoteText: {
     ...Typography.small,
-    color: Colors.textSecondary,
     flex: 1,
     lineHeight: 20,
   },

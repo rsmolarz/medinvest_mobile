@@ -22,6 +22,7 @@ import { useMutation } from '@tanstack/react-query';
 
 import { ThemedText } from '@/components/ThemedText';
 import { Colors, Spacing, BorderRadius, Typography, Shadows } from '@/constants/theme';
+import { useAppColors } from '@/hooks/useAppColors';
 import { subscriptionApi } from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -82,6 +83,7 @@ export default function PremiumScreen() {
   const navigation = useNavigation<any>();
   const { user, refreshUser } = useAuth();
   const [selectedPlan, setSelectedPlan] = useState('yearly');
+  const appColors = useAppColors();
 
   const checkoutMutation = useMutation({
     mutationFn: async () => {
@@ -109,8 +111,8 @@ export default function PremiumScreen() {
         <Ionicons name={feature.icon as any} size={24} color={Colors.primary} />
       </View>
       <View style={styles.featureContent}>
-        <ThemedText style={styles.featureTitle}>{feature.title}</ThemedText>
-        <ThemedText style={styles.featureDescription}>{feature.description}</ThemedText>
+        <ThemedText style={[styles.featureTitle, { color: appColors.textPrimary }]}>{feature.title}</ThemedText>
+        <ThemedText style={[styles.featureDescription, { color: appColors.textSecondary }]}>{feature.description}</ThemedText>
       </View>
     </View>
   );
@@ -130,10 +132,10 @@ export default function PremiumScreen() {
         </View>
       )}
       <View style={styles.pricingContent}>
-        <ThemedText style={styles.planName}>{plan.name}</ThemedText>
+        <ThemedText style={[styles.planName, { color: appColors.textSecondary }]}>{plan.name}</ThemedText>
         <View style={styles.priceRow}>
-          <ThemedText style={styles.price}>{plan.price}</ThemedText>
-          <ThemedText style={styles.period}>{plan.period}</ThemedText>
+          <ThemedText style={[styles.price, { color: appColors.textPrimary }]}>{plan.price}</ThemedText>
+          <ThemedText style={[styles.period, { color: appColors.textSecondary }]}>{plan.period}</ThemedText>
         </View>
         {plan.savings && (
           <ThemedText style={styles.savings}>{plan.savings}</ThemedText>
@@ -141,6 +143,7 @@ export default function PremiumScreen() {
       </View>
       <View style={[
         styles.radioButton,
+        { borderColor: appColors.border },
         selectedPlan === plan.id && styles.radioButtonSelected,
       ]}>
         {selectedPlan === plan.id && (
@@ -151,11 +154,11 @@ export default function PremiumScreen() {
   );
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: appColors.surface }]} edges={['top']}>
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <Ionicons name="close" size={24} color={Colors.textPrimary} />
+          <Ionicons name="close" size={24} color={appColors.textPrimary} />
         </TouchableOpacity>
       </View>
 
@@ -170,21 +173,21 @@ export default function PremiumScreen() {
           >
             <MaterialCommunityIcons name="crown" size={48} color="white" />
           </LinearGradient>
-          <ThemedText style={styles.heroTitle}>Upgrade to Premium</ThemedText>
-          <ThemedText style={styles.heroSubtitle}>
+          <ThemedText style={[styles.heroTitle, { color: appColors.textPrimary }]}>Upgrade to Premium</ThemedText>
+          <ThemedText style={[styles.heroSubtitle, { color: appColors.textSecondary }]}>
             Unlock the full potential of MedInvest and accelerate your healthcare investment journey
           </ThemedText>
         </View>
 
         {/* Features Section */}
         <View style={styles.featuresSection}>
-          <ThemedText style={styles.sectionTitle}>Premium Benefits</ThemedText>
+          <ThemedText style={[styles.sectionTitle, { color: appColors.textPrimary }]}>Premium Benefits</ThemedText>
           {PREMIUM_FEATURES.map(renderFeature)}
         </View>
 
         {/* Pricing Section */}
         <View style={styles.pricingSection}>
-          <ThemedText style={styles.sectionTitle}>Choose Your Plan</ThemedText>
+          <ThemedText style={[styles.sectionTitle, { color: appColors.textPrimary }]}>Choose Your Plan</ThemedText>
           <View style={styles.pricingCards}>
             {PRICING_PLANS.map(renderPricingPlan)}
           </View>
@@ -193,7 +196,7 @@ export default function PremiumScreen() {
         {/* Guarantee */}
         <View style={styles.guaranteeSection}>
           <Ionicons name="shield-checkmark" size={24} color={Colors.secondary} />
-          <ThemedText style={styles.guaranteeText}>
+          <ThemedText style={[styles.guaranteeText, { color: appColors.textSecondary }]}>
             7-day money-back guarantee. Cancel anytime.
           </ThemedText>
         </View>
@@ -201,10 +204,10 @@ export default function PremiumScreen() {
         {/* Testimonials */}
         <View style={styles.testimonialSection}>
           <View style={styles.testimonialCard}>
-            <ThemedText style={styles.testimonialText}>
+            <ThemedText style={[styles.testimonialText, { color: appColors.textPrimary }]}>
               "Premium gave me access to deals I never would have found otherwise. Already seeing 3x returns on my first investment!"
             </ThemedText>
-            <ThemedText style={styles.testimonialAuthor}>
+            <ThemedText style={[styles.testimonialAuthor, { color: appColors.textSecondary }]}>
               — Dr. Sarah Chen, Cardiologist
             </ThemedText>
           </View>
@@ -212,7 +215,7 @@ export default function PremiumScreen() {
       </ScrollView>
 
       {/* Subscribe Button */}
-      <View style={styles.footer}>
+      <View style={[styles.footer, { backgroundColor: appColors.surface, borderTopColor: appColors.border }]}>
         <TouchableOpacity
           style={styles.subscribeButton}
           onPress={handleSubscribe}
@@ -235,7 +238,7 @@ export default function PremiumScreen() {
             )}
           </LinearGradient>
         </TouchableOpacity>
-        <ThemedText style={styles.footerNote}>
+        <ThemedText style={[styles.footerNote, { color: appColors.textSecondary }]}>
           Subscription auto-renews. Cancel anytime.
         </ThemedText>
       </View>
@@ -246,7 +249,6 @@ export default function PremiumScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.surface,
   },
   header: {
     flexDirection: 'row',
@@ -275,19 +277,16 @@ const styles = StyleSheet.create({
   },
   heroTitle: {
     ...Typography.title,
-    color: Colors.textPrimary,
     textAlign: 'center',
     marginBottom: Spacing.sm,
   },
   heroSubtitle: {
     ...Typography.body,
-    color: Colors.textSecondary,
     textAlign: 'center',
     lineHeight: 22,
   },
   sectionTitle: {
     ...Typography.heading,
-    color: Colors.textPrimary,
     marginBottom: Spacing.lg,
     paddingHorizontal: Spacing.lg,
   },
@@ -315,12 +314,10 @@ const styles = StyleSheet.create({
   featureTitle: {
     ...Typography.body,
     fontWeight: '600',
-    color: Colors.textPrimary,
     marginBottom: 2,
   },
   featureDescription: {
     ...Typography.caption,
-    color: Colors.textSecondary,
     lineHeight: 20,
   },
   pricingSection: {
@@ -362,7 +359,6 @@ const styles = StyleSheet.create({
   },
   planName: {
     ...Typography.caption,
-    color: Colors.textSecondary,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
@@ -373,11 +369,9 @@ const styles = StyleSheet.create({
   },
   price: {
     ...Typography.title,
-    color: Colors.textPrimary,
   },
   period: {
     ...Typography.body,
-    color: Colors.textSecondary,
     marginLeft: Spacing.xs,
   },
   savings: {
@@ -391,7 +385,6 @@ const styles = StyleSheet.create({
     height: 24,
     borderRadius: 12,
     borderWidth: 2,
-    borderColor: Colors.border,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -413,7 +406,6 @@ const styles = StyleSheet.create({
   },
   guaranteeText: {
     ...Typography.caption,
-    color: Colors.textSecondary,
   },
   testimonialSection: {
     paddingHorizontal: Spacing.lg,
@@ -426,21 +418,17 @@ const styles = StyleSheet.create({
   },
   testimonialText: {
     ...Typography.body,
-    color: Colors.textPrimary,
     fontStyle: 'italic',
     lineHeight: 24,
   },
   testimonialAuthor: {
     ...Typography.caption,
-    color: Colors.textSecondary,
     marginTop: Spacing.md,
   },
   footer: {
     padding: Spacing.lg,
     paddingBottom: Spacing.xl,
-    backgroundColor: Colors.surface,
     borderTopWidth: 1,
-    borderTopColor: Colors.border,
   },
   subscribeButton: {
     borderRadius: BorderRadius.md,
@@ -459,7 +447,6 @@ const styles = StyleSheet.create({
   },
   footerNote: {
     ...Typography.small,
-    color: Colors.textSecondary,
     textAlign: 'center',
     marginTop: Spacing.sm,
   },

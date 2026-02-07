@@ -18,6 +18,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { ThemedText } from '@/components/ThemedText';
 import { Colors, Spacing, BorderRadius, Typography, Shadows } from '@/constants/theme';
+import { useAppColors } from '@/hooks/useAppColors';
 import { usersApi } from '@/lib/api';
 
 interface SuggestedUser {
@@ -29,7 +30,7 @@ interface SuggestedUser {
   specialty?: string;
   location?: string;
   mutual_connections?: number;
-  reason?: string; // "Same specialty", "In your network", etc.
+  reason?: string;
 }
 
 interface PeopleYouMayKnowProps {
@@ -45,10 +46,10 @@ export default function PeopleYouMayKnow({
   showHeader = true,
   onViewAll,
 }: PeopleYouMayKnowProps) {
+  const appColors = useAppColors();
   const navigation = useNavigation<any>();
   const queryClient = useQueryClient();
 
-  // Fetch suggested users
   const { data: suggestions, isLoading } = useQuery({
     queryKey: ['suggestedUsers', limit],
     queryFn: async () => {
@@ -57,7 +58,6 @@ export default function PeopleYouMayKnow({
     },
   });
 
-  // Follow mutation
   const followMutation = useMutation({
     mutationFn: async (userId: number) => {
       const response = await usersApi.follow(userId);
@@ -110,10 +110,10 @@ export default function PeopleYouMayKnow({
   );
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: appColors.surface }]}>
       {showHeader && (
         <View style={styles.header}>
-          <ThemedText style={styles.headerTitle}>People you may know</ThemedText>
+          <ThemedText style={[styles.headerTitle, { color: appColors.textPrimary }]}>People you may know</ThemedText>
           <TouchableOpacity onPress={handleViewAll}>
             <ThemedText style={styles.viewAllText}>View all</ThemedText>
           </TouchableOpacity>
@@ -147,7 +147,6 @@ export default function PeopleYouMayKnow({
   );
 }
 
-// Individual user card component
 interface SuggestedUserCardProps {
   user: SuggestedUser;
   onPress: () => void;
@@ -163,6 +162,7 @@ function SuggestedUserCard({
   isFollowing,
   horizontal 
 }: SuggestedUserCardProps) {
+  const appColors = useAppColors();
   const [followed, setFollowed] = useState(false);
 
   const handleFollow = () => {
@@ -171,7 +171,6 @@ function SuggestedUserCard({
   };
 
   if (horizontal) {
-    // Horizontal card layout (for carousels)
     return (
       <TouchableOpacity style={styles.horizontalCard} onPress={onPress}>
         {user.avatar_url ? (
@@ -183,11 +182,11 @@ function SuggestedUserCard({
             </ThemedText>
           </View>
         )}
-        <ThemedText style={styles.horizontalName} numberOfLines={1}>
+        <ThemedText style={[styles.horizontalName, { color: appColors.textPrimary }]} numberOfLines={1}>
           {user.full_name}
         </ThemedText>
         {user.specialty && (
-          <ThemedText style={styles.horizontalSpecialty} numberOfLines={1}>
+          <ThemedText style={[styles.horizontalSpecialty, { color: appColors.textSecondary }]} numberOfLines={1}>
             {user.specialty}
           </ThemedText>
         )}
@@ -199,7 +198,7 @@ function SuggestedUserCard({
           {isFollowing ? (
             <ActivityIndicator size="small" color={Colors.primary} />
           ) : (
-            <ThemedText style={[styles.followButtonTextSmall, followed && styles.followedButtonText]}>
+            <ThemedText style={[styles.followButtonTextSmall, followed && [styles.followedButtonText, { color: appColors.textSecondary }]]}>
               {followed ? 'Following' : 'Follow'}
             </ThemedText>
           )}
@@ -208,9 +207,8 @@ function SuggestedUserCard({
     );
   }
 
-  // Vertical list item layout (matching the screenshot)
   return (
-    <View style={styles.listItem}>
+    <View style={[styles.listItem, { borderBottomColor: appColors.border }]}>
       <TouchableOpacity style={styles.listItemContent} onPress={onPress}>
         {user.avatar_url ? (
           <Image source={{ uri: user.avatar_url }} style={styles.listAvatar} />
@@ -223,11 +221,11 @@ function SuggestedUserCard({
         )}
         <View style={styles.listUserInfo}>
           <ThemedText style={styles.listUserName}>{user.full_name}</ThemedText>
-          <ThemedText style={styles.listUserMeta}>
+          <ThemedText style={[styles.listUserMeta, { color: appColors.textSecondary }]}>
             {user.specialty}{user.location ? ` · ${user.location}` : ''}
           </ThemedText>
           {user.mutual_connections && user.mutual_connections > 0 && (
-            <ThemedText style={styles.mutualConnections}>
+            <ThemedText style={[styles.mutualConnections, { color: appColors.textSecondary }]}>
               {user.mutual_connections} mutual connection{user.mutual_connections > 1 ? 's' : ''}
             </ThemedText>
           )}
@@ -242,7 +240,7 @@ function SuggestedUserCard({
         {isFollowing ? (
           <ActivityIndicator size="small" color={Colors.primary} />
         ) : followed ? (
-          <Ionicons name="checkmark" size={18} color={Colors.textSecondary} />
+          <Ionicons name="checkmark" size={18} color={appColors.textSecondary} />
         ) : (
           <Ionicons name="person-add-outline" size={18} color={Colors.primary} />
         )}
@@ -251,10 +249,10 @@ function SuggestedUserCard({
   );
 }
 
-// Compact inline version for sidebars
 export function PeopleYouMayKnowCompact({ limit = 3 }: { limit?: number }) {
+  const appColors = useAppColors();
   return (
-    <View style={styles.compactContainer}>
+    <View style={[styles.compactContainer, { backgroundColor: appColors.surface }]}>
       <PeopleYouMayKnow 
         limit={limit} 
         horizontal={false} 
@@ -266,7 +264,6 @@ export function PeopleYouMayKnowCompact({ limit = 3 }: { limit?: number }) {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: Colors.surface,
   },
   loadingContainer: {
     padding: Spacing.xl,
@@ -283,7 +280,6 @@ const styles = StyleSheet.create({
   headerTitle: {
     ...Typography.body,
     fontWeight: '600',
-    color: Colors.textPrimary,
   },
   viewAllText: {
     ...Typography.caption,
@@ -291,7 +287,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   
-  // Horizontal list
   horizontalList: {
     paddingHorizontal: Spacing.lg,
     paddingBottom: Spacing.lg,
@@ -314,12 +309,10 @@ const styles = StyleSheet.create({
   horizontalName: {
     ...Typography.caption,
     fontWeight: '600',
-    color: Colors.textPrimary,
     textAlign: 'center',
   },
   horizontalSpecialty: {
     ...Typography.small,
-    color: Colors.textSecondary,
     textAlign: 'center',
     marginTop: 2,
   },
@@ -338,7 +331,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
 
-  // Vertical list
   verticalList: {
     paddingHorizontal: Spacing.lg,
     paddingBottom: Spacing.lg,
@@ -348,7 +340,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: Spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
   },
   listItemContent: {
     flex: 1,
@@ -386,12 +377,10 @@ const styles = StyleSheet.create({
   },
   listUserMeta: {
     ...Typography.small,
-    color: Colors.textSecondary,
     marginTop: 2,
   },
   mutualConnections: {
     ...Typography.small,
-    color: Colors.textSecondary,
     marginTop: 2,
   },
   followButton: {
@@ -406,12 +395,9 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.light.backgroundTertiary,
   },
   followedButtonText: {
-    color: Colors.textSecondary,
   },
 
-  // Compact container
   compactContainer: {
-    backgroundColor: Colors.surface,
     borderRadius: BorderRadius.md,
     overflow: 'hidden',
     ...Shadows.card,

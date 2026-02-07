@@ -22,6 +22,7 @@ import { useMutation } from '@tanstack/react-query';
 
 import { ThemedText } from '@/components/ThemedText';
 import { Colors, Spacing, BorderRadius, Typography } from '@/constants/theme';
+import { useAppColors } from '@/hooks/useAppColors';
 import { usersApi } from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -46,6 +47,7 @@ const SPECIALTIES = [
 
 export default function EditProfileScreen() {
   const navigation = useNavigation<any>();
+  const appColors = useAppColors();
   const { user, updateUser, refreshUser } = useAuth();
 
   const [firstName, setFirstName] = useState(user?.first_name || '');
@@ -55,7 +57,6 @@ export default function EditProfileScreen() {
   const [avatarUri, setAvatarUri] = useState(user?.avatar_url || '');
   const [showSpecialtyPicker, setShowSpecialtyPicker] = useState(false);
 
-  // Update profile mutation
   const updateProfileMutation = useMutation({
     mutationFn: async () => {
       const response = await usersApi.updateProfile({
@@ -81,7 +82,6 @@ export default function EditProfileScreen() {
     },
   });
 
-  // Upload avatar mutation
   const uploadAvatarMutation = useMutation({
     mutationFn: async (uri: string) => {
       const formData = new FormData();
@@ -136,13 +136,13 @@ export default function EditProfileScreen() {
     specialty !== (user?.specialty || '');
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: appColors.surface }]} edges={['top']}>
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { borderBottomColor: appColors.border }]}>
         <TouchableOpacity style={styles.cancelButton} onPress={() => navigation.goBack()}>
-          <ThemedText style={styles.cancelText}>Cancel</ThemedText>
+          <ThemedText style={[styles.cancelText, { color: appColors.textSecondary }]}>Cancel</ThemedText>
         </TouchableOpacity>
-        <ThemedText style={styles.headerTitle}>Edit Profile</ThemedText>
+        <ThemedText style={[styles.headerTitle, { color: appColors.textPrimary }]}>Edit Profile</ThemedText>
         <TouchableOpacity
           style={[styles.saveButton, !hasChanges && styles.saveButtonDisabled]}
           onPress={handleSave}
@@ -151,7 +151,7 @@ export default function EditProfileScreen() {
           {updateProfileMutation.isPending ? (
             <ActivityIndicator size="small" color={Colors.primary} />
           ) : (
-            <ThemedText style={[styles.saveText, !hasChanges && styles.saveTextDisabled]}>
+            <ThemedText style={[styles.saveText, !hasChanges && { color: appColors.textSecondary }]}>
               Save
             </ThemedText>
           )}
@@ -160,7 +160,7 @@ export default function EditProfileScreen() {
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* Avatar Section */}
-        <View style={styles.avatarSection}>
+        <View style={[styles.avatarSection, { borderBottomColor: appColors.border }]}>
           <TouchableOpacity style={styles.avatarContainer} onPress={handlePickImage}>
             {avatarUri ? (
               <Image source={{ uri: avatarUri }} style={styles.avatar} />
@@ -171,7 +171,7 @@ export default function EditProfileScreen() {
                 </ThemedText>
               </View>
             )}
-            <View style={styles.avatarEditBadge}>
+            <View style={[styles.avatarEditBadge, { borderColor: appColors.surface }]}>
               {uploadAvatarMutation.isPending ? (
                 <ActivityIndicator size="small" color="white" />
               ) : (
@@ -187,65 +187,66 @@ export default function EditProfileScreen() {
         {/* Form Fields */}
         <View style={styles.form}>
           <View style={styles.inputGroup}>
-            <ThemedText style={styles.label}>First Name</ThemedText>
+            <ThemedText style={[styles.label, { color: appColors.textSecondary }]}>First Name</ThemedText>
             <TextInput
-              style={styles.input}
+              style={[styles.input, { color: appColors.textPrimary, borderColor: appColors.border }]}
               value={firstName}
               onChangeText={setFirstName}
               placeholder="Enter your first name"
-              placeholderTextColor={Colors.textSecondary}
+              placeholderTextColor={appColors.textSecondary}
               autoCapitalize="words"
             />
           </View>
 
           <View style={styles.inputGroup}>
-            <ThemedText style={styles.label}>Last Name</ThemedText>
+            <ThemedText style={[styles.label, { color: appColors.textSecondary }]}>Last Name</ThemedText>
             <TextInput
-              style={styles.input}
+              style={[styles.input, { color: appColors.textPrimary, borderColor: appColors.border }]}
               value={lastName}
               onChangeText={setLastName}
               placeholder="Enter your last name"
-              placeholderTextColor={Colors.textSecondary}
+              placeholderTextColor={appColors.textSecondary}
               autoCapitalize="words"
             />
           </View>
 
           <View style={styles.inputGroup}>
-            <ThemedText style={styles.label}>Bio</ThemedText>
+            <ThemedText style={[styles.label, { color: appColors.textSecondary }]}>Bio</ThemedText>
             <TextInput
-              style={[styles.input, styles.bioInput]}
+              style={[styles.input, styles.bioInput, { color: appColors.textPrimary, borderColor: appColors.border }]}
               value={bio}
               onChangeText={setBio}
               placeholder="Tell us about yourself"
-              placeholderTextColor={Colors.textSecondary}
+              placeholderTextColor={appColors.textSecondary}
               multiline
               numberOfLines={4}
               maxLength={500}
               textAlignVertical="top"
             />
-            <ThemedText style={styles.charCount}>{bio.length}/500</ThemedText>
+            <ThemedText style={[styles.charCount, { color: appColors.textSecondary }]}>{bio.length}/500</ThemedText>
           </View>
 
           <View style={styles.inputGroup}>
-            <ThemedText style={styles.label}>Specialty</ThemedText>
+            <ThemedText style={[styles.label, { color: appColors.textSecondary }]}>Specialty</ThemedText>
             <TouchableOpacity
-              style={styles.pickerButton}
+              style={[styles.pickerButton, { borderColor: appColors.border }]}
               onPress={() => setShowSpecialtyPicker(!showSpecialtyPicker)}
             >
-              <ThemedText style={specialty ? styles.pickerText : styles.pickerPlaceholder}>
+              <ThemedText style={specialty ? [styles.pickerText, { color: appColors.textPrimary }] : [styles.pickerPlaceholder, { color: appColors.textSecondary }]}>
                 {specialty || 'Select your specialty'}
               </ThemedText>
-              <Ionicons name="chevron-down" size={20} color={Colors.textSecondary} />
+              <Ionicons name="chevron-down" size={20} color={appColors.textSecondary} />
             </TouchableOpacity>
           </View>
 
           {showSpecialtyPicker && (
-            <View style={styles.specialtyPicker}>
+            <View style={[styles.specialtyPicker, { borderColor: appColors.border }]}>
               {SPECIALTIES.map((s) => (
                 <TouchableOpacity
                   key={s}
                   style={[
                     styles.specialtyOption,
+                    { borderBottomColor: appColors.border },
                     specialty === s && styles.specialtyOptionSelected,
                   ]}
                   onPress={() => {
@@ -255,6 +256,7 @@ export default function EditProfileScreen() {
                 >
                   <ThemedText style={[
                     styles.specialtyOptionText,
+                    { color: appColors.textPrimary },
                     specialty === s && styles.specialtyOptionTextSelected,
                   ]}>
                     {s}
@@ -269,10 +271,10 @@ export default function EditProfileScreen() {
 
           {/* Email (read-only) */}
           <View style={styles.inputGroup}>
-            <ThemedText style={styles.label}>Email</ThemedText>
-            <View style={styles.readOnlyInput}>
-              <ThemedText style={styles.readOnlyText}>{user?.email}</ThemedText>
-              <Ionicons name="lock-closed" size={16} color={Colors.textSecondary} />
+            <ThemedText style={[styles.label, { color: appColors.textSecondary }]}>Email</ThemedText>
+            <View style={[styles.readOnlyInput, { borderColor: appColors.border }]}>
+              <ThemedText style={[styles.readOnlyText, { color: appColors.textSecondary }]}>{user?.email}</ThemedText>
+              <Ionicons name="lock-closed" size={16} color={appColors.textSecondary} />
             </View>
           </View>
         </View>
@@ -284,7 +286,6 @@ export default function EditProfileScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.surface,
   },
   header: {
     flexDirection: 'row',
@@ -293,18 +294,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
   },
   cancelButton: {
     padding: Spacing.sm,
   },
   cancelText: {
     ...Typography.body,
-    color: Colors.textSecondary,
   },
   headerTitle: {
     ...Typography.heading,
-    color: Colors.textPrimary,
   },
   saveButton: {
     padding: Spacing.sm,
@@ -317,9 +315,6 @@ const styles = StyleSheet.create({
     color: Colors.primary,
     fontWeight: '600',
   },
-  saveTextDisabled: {
-    color: Colors.textSecondary,
-  },
   content: {
     flex: 1,
   },
@@ -327,7 +322,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: Spacing.xl,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
   },
   avatarContainer: {
     position: 'relative',
@@ -358,7 +352,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
-    borderColor: Colors.surface,
   },
   changePhotoText: {
     ...Typography.body,
@@ -374,20 +367,17 @@ const styles = StyleSheet.create({
   label: {
     ...Typography.caption,
     fontWeight: '600',
-    color: Colors.textSecondary,
     marginBottom: Spacing.sm,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
   input: {
     ...Typography.body,
-    color: Colors.textPrimary,
     backgroundColor: Colors.light.backgroundSecondary,
     borderRadius: BorderRadius.md,
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.md,
     borderWidth: 1,
-    borderColor: Colors.border,
   },
   bioInput: {
     minHeight: 100,
@@ -395,7 +385,6 @@ const styles = StyleSheet.create({
   },
   charCount: {
     ...Typography.small,
-    color: Colors.textSecondary,
     textAlign: 'right',
     marginTop: Spacing.xs,
   },
@@ -408,15 +397,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.md,
     borderWidth: 1,
-    borderColor: Colors.border,
   },
   pickerText: {
     ...Typography.body,
-    color: Colors.textPrimary,
   },
   pickerPlaceholder: {
     ...Typography.body,
-    color: Colors.textSecondary,
   },
   specialtyPicker: {
     backgroundColor: Colors.light.backgroundSecondary,
@@ -424,7 +410,6 @@ const styles = StyleSheet.create({
     marginTop: -Spacing.md,
     marginBottom: Spacing.lg,
     borderWidth: 1,
-    borderColor: Colors.border,
     maxHeight: 200,
   },
   specialtyOption: {
@@ -434,14 +419,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
   },
   specialtyOptionSelected: {
     backgroundColor: Colors.primary + '10',
   },
   specialtyOptionText: {
     ...Typography.body,
-    color: Colors.textPrimary,
   },
   specialtyOptionTextSelected: {
     color: Colors.primary,
@@ -456,10 +439,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.md,
     borderWidth: 1,
-    borderColor: Colors.border,
   },
   readOnlyText: {
     ...Typography.body,
-    color: Colors.textSecondary,
   },
 });

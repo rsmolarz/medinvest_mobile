@@ -18,6 +18,7 @@ import { useQuery } from '@tanstack/react-query';
 
 import { ThemedText } from '@/components/ThemedText';
 import { Colors, Spacing, BorderRadius, Typography, Shadows } from '@/constants/theme';
+import { useAppColors } from '@/hooks/useAppColors';
 import { newsApi } from '@/lib/api';
 import { formatRelativeTime } from '@/lib/utils';
 
@@ -43,7 +44,8 @@ export default function DiscoverMoreNews({
   showHeader = true,
   onViewAll,
 }: DiscoverMoreNewsProps) {
-  // Fetch news
+  const appColors = useAppColors();
+
   const { data: news, isLoading } = useQuery({
     queryKey: ['news', limit],
     queryFn: async () => {
@@ -60,7 +62,6 @@ export default function DiscoverMoreNews({
     if (onViewAll) {
       onViewAll();
     } else {
-      // Navigate to full news screen or open browser
       Linking.openURL('https://medinvest.com/news');
     }
   }, [onViewAll]);
@@ -78,10 +79,10 @@ export default function DiscoverMoreNews({
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: appColors.surface }]}>
       {showHeader && (
         <View style={styles.header}>
-          <ThemedText style={styles.headerTitle}>Discover More News</ThemedText>
+          <ThemedText style={[styles.headerTitle, { color: appColors.textPrimary }]}>Discover More News</ThemedText>
         </View>
       )}
 
@@ -105,43 +106,41 @@ export default function DiscoverMoreNews({
   );
 }
 
-// Individual news item
 interface NewsListItemProps {
   item: NewsItem;
   onPress: () => void;
 }
 
 function NewsListItem({ item, onPress }: NewsListItemProps) {
-  // Format date for display
+  const appColors = useAppColors();
   const formattedDate = formatNewsDate(item.published_at);
 
   return (
-    <TouchableOpacity style={styles.newsItem} onPress={onPress}>
+    <TouchableOpacity style={[styles.newsItem, { borderBottomColor: appColors.border }]} onPress={onPress}>
       {/* Source Icon */}
       <View style={styles.sourceIconContainer}>
         {item.source_icon ? (
           <Image source={{ uri: item.source_icon }} style={styles.sourceIcon} />
         ) : (
-          <View style={[styles.sourceIcon, styles.sourceIconPlaceholder]}>
-            <Ionicons name="newspaper-outline" size={16} color={Colors.error} />
+          <View style={[styles.sourceIcon, styles.sourceIconPlaceholder, { backgroundColor: appColors.error + '15' }]}>
+            <Ionicons name="newspaper-outline" size={16} color={appColors.error} />
           </View>
         )}
       </View>
 
       {/* Content */}
       <View style={styles.newsContent}>
-        <ThemedText style={styles.newsTitle} numberOfLines={2}>
+        <ThemedText style={[styles.newsTitle, { color: appColors.textPrimary }]} numberOfLines={2}>
           {item.title}
         </ThemedText>
         {item.category && (
-          <ThemedText style={styles.newsCategory}>{item.category}</ThemedText>
+          <ThemedText style={[styles.newsCategory, { color: appColors.textSecondary }]}>{item.category}</ThemedText>
         )}
       </View>
     </TouchableOpacity>
   );
 }
 
-// Helper to format news date
 function formatNewsDate(dateString: string): string {
   const date = new Date(dateString);
   const now = new Date();
@@ -159,26 +158,26 @@ function formatNewsDate(dateString: string): string {
   }
 }
 
-// News card with image (for featured news)
 interface FeaturedNewsCardProps {
   item: NewsItem;
   onPress: () => void;
 }
 
 export function FeaturedNewsCard({ item, onPress }: FeaturedNewsCardProps) {
+  const appColors = useAppColors();
   return (
-    <TouchableOpacity style={styles.featuredCard} onPress={onPress}>
+    <TouchableOpacity style={[styles.featuredCard, { backgroundColor: appColors.surface }]} onPress={onPress}>
       {item.image_url && (
         <Image source={{ uri: item.image_url }} style={styles.featuredImage} />
       )}
       <View style={styles.featuredContent}>
         <View style={styles.featuredMeta}>
           <ThemedText style={styles.featuredSource}>{item.source}</ThemedText>
-          <ThemedText style={styles.featuredDate}>
+          <ThemedText style={[styles.featuredDate, { color: appColors.textSecondary }]}>
             {formatNewsDate(item.published_at)}
           </ThemedText>
         </View>
-        <ThemedText style={styles.featuredTitle} numberOfLines={2}>
+        <ThemedText style={[styles.featuredTitle, { color: appColors.textPrimary }]} numberOfLines={2}>
           {item.title}
         </ThemedText>
       </View>
@@ -186,10 +185,10 @@ export function FeaturedNewsCard({ item, onPress }: FeaturedNewsCardProps) {
   );
 }
 
-// Compact version for sidebar
 export function DiscoverNewsCompact({ limit = 5 }: { limit?: number }) {
+  const appColors = useAppColors();
   return (
-    <View style={styles.compactContainer}>
+    <View style={[styles.compactContainer, { backgroundColor: appColors.surface }]}>
       <DiscoverMoreNews limit={limit} showHeader={true} />
     </View>
   );
@@ -197,7 +196,6 @@ export function DiscoverNewsCompact({ limit = 5 }: { limit?: number }) {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: Colors.surface,
   },
   loadingContainer: {
     padding: Spacing.xl,
@@ -211,7 +209,6 @@ const styles = StyleSheet.create({
   headerTitle: {
     ...Typography.body,
     fontWeight: '600',
-    color: Colors.textPrimary,
   },
   newsList: {
     paddingHorizontal: Spacing.lg,
@@ -221,7 +218,6 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     paddingVertical: Spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
   },
   sourceIconContainer: {
     marginRight: Spacing.md,
@@ -232,7 +228,6 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   sourceIconPlaceholder: {
-    backgroundColor: Colors.error + '15',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -241,12 +236,10 @@ const styles = StyleSheet.create({
   },
   newsTitle: {
     ...Typography.body,
-    color: Colors.textPrimary,
     lineHeight: 22,
   },
   newsCategory: {
     ...Typography.small,
-    color: Colors.textSecondary,
     marginTop: 4,
   },
   viewAllButton: {
@@ -262,9 +255,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
 
-  // Featured card
   featuredCard: {
-    backgroundColor: Colors.surface,
     borderRadius: BorderRadius.md,
     overflow: 'hidden',
     ...Shadows.card,
@@ -288,19 +279,15 @@ const styles = StyleSheet.create({
   },
   featuredDate: {
     ...Typography.small,
-    color: Colors.textSecondary,
     marginLeft: Spacing.sm,
   },
   featuredTitle: {
     ...Typography.body,
     fontWeight: '600',
-    color: Colors.textPrimary,
     lineHeight: 22,
   },
 
-  // Compact container
   compactContainer: {
-    backgroundColor: Colors.surface,
     borderRadius: BorderRadius.md,
     overflow: 'hidden',
     ...Shadows.card,

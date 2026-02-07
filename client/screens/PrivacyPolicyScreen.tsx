@@ -17,12 +17,14 @@ import { Ionicons } from '@expo/vector-icons';
 
 import { ThemedText } from '@/components/ThemedText';
 import { Colors, Spacing, BorderRadius, Typography } from '@/constants/theme';
+import { useAppColors } from '@/hooks/useAppColors';
 
 const PRIVACY_POLICY_URL = 'https://medinvest.com/privacy';
 const SUPPORT_EMAIL = 'privacy@medinvest.com';
 
 export default function PrivacyPolicyScreen() {
   const navigation = useNavigation<any>();
+  const appColors = useAppColors();
 
   const handleOpenWebsite = () => {
     Linking.openURL(PRIVACY_POLICY_URL);
@@ -33,32 +35,30 @@ export default function PrivacyPolicyScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: appColors.background }]} edges={['top']}>
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { backgroundColor: appColors.surface, borderBottomColor: appColors.border }]}>
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <Ionicons name="chevron-back" size={24} color={Colors.textPrimary} />
+          <Ionicons name="chevron-back" size={24} color={appColors.textPrimary} />
         </TouchableOpacity>
-        <ThemedText style={styles.headerTitle}>Privacy Policy</ThemedText>
+        <ThemedText style={[styles.headerTitle, { color: appColors.textPrimary }]}>Privacy Policy</ThemedText>
         <TouchableOpacity style={styles.webButton} onPress={handleOpenWebsite}>
           <Ionicons name="open-outline" size={20} color={Colors.primary} />
         </TouchableOpacity>
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        <ThemedText style={styles.lastUpdated}>Last updated: January 2026</ThemedText>
+        <ThemedText style={[styles.lastUpdated, { color: appColors.textSecondary }]}>Last updated: January 2026</ThemedText>
 
-        {/* Introduction */}
         <Section title="Introduction">
-          <ThemedText style={styles.paragraph}>
+          <ThemedText style={[styles.paragraph, { color: appColors.textSecondary }]}>
             MedInvest ("we", "our", or "us") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our mobile application.
           </ThemedText>
         </Section>
 
-        {/* Information We Collect */}
         <Section title="Information We Collect">
-          <ThemedText style={styles.subheading}>Personal Information</ThemedText>
-          <ThemedText style={styles.paragraph}>
+          <ThemedText style={[styles.subheading, { color: appColors.textPrimary }]}>Personal Information</ThemedText>
+          <ThemedText style={[styles.paragraph, { color: appColors.textSecondary }]}>
             When you create an account, we collect:
           </ThemedText>
           <BulletList items={[
@@ -68,8 +68,8 @@ export default function PrivacyPolicyScreen() {
             'Account preferences',
           ]} />
 
-          <ThemedText style={styles.subheading}>Usage Information</ThemedText>
-          <ThemedText style={styles.paragraph}>
+          <ThemedText style={[styles.subheading, { color: appColors.textPrimary }]}>Usage Information</ThemedText>
+          <ThemedText style={[styles.paragraph, { color: appColors.textSecondary }]}>
             We automatically collect:
           </ThemedText>
           <BulletList items={[
@@ -79,8 +79,8 @@ export default function PrivacyPolicyScreen() {
             'Crash reports and performance data',
           ]} />
 
-          <ThemedText style={styles.subheading}>User Content</ThemedText>
-          <ThemedText style={styles.paragraph}>
+          <ThemedText style={[styles.subheading, { color: appColors.textPrimary }]}>User Content</ThemedText>
+          <ThemedText style={[styles.paragraph, { color: appColors.textSecondary }]}>
             Content you create on the platform:
           </ThemedText>
           <BulletList items={[
@@ -90,7 +90,6 @@ export default function PrivacyPolicyScreen() {
           ]} />
         </Section>
 
-        {/* How We Use Information */}
         <Section title="How We Use Your Information">
           <BulletList items={[
             'Provide and maintain our services',
@@ -102,9 +101,8 @@ export default function PrivacyPolicyScreen() {
           ]} />
         </Section>
 
-        {/* Sharing Information */}
         <Section title="Sharing Your Information">
-          <ThemedText style={styles.paragraph}>
+          <ThemedText style={[styles.paragraph, { color: appColors.textSecondary }]}>
             We do not sell your personal information. We may share data with:
           </ThemedText>
           <BulletList items={[
@@ -114,16 +112,14 @@ export default function PrivacyPolicyScreen() {
           ]} />
         </Section>
 
-        {/* Data Security */}
         <Section title="Data Security">
-          <ThemedText style={styles.paragraph}>
+          <ThemedText style={[styles.paragraph, { color: appColors.textSecondary }]}>
             We implement industry-standard security measures including encryption, secure data centers, and regular security audits. However, no method of transmission over the Internet is 100% secure.
           </ThemedText>
         </Section>
 
-        {/* Your Rights */}
         <Section title="Your Rights">
-          <ThemedText style={styles.paragraph}>
+          <ThemedText style={[styles.paragraph, { color: appColors.textSecondary }]}>
             You have the right to:
           </ThemedText>
           <BulletList items={[
@@ -136,30 +132,26 @@ export default function PrivacyPolicyScreen() {
           ]} />
         </Section>
 
-        {/* Data Retention */}
         <Section title="Data Retention">
-          <ThemedText style={styles.paragraph}>
+          <ThemedText style={[styles.paragraph, { color: appColors.textSecondary }]}>
             We retain your data for as long as your account is active or as needed to provide services. You can request deletion at any time through account settings.
           </ThemedText>
         </Section>
 
-        {/* Children's Privacy */}
         <Section title="Children's Privacy">
-          <ThemedText style={styles.paragraph}>
+          <ThemedText style={[styles.paragraph, { color: appColors.textSecondary }]}>
             Our service is not intended for users under 18 years of age. We do not knowingly collect information from children.
           </ThemedText>
         </Section>
 
-        {/* Changes */}
         <Section title="Changes to This Policy">
-          <ThemedText style={styles.paragraph}>
+          <ThemedText style={[styles.paragraph, { color: appColors.textSecondary }]}>
             We may update this policy periodically. We will notify you of significant changes through the app or via email.
           </ThemedText>
         </Section>
 
-        {/* Contact */}
         <Section title="Contact Us">
-          <ThemedText style={styles.paragraph}>
+          <ThemedText style={[styles.paragraph, { color: appColors.textSecondary }]}>
             For privacy-related questions or requests:
           </ThemedText>
           <TouchableOpacity style={styles.contactButton} onPress={handleContactPrivacy}>
@@ -174,24 +166,24 @@ export default function PrivacyPolicyScreen() {
   );
 }
 
-// Section component
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
+  const appColors = useAppColors();
   return (
     <View style={styles.section}>
-      <ThemedText style={styles.sectionTitle}>{title}</ThemedText>
+      <ThemedText style={[styles.sectionTitle, { color: appColors.textPrimary }]}>{title}</ThemedText>
       {children}
     </View>
   );
 }
 
-// Bullet list component
 function BulletList({ items }: { items: string[] }) {
+  const appColors = useAppColors();
   return (
     <View style={styles.bulletList}>
       {items.map((item, index) => (
         <View key={index} style={styles.bulletItem}>
           <View style={styles.bullet} />
-          <ThemedText style={styles.bulletText}>{item}</ThemedText>
+          <ThemedText style={[styles.bulletText, { color: appColors.textSecondary }]}>{item}</ThemedText>
         </View>
       ))}
     </View>
@@ -201,7 +193,6 @@ function BulletList({ items }: { items: string[] }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
   },
   header: {
     flexDirection: 'row',
@@ -209,16 +200,13 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.sm,
-    backgroundColor: Colors.surface,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
   },
   backButton: {
     padding: Spacing.sm,
   },
   headerTitle: {
     ...Typography.heading,
-    color: Colors.textPrimary,
   },
   webButton: {
     padding: Spacing.sm,
@@ -229,7 +217,6 @@ const styles = StyleSheet.create({
   },
   lastUpdated: {
     ...Typography.small,
-    color: Colors.textSecondary,
     marginTop: Spacing.lg,
     marginBottom: Spacing.xl,
   },
@@ -238,19 +225,16 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     ...Typography.heading,
-    color: Colors.textPrimary,
     marginBottom: Spacing.md,
   },
   subheading: {
     ...Typography.body,
     fontWeight: '600',
-    color: Colors.textPrimary,
     marginTop: Spacing.md,
     marginBottom: Spacing.sm,
   },
   paragraph: {
     ...Typography.body,
-    color: Colors.textSecondary,
     lineHeight: 24,
     marginBottom: Spacing.md,
   },
@@ -272,7 +256,6 @@ const styles = StyleSheet.create({
   },
   bulletText: {
     ...Typography.body,
-    color: Colors.textSecondary,
     flex: 1,
     lineHeight: 22,
   },

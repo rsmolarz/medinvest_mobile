@@ -22,6 +22,7 @@ import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from '@tansta
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { Colors, Spacing, BorderRadius, Typography, Shadows } from '@/constants/theme';
+import { useAppColors } from '@/hooks/useAppColors';
 import { feedApi, postsApi, roomsApi, notificationsApi } from '@/lib/api';
 import { Post, Room, FeedStyle, TrendingTopic } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
@@ -40,6 +41,7 @@ export default function HomeScreen() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const scrollY = useRef(new Animated.Value(0)).current;
+  const appColors = useAppColors();
 
   const [feedStyle, setFeedStyle] = useState<FeedStyle>('algorithmic');
   const [selectedRoom, setSelectedRoom] = useState<string | null>(null);
@@ -54,7 +56,7 @@ export default function HomeScreen() {
       const response = await notificationsApi.getNotifications(1);
       return { unread_count: response.data?.unread_count || 0 };
     },
-    refetchInterval: 30000, // Check every 30 seconds
+    refetchInterval: 30000,
   });
 
   // Fetch rooms
@@ -73,7 +75,7 @@ export default function HomeScreen() {
       const response = await feedApi.getTrending();
       return response.data?.topics || [];
     },
-    refetchInterval: 60000, // Refresh every minute
+    refetchInterval: 60000,
   });
 
   // Infinite scroll feed
@@ -179,7 +181,7 @@ export default function HomeScreen() {
   ), [handlePostPress, handleUserPress, handleVote, handleBookmark, handleHashtagPress]);
 
   const renderHeader = () => (
-    <View style={styles.feedHeader}>
+    <View style={[styles.feedHeader, { backgroundColor: appColors.surface }]}>
       {/* Feed Style Selector */}
       <View style={styles.feedStyleContainer}>
         <TouchableOpacity
@@ -189,10 +191,11 @@ export default function HomeScreen() {
           <Ionicons 
             name="sparkles" 
             size={16} 
-            color={feedStyle === 'algorithmic' ? Colors.primary : Colors.textSecondary} 
+            color={feedStyle === 'algorithmic' ? Colors.primary : appColors.textSecondary} 
           />
           <ThemedText style={[
             styles.feedStyleText,
+            { color: appColors.textSecondary },
             feedStyle === 'algorithmic' && styles.feedStyleTextActive
           ]}>
             For You
@@ -206,10 +209,11 @@ export default function HomeScreen() {
           <Ionicons 
             name="time-outline" 
             size={16} 
-            color={feedStyle === 'chronological' ? Colors.primary : Colors.textSecondary} 
+            color={feedStyle === 'chronological' ? Colors.primary : appColors.textSecondary} 
           />
           <ThemedText style={[
             styles.feedStyleText,
+            { color: appColors.textSecondary },
             feedStyle === 'chronological' && styles.feedStyleTextActive
           ]}>
             Latest
@@ -223,10 +227,11 @@ export default function HomeScreen() {
           <Ionicons 
             name="compass-outline" 
             size={16} 
-            color={feedStyle === 'discovery' ? Colors.primary : Colors.textSecondary} 
+            color={feedStyle === 'discovery' ? Colors.primary : appColors.textSecondary} 
           />
           <ThemedText style={[
             styles.feedStyleText,
+            { color: appColors.textSecondary },
             feedStyle === 'discovery' && styles.feedStyleTextActive
           ]}>
             Discover
@@ -256,9 +261,9 @@ export default function HomeScreen() {
     if (isLoading) return null;
     return (
       <View style={styles.emptyContainer}>
-        <MaterialCommunityIcons name="post-outline" size={64} color={Colors.textSecondary} />
-        <ThemedText style={styles.emptyTitle}>No posts yet</ThemedText>
-        <ThemedText style={styles.emptySubtitle}>
+        <MaterialCommunityIcons name="post-outline" size={64} color={appColors.textSecondary} />
+        <ThemedText style={[styles.emptyTitle, { color: appColors.textPrimary }]}>No posts yet</ThemedText>
+        <ThemedText style={[styles.emptySubtitle, { color: appColors.textSecondary }]}>
           {selectedRoom 
             ? 'Be the first to post in this room!'
             : 'Follow people and join rooms to see posts here'}
@@ -271,9 +276,9 @@ export default function HomeScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: appColors.background }]} edges={['top']}>
       {/* Animated Header */}
-      <Animated.View style={[styles.header, { transform: [{ translateY: headerTranslate }] }]}>
+      <Animated.View style={[styles.header, { backgroundColor: appColors.surface, borderBottomColor: appColors.border }, { transform: [{ translateY: headerTranslate }] }]}>
         <View style={styles.headerContent}>
           <ThemedText style={styles.headerTitle}>MedInvest</ThemedText>
           <View style={styles.headerActions}>
@@ -281,13 +286,13 @@ export default function HomeScreen() {
               style={styles.headerButton}
               onPress={() => setShowTrending(!showTrending)}
             >
-              <Ionicons name="trending-up" size={24} color={Colors.textPrimary} />
+              <Ionicons name="trending-up" size={24} color={appColors.textPrimary} />
             </TouchableOpacity>
             <TouchableOpacity 
               style={styles.headerButton}
               onPress={() => navigation.navigate('Search')}
             >
-              <Ionicons name="search" size={24} color={Colors.textPrimary} />
+              <Ionicons name="search" size={24} color={appColors.textPrimary} />
             </TouchableOpacity>
             <NotificationBell 
               unreadCount={notificationData?.unread_count || 0}
@@ -359,12 +364,9 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
   },
   header: {
-    backgroundColor: Colors.surface,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
     zIndex: 10,
   },
   headerContent: {
@@ -395,7 +397,6 @@ const styles = StyleSheet.create({
     paddingBottom: 100,
   },
   feedHeader: {
-    backgroundColor: Colors.surface,
     paddingBottom: Spacing.md,
   },
   feedStyleContainer: {
@@ -418,7 +419,6 @@ const styles = StyleSheet.create({
   },
   feedStyleText: {
     ...Typography.caption,
-    color: Colors.textSecondary,
   },
   feedStyleTextActive: {
     color: Colors.primary,
@@ -438,11 +438,9 @@ const styles = StyleSheet.create({
   emptyTitle: {
     ...Typography.heading,
     marginTop: Spacing.lg,
-    color: Colors.textPrimary,
   },
   emptySubtitle: {
     ...Typography.body,
-    color: Colors.textSecondary,
     textAlign: 'center',
     marginTop: Spacing.sm,
   },

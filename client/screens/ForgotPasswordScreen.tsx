@@ -21,11 +21,13 @@ import { Ionicons } from '@expo/vector-icons';
 
 import { ThemedText } from '@/components/ThemedText';
 import { Colors, Spacing, BorderRadius, Typography } from '@/constants/theme';
+import { useAppColors } from '@/hooks/useAppColors';
 import { useAuth } from '@/contexts/AuthContext';
 import { isValidEmail } from '@/lib/utils';
 
 export default function ForgotPasswordScreen() {
   const navigation = useNavigation<any>();
+  const appColors = useAppColors();
   const { forgotPassword, isLoading } = useAuth();
 
   const [email, setEmail] = useState('');
@@ -63,10 +65,10 @@ export default function ForgotPasswordScreen() {
 
   if (sent) {
     return (
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView style={[styles.container, { backgroundColor: appColors.surface }]}>
         <View style={styles.header}>
           <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-            <Ionicons name="chevron-back" size={24} color={Colors.textPrimary} />
+            <Ionicons name="chevron-back" size={24} color={appColors.textPrimary} />
           </TouchableOpacity>
         </View>
 
@@ -74,10 +76,10 @@ export default function ForgotPasswordScreen() {
           <View style={styles.successIcon}>
             <Ionicons name="mail" size={48} color={Colors.primary} />
           </View>
-          <ThemedText style={styles.successTitle}>Check Your Email</ThemedText>
-          <ThemedText style={styles.successMessage}>
+          <ThemedText style={[styles.successTitle, { color: appColors.textPrimary }]}>Check Your Email</ThemedText>
+          <ThemedText style={[styles.successMessage, { color: appColors.textSecondary }]}>
             We've sent password reset instructions to{'\n'}
-            <ThemedText style={styles.emailHighlight}>{email}</ThemedText>
+            <ThemedText style={[styles.emailHighlight, { color: appColors.textPrimary }]}>{email}</ThemedText>
           </ThemedText>
 
           <View style={styles.instructionsContainer}>
@@ -85,7 +87,7 @@ export default function ForgotPasswordScreen() {
               <View style={styles.instructionNumber}>
                 <ThemedText style={styles.instructionNumberText}>1</ThemedText>
               </View>
-              <ThemedText style={styles.instructionText}>
+              <ThemedText style={[styles.instructionText, { color: appColors.textPrimary }]}>
                 Open the email we just sent you
               </ThemedText>
             </View>
@@ -93,7 +95,7 @@ export default function ForgotPasswordScreen() {
               <View style={styles.instructionNumber}>
                 <ThemedText style={styles.instructionNumberText}>2</ThemedText>
               </View>
-              <ThemedText style={styles.instructionText}>
+              <ThemedText style={[styles.instructionText, { color: appColors.textPrimary }]}>
                 Click the reset password link
               </ThemedText>
             </View>
@@ -101,7 +103,7 @@ export default function ForgotPasswordScreen() {
               <View style={styles.instructionNumber}>
                 <ThemedText style={styles.instructionNumberText}>3</ThemedText>
               </View>
-              <ThemedText style={styles.instructionText}>
+              <ThemedText style={[styles.instructionText, { color: appColors.textPrimary }]}>
                 Create a new password
               </ThemedText>
             </View>
@@ -126,7 +128,7 @@ export default function ForgotPasswordScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: appColors.surface }]}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardView}
@@ -139,7 +141,7 @@ export default function ForgotPasswordScreen() {
           {/* Header */}
           <View style={styles.header}>
             <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-              <Ionicons name="chevron-back" size={24} color={Colors.textPrimary} />
+              <Ionicons name="chevron-back" size={24} color={appColors.textPrimary} />
             </TouchableOpacity>
           </View>
 
@@ -148,20 +150,20 @@ export default function ForgotPasswordScreen() {
             <View style={styles.iconContainer}>
               <Ionicons name="lock-closed-outline" size={48} color={Colors.primary} />
             </View>
-            <ThemedText style={styles.title}>Forgot Password?</ThemedText>
-            <ThemedText style={styles.subtitle}>
+            <ThemedText style={[styles.title, { color: appColors.textPrimary }]}>Forgot Password?</ThemedText>
+            <ThemedText style={[styles.subtitle, { color: appColors.textSecondary }]}>
               No worries! Enter your email address and we'll send you instructions to reset your password.
             </ThemedText>
 
             {/* Email Input */}
             <View style={styles.inputContainer}>
-              <ThemedText style={styles.label}>Email Address</ThemedText>
-              <View style={[styles.inputWrapper, emailError && styles.inputError]}>
-                <Ionicons name="mail-outline" size={20} color={Colors.textSecondary} />
+              <ThemedText style={[styles.label, { color: appColors.textPrimary }]}>Email Address</ThemedText>
+              <View style={[styles.inputWrapper, emailError && [styles.inputError, { borderColor: appColors.error }]]}>
+                <Ionicons name="mail-outline" size={20} color={appColors.textSecondary} />
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, { color: appColors.textPrimary }]}
                   placeholder="Enter your email"
-                  placeholderTextColor={Colors.textSecondary}
+                  placeholderTextColor={appColors.textSecondary}
                   value={email}
                   onChangeText={(text) => {
                     setEmail(text);
@@ -173,7 +175,7 @@ export default function ForgotPasswordScreen() {
                 />
               </View>
               {emailError ? (
-                <ThemedText style={styles.errorText}>{emailError}</ThemedText>
+                <ThemedText style={[styles.errorText, { color: appColors.error }]}>{emailError}</ThemedText>
               ) : null}
             </View>
 
@@ -208,7 +210,6 @@ export default function ForgotPasswordScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.surface,
   },
   keyboardView: {
     flex: 1,
@@ -245,13 +246,11 @@ const styles = StyleSheet.create({
   },
   title: {
     ...Typography.title,
-    color: Colors.textPrimary,
     textAlign: 'center',
     marginBottom: Spacing.sm,
   },
   subtitle: {
     ...Typography.body,
-    color: Colors.textSecondary,
     textAlign: 'center',
     lineHeight: 22,
     marginBottom: Spacing['3xl'],
@@ -262,7 +261,6 @@ const styles = StyleSheet.create({
   label: {
     ...Typography.caption,
     fontWeight: '600',
-    color: Colors.textPrimary,
     marginBottom: Spacing.sm,
   },
   inputWrapper: {
@@ -277,17 +275,15 @@ const styles = StyleSheet.create({
     borderColor: 'transparent',
   },
   inputError: {
-    borderColor: Colors.error,
+    borderWidth: 1,
   },
   input: {
     flex: 1,
     ...Typography.body,
-    color: Colors.textPrimary,
     height: '100%',
   },
   errorText: {
     ...Typography.small,
-    color: Colors.error,
     marginTop: Spacing.xs,
   },
   submitButton: {
@@ -317,7 +313,6 @@ const styles = StyleSheet.create({
     color: Colors.primary,
     fontWeight: '500',
   },
-  // Success State
   successContent: {
     flex: 1,
     paddingHorizontal: Spacing.xl,
@@ -335,18 +330,15 @@ const styles = StyleSheet.create({
   },
   successTitle: {
     ...Typography.title,
-    color: Colors.textPrimary,
     marginBottom: Spacing.md,
   },
   successMessage: {
     ...Typography.body,
-    color: Colors.textSecondary,
     textAlign: 'center',
     lineHeight: 24,
     marginBottom: Spacing['3xl'],
   },
   emailHighlight: {
-    color: Colors.textPrimary,
     fontWeight: '600',
   },
   instructionsContainer: {
@@ -377,7 +369,6 @@ const styles = StyleSheet.create({
   },
   instructionText: {
     ...Typography.body,
-    color: Colors.textPrimary,
     flex: 1,
   },
   resendButton: {

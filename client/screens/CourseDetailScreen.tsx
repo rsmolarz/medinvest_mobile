@@ -21,6 +21,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 
 import { ThemedText } from '@/components/ThemedText';
 import { Colors, Spacing, BorderRadius, Typography, Shadows } from '@/constants/theme';
+import { useAppColors } from '@/hooks/useAppColors';
 import { contentApi } from '@/lib/api';
 import { Course, Lesson } from '@/types';
 import { formatDuration } from '@/lib/utils';
@@ -36,6 +37,7 @@ export default function CourseDetailScreen() {
   const route = useRoute<RouteProp<CourseDetailRouteParams, 'CourseDetail'>>();
   const { courseId } = route.params;
   const queryClient = useQueryClient();
+  const appColors = useAppColors();
 
   // Fetch course details
   const {
@@ -85,7 +87,7 @@ export default function CourseDetailScreen() {
     return (
       <TouchableOpacity
         key={lesson.id}
-        style={[styles.lessonItem, isLocked && styles.lessonLocked]}
+        style={[styles.lessonItem, { borderBottomColor: appColors.border }, isLocked && styles.lessonLocked]}
         onPress={() => !isLocked && handleLessonPress(lesson)}
         disabled={isLocked}
       >
@@ -93,16 +95,16 @@ export default function CourseDetailScreen() {
           {isCompleted ? (
             <Ionicons name="checkmark-circle" size={24} color={Colors.secondary} />
           ) : (
-            <ThemedText style={styles.lessonNumberText}>{index + 1}</ThemedText>
+            <ThemedText style={[styles.lessonNumberText, { color: appColors.textSecondary }]}>{index + 1}</ThemedText>
           )}
         </View>
         <View style={styles.lessonContent}>
-          <ThemedText style={[styles.lessonTitle, isLocked && styles.lessonTitleLocked]}>
+          <ThemedText style={[styles.lessonTitle, { color: appColors.textPrimary }, isLocked && { color: appColors.textSecondary }]}>
             {lesson.title}
           </ThemedText>
           <View style={styles.lessonMeta}>
-            <Ionicons name="time-outline" size={14} color={Colors.textSecondary} />
-            <ThemedText style={styles.lessonDuration}>
+            <Ionicons name="time-outline" size={14} color={appColors.textSecondary} />
+            <ThemedText style={[styles.lessonDuration, { color: appColors.textSecondary }]}>
               {formatDuration(lesson.duration_minutes)}
             </ThemedText>
             {lesson.is_preview && (
@@ -113,7 +115,7 @@ export default function CourseDetailScreen() {
           </View>
         </View>
         {isLocked ? (
-          <Ionicons name="lock-closed" size={20} color={Colors.textSecondary} />
+          <Ionicons name="lock-closed" size={20} color={appColors.textSecondary} />
         ) : (
           <Ionicons name="play-circle-outline" size={24} color={Colors.primary} />
         )}
@@ -123,7 +125,7 @@ export default function CourseDetailScreen() {
 
   if (isLoading) {
     return (
-      <SafeAreaView style={styles.loadingContainer}>
+      <SafeAreaView style={[styles.loadingContainer, { backgroundColor: appColors.background }]}>
         <ActivityIndicator size="large" color={Colors.primary} />
       </SafeAreaView>
     );
@@ -131,7 +133,7 @@ export default function CourseDetailScreen() {
 
   if (!course) {
     return (
-      <SafeAreaView style={styles.loadingContainer}>
+      <SafeAreaView style={[styles.loadingContainer, { backgroundColor: appColors.background }]}>
         <ThemedText>Course not found</ThemedText>
       </SafeAreaView>
     );
@@ -142,15 +144,15 @@ export default function CourseDetailScreen() {
   const progress = course.lessons?.length ? (completedLessons / course.lessons.length) * 100 : 0;
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: appColors.background }]} edges={['top']}>
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { backgroundColor: appColors.surface, borderBottomColor: appColors.border }]}>
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <Ionicons name="chevron-back" size={24} color={Colors.textPrimary} />
+          <Ionicons name="chevron-back" size={24} color={appColors.textPrimary} />
         </TouchableOpacity>
-        <ThemedText style={styles.headerTitle}>Course</ThemedText>
+        <ThemedText style={[styles.headerTitle, { color: appColors.textPrimary }]}>Course</ThemedText>
         <TouchableOpacity style={styles.shareButton}>
-          <Ionicons name="share-outline" size={24} color={Colors.textPrimary} />
+          <Ionicons name="share-outline" size={24} color={appColors.textPrimary} />
         </TouchableOpacity>
       </View>
 
@@ -180,30 +182,30 @@ export default function CourseDetailScreen() {
         )}
 
         {/* Course Info */}
-        <View style={styles.courseInfo}>
+        <View style={[styles.courseInfo, { backgroundColor: appColors.surface }]}>
           <View style={styles.categoryBadge}>
             <ThemedText style={styles.categoryText}>{course.category}</ThemedText>
           </View>
-          <ThemedText style={styles.courseTitle}>{course.title}</ThemedText>
-          <ThemedText style={styles.courseDescription}>{course.description}</ThemedText>
+          <ThemedText style={[styles.courseTitle, { color: appColors.textPrimary }]}>{course.title}</ThemedText>
+          <ThemedText style={[styles.courseDescription, { color: appColors.textSecondary }]}>{course.description}</ThemedText>
 
           {/* Stats */}
-          <View style={styles.statsRow}>
+          <View style={[styles.statsRow, { borderTopColor: appColors.border }]}>
             <View style={styles.statItem}>
               <Ionicons name="book-outline" size={18} color={Colors.primary} />
-              <ThemedText style={styles.statText}>
+              <ThemedText style={[styles.statText, { color: appColors.textSecondary }]}>
                 {course.lessons?.length || 0} lessons
               </ThemedText>
             </View>
             <View style={styles.statItem}>
               <Ionicons name="time-outline" size={18} color={Colors.primary} />
-              <ThemedText style={styles.statText}>
+              <ThemedText style={[styles.statText, { color: appColors.textSecondary }]}>
                 {formatDuration(totalDuration)}
               </ThemedText>
             </View>
             <View style={styles.statItem}>
               <Ionicons name="people-outline" size={18} color={Colors.primary} />
-              <ThemedText style={styles.statText}>
+              <ThemedText style={[styles.statText, { color: appColors.textSecondary }]}>
                 {course.enrolled_count} enrolled
               </ThemedText>
             </View>
@@ -224,23 +226,23 @@ export default function CourseDetailScreen() {
               </View>
             )}
             <View style={styles.instructorInfo}>
-              <ThemedText style={styles.instructorLabel}>Instructor</ThemedText>
-              <ThemedText style={styles.instructorName}>{course.instructor.full_name}</ThemedText>
+              <ThemedText style={[styles.instructorLabel, { color: appColors.textSecondary }]}>Instructor</ThemedText>
+              <ThemedText style={[styles.instructorName, { color: appColors.textPrimary }]}>{course.instructor.full_name}</ThemedText>
             </View>
-            <Ionicons name="chevron-forward" size={20} color={Colors.textSecondary} />
+            <Ionicons name="chevron-forward" size={20} color={appColors.textSecondary} />
           </TouchableOpacity>
 
           {/* Progress (if enrolled) */}
           {course.is_enrolled && (
             <View style={styles.progressSection}>
               <View style={styles.progressHeader}>
-                <ThemedText style={styles.progressLabel}>Your Progress</ThemedText>
+                <ThemedText style={[styles.progressLabel, { color: appColors.textSecondary }]}>Your Progress</ThemedText>
                 <ThemedText style={styles.progressPercent}>{Math.round(progress)}%</ThemedText>
               </View>
               <View style={styles.progressBar}>
                 <View style={[styles.progressFill, { width: `${progress}%` }]} />
               </View>
-              <ThemedText style={styles.progressText}>
+              <ThemedText style={[styles.progressText, { color: appColors.textSecondary }]}>
                 {completedLessons} of {course.lessons?.length} lessons completed
               </ThemedText>
             </View>
@@ -248,19 +250,19 @@ export default function CourseDetailScreen() {
         </View>
 
         {/* Lessons */}
-        <View style={styles.lessonsSection}>
-          <ThemedText style={styles.lessonsTitle}>Course Content</ThemedText>
+        <View style={[styles.lessonsSection, { backgroundColor: appColors.surface }]}>
+          <ThemedText style={[styles.lessonsTitle, { color: appColors.textPrimary }]}>Course Content</ThemedText>
           {course.lessons?.map((lesson, index) => renderLesson(lesson, index))}
         </View>
 
         {/* What You'll Learn */}
         {course.learning_points && course.learning_points.length > 0 && (
-          <View style={styles.learningSection}>
-            <ThemedText style={styles.learningSectionTitle}>What You'll Learn</ThemedText>
+          <View style={[styles.learningSection, { backgroundColor: appColors.surface }]}>
+            <ThemedText style={[styles.learningSectionTitle, { color: appColors.textPrimary }]}>What You'll Learn</ThemedText>
             {course.learning_points.map((point, index) => (
               <View key={index} style={styles.learningPoint}>
                 <Ionicons name="checkmark-circle" size={18} color={Colors.secondary} />
-                <ThemedText style={styles.learningPointText}>{point}</ThemedText>
+                <ThemedText style={[styles.learningPointText, { color: appColors.textPrimary }]}>{point}</ThemedText>
               </View>
             ))}
           </View>
@@ -269,7 +271,7 @@ export default function CourseDetailScreen() {
 
       {/* Enroll Button */}
       {!course.is_enrolled && (
-        <View style={styles.footer}>
+        <View style={[styles.footer, { backgroundColor: appColors.surface, borderTopColor: appColors.border }]}>
           <TouchableOpacity
             style={styles.enrollButton}
             onPress={handleEnroll}
@@ -302,13 +304,11 @@ export default function CourseDetailScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
   },
   loadingContainer: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: Colors.background,
   },
   header: {
     flexDirection: 'row',
@@ -316,16 +316,13 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.sm,
-    backgroundColor: Colors.surface,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
   },
   backButton: {
     padding: Spacing.sm,
   },
   headerTitle: {
     ...Typography.heading,
-    color: Colors.textPrimary,
   },
   shareButton: {
     padding: Spacing.sm,
@@ -346,7 +343,6 @@ const styles = StyleSheet.create({
   },
   courseInfo: {
     padding: Spacing.lg,
-    backgroundColor: Colors.surface,
   },
   categoryBadge: {
     alignSelf: 'flex-start',
@@ -363,12 +359,10 @@ const styles = StyleSheet.create({
   },
   courseTitle: {
     ...Typography.title,
-    color: Colors.textPrimary,
     marginBottom: Spacing.sm,
   },
   courseDescription: {
     ...Typography.body,
-    color: Colors.textSecondary,
     lineHeight: 22,
   },
   statsRow: {
@@ -376,7 +370,6 @@ const styles = StyleSheet.create({
     marginTop: Spacing.lg,
     paddingTop: Spacing.lg,
     borderTopWidth: 1,
-    borderTopColor: Colors.border,
   },
   statItem: {
     flex: 1,
@@ -386,7 +379,6 @@ const styles = StyleSheet.create({
   },
   statText: {
     ...Typography.caption,
-    color: Colors.textSecondary,
   },
   instructorSection: {
     flexDirection: 'row',
@@ -417,12 +409,10 @@ const styles = StyleSheet.create({
   },
   instructorLabel: {
     ...Typography.small,
-    color: Colors.textSecondary,
   },
   instructorName: {
     ...Typography.body,
     fontWeight: '600',
-    color: Colors.textPrimary,
   },
   progressSection: {
     marginTop: Spacing.lg,
@@ -437,7 +427,6 @@ const styles = StyleSheet.create({
   },
   progressLabel: {
     ...Typography.caption,
-    color: Colors.textSecondary,
   },
   progressPercent: {
     ...Typography.caption,
@@ -457,16 +446,13 @@ const styles = StyleSheet.create({
   },
   progressText: {
     ...Typography.small,
-    color: Colors.textSecondary,
   },
   lessonsSection: {
     padding: Spacing.lg,
-    backgroundColor: Colors.surface,
     marginTop: Spacing.md,
   },
   lessonsTitle: {
     ...Typography.heading,
-    color: Colors.textPrimary,
     marginBottom: Spacing.lg,
   },
   lessonItem: {
@@ -474,7 +460,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: Spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
   },
   lessonLocked: {
     opacity: 0.6,
@@ -491,18 +476,13 @@ const styles = StyleSheet.create({
   lessonNumberText: {
     ...Typography.caption,
     fontWeight: '600',
-    color: Colors.textSecondary,
   },
   lessonContent: {
     flex: 1,
   },
   lessonTitle: {
     ...Typography.body,
-    color: Colors.textPrimary,
     fontWeight: '500',
-  },
-  lessonTitleLocked: {
-    color: Colors.textSecondary,
   },
   lessonMeta: {
     flexDirection: 'row',
@@ -512,7 +492,6 @@ const styles = StyleSheet.create({
   },
   lessonDuration: {
     ...Typography.small,
-    color: Colors.textSecondary,
   },
   previewBadge: {
     backgroundColor: Colors.primary + '20',
@@ -528,13 +507,11 @@ const styles = StyleSheet.create({
   },
   learningSection: {
     padding: Spacing.lg,
-    backgroundColor: Colors.surface,
     marginTop: Spacing.md,
     marginBottom: Spacing.xl,
   },
   learningSectionTitle: {
     ...Typography.heading,
-    color: Colors.textPrimary,
     marginBottom: Spacing.lg,
   },
   learningPoint: {
@@ -545,14 +522,11 @@ const styles = StyleSheet.create({
   },
   learningPointText: {
     ...Typography.body,
-    color: Colors.textPrimary,
     flex: 1,
   },
   footer: {
     padding: Spacing.lg,
-    backgroundColor: Colors.surface,
     borderTopWidth: 1,
-    borderTopColor: Colors.border,
   },
   enrollButton: {
     borderRadius: BorderRadius.md,

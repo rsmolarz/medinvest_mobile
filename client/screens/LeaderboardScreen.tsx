@@ -20,6 +20,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 
 import { ThemedText } from '@/components/ThemedText';
 import { Colors, Spacing, BorderRadius, Typography, Shadows } from '@/constants/theme';
+import { useAppColors } from '@/hooks/useAppColors';
 import { gamificationApi } from '@/lib/api';
 import { LeaderboardEntry } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
@@ -31,6 +32,7 @@ export default function LeaderboardScreen() {
   const navigation = useNavigation<any>();
   const { user: currentUser } = useAuth();
   const [period, setPeriod] = useState<Period>('weekly');
+  const appColors = useAppColors();
 
   const {
     data: leaderboard,
@@ -58,7 +60,7 @@ export default function LeaderboardScreen() {
       case 1: return '#FFD700';
       case 2: return '#C0C0C0';
       case 3: return '#CD7F32';
-      default: return Colors.textSecondary;
+      default: return appColors.textSecondary;
     }
   };
 
@@ -66,7 +68,7 @@ export default function LeaderboardScreen() {
     if (rank <= 3) {
       return <MaterialCommunityIcons name="trophy" size={24} color={getRankColor(rank)} />;
     }
-    return <ThemedText style={styles.rankNumber}>{rank}</ThemedText>;
+    return <ThemedText style={[styles.rankNumber, { color: appColors.textSecondary }]}>{rank}</ThemedText>;
   };
 
   const renderTopThree = () => {
@@ -76,7 +78,7 @@ export default function LeaderboardScreen() {
     const [first, second, third] = top3;
 
     return (
-      <View style={styles.topThreeContainer}>
+      <View style={[styles.topThreeContainer, { backgroundColor: appColors.surface }]}>
         {/* Second Place */}
         <View style={styles.topThreeItem}>
           <View style={[styles.topThreeAvatar, styles.secondPlace]}>
@@ -87,14 +89,14 @@ export default function LeaderboardScreen() {
                 {second.user.first_name[0]}{second.user.last_name[0]}
               </ThemedText>
             )}
-            <View style={[styles.topThreeBadge, { backgroundColor: '#C0C0C0' }]}>
+            <View style={[styles.topThreeBadge, { backgroundColor: '#C0C0C0', borderColor: appColors.surface }]}>
               <ThemedText style={styles.topThreeBadgeText}>2</ThemedText>
             </View>
           </View>
-          <ThemedText style={styles.topThreeName} numberOfLines={1}>
+          <ThemedText style={[styles.topThreeName, { color: appColors.textPrimary }]} numberOfLines={1}>
             {second.user.first_name}
           </ThemedText>
-          <ThemedText style={styles.topThreePoints}>{formatNumber(second.points)}</ThemedText>
+          <ThemedText style={[styles.topThreePoints, { color: appColors.textSecondary }]}>{formatNumber(second.points)}</ThemedText>
         </View>
 
         {/* First Place */}
@@ -107,14 +109,14 @@ export default function LeaderboardScreen() {
                 {first.user.first_name[0]}{first.user.last_name[0]}
               </ThemedText>
             )}
-            <View style={[styles.topThreeBadge, { backgroundColor: '#FFD700' }]}>
+            <View style={[styles.topThreeBadge, { backgroundColor: '#FFD700', borderColor: appColors.surface }]}>
               <MaterialCommunityIcons name="crown" size={14} color="white" />
             </View>
           </View>
-          <ThemedText style={styles.topThreeName} numberOfLines={1}>
+          <ThemedText style={[styles.topThreeName, { color: appColors.textPrimary }]} numberOfLines={1}>
             {first.user.first_name}
           </ThemedText>
-          <ThemedText style={styles.topThreePoints}>{formatNumber(first.points)}</ThemedText>
+          <ThemedText style={[styles.topThreePoints, { color: appColors.textSecondary }]}>{formatNumber(first.points)}</ThemedText>
         </View>
 
         {/* Third Place */}
@@ -127,14 +129,14 @@ export default function LeaderboardScreen() {
                 {third.user.first_name[0]}{third.user.last_name[0]}
               </ThemedText>
             )}
-            <View style={[styles.topThreeBadge, { backgroundColor: '#CD7F32' }]}>
+            <View style={[styles.topThreeBadge, { backgroundColor: '#CD7F32', borderColor: appColors.surface }]}>
               <ThemedText style={styles.topThreeBadgeText}>3</ThemedText>
             </View>
           </View>
-          <ThemedText style={styles.topThreeName} numberOfLines={1}>
+          <ThemedText style={[styles.topThreeName, { color: appColors.textPrimary }]} numberOfLines={1}>
             {third.user.first_name}
           </ThemedText>
-          <ThemedText style={styles.topThreePoints}>{formatNumber(third.points)}</ThemedText>
+          <ThemedText style={[styles.topThreePoints, { color: appColors.textSecondary }]}>{formatNumber(third.points)}</ThemedText>
         </View>
       </View>
     );
@@ -145,7 +147,7 @@ export default function LeaderboardScreen() {
 
     return (
       <TouchableOpacity
-        style={[styles.entryItem, isCurrentUser && styles.entryItemCurrent]}
+        style={[styles.entryItem, { backgroundColor: appColors.surface, borderBottomColor: appColors.border }, isCurrentUser && styles.entryItemCurrent]}
         onPress={() => navigation.navigate('UserProfile', { userId: item.user.id })}
       >
         <View style={styles.entryRank}>{getRankIcon(item.rank)}</View>
@@ -159,12 +161,12 @@ export default function LeaderboardScreen() {
           </View>
         )}
         <View style={styles.entryInfo}>
-          <ThemedText style={styles.entryName}>{item.user.full_name}</ThemedText>
-          <ThemedText style={styles.entryLevel}>Level {item.user.level}</ThemedText>
+          <ThemedText style={[styles.entryName, { color: appColors.textPrimary }]}>{item.user.full_name}</ThemedText>
+          <ThemedText style={[styles.entryLevel, { color: appColors.textSecondary }]}>Level {item.user.level}</ThemedText>
         </View>
         <View style={styles.entryPoints}>
           <ThemedText style={styles.entryPointsValue}>{formatNumber(item.points)}</ThemedText>
-          <ThemedText style={styles.entryPointsLabel}>pts</ThemedText>
+          <ThemedText style={[styles.entryPointsLabel, { color: appColors.textSecondary }]}>pts</ThemedText>
         </View>
       </TouchableOpacity>
     );
@@ -173,14 +175,14 @@ export default function LeaderboardScreen() {
   const renderHeader = () => (
     <View>
       {/* Period Selector */}
-      <View style={styles.periodContainer}>
+      <View style={[styles.periodContainer, { backgroundColor: appColors.surface }]}>
         {(['weekly', 'monthly', 'all_time'] as Period[]).map((p) => (
           <TouchableOpacity
             key={p}
             style={[styles.periodButton, period === p && styles.periodButtonActive]}
             onPress={() => setPeriod(p)}
           >
-            <ThemedText style={[styles.periodText, period === p && styles.periodTextActive]}>
+            <ThemedText style={[styles.periodText, { color: appColors.textSecondary }, period === p && styles.periodTextActive]}>
               {p === 'all_time' ? 'All Time' : p.charAt(0).toUpperCase() + p.slice(1)}
             </ThemedText>
           </TouchableOpacity>
@@ -196,16 +198,16 @@ export default function LeaderboardScreen() {
           <ThemedText style={styles.myStatsTitle}>Your Stats</ThemedText>
           <View style={styles.myStatsRow}>
             <View style={styles.myStatItem}>
-              <ThemedText style={styles.myStatValue}>#{myStats.rank}</ThemedText>
-              <ThemedText style={styles.myStatLabel}>Rank</ThemedText>
+              <ThemedText style={[styles.myStatValue, { color: appColors.textPrimary }]}>#{myStats.rank}</ThemedText>
+              <ThemedText style={[styles.myStatLabel, { color: appColors.textSecondary }]}>Rank</ThemedText>
             </View>
             <View style={styles.myStatItem}>
-              <ThemedText style={styles.myStatValue}>{formatNumber(myStats.points)}</ThemedText>
-              <ThemedText style={styles.myStatLabel}>Points</ThemedText>
+              <ThemedText style={[styles.myStatValue, { color: appColors.textPrimary }]}>{formatNumber(myStats.points)}</ThemedText>
+              <ThemedText style={[styles.myStatLabel, { color: appColors.textSecondary }]}>Points</ThemedText>
             </View>
             <View style={styles.myStatItem}>
-              <ThemedText style={styles.myStatValue}>{myStats.streak}</ThemedText>
-              <ThemedText style={styles.myStatLabel}>Streak</ThemedText>
+              <ThemedText style={[styles.myStatValue, { color: appColors.textPrimary }]}>{myStats.streak}</ThemedText>
+              <ThemedText style={[styles.myStatLabel, { color: appColors.textSecondary }]}>Streak</ThemedText>
             </View>
           </View>
         </View>
@@ -213,19 +215,19 @@ export default function LeaderboardScreen() {
 
       {/* Rankings Header */}
       <View style={styles.rankingsHeader}>
-        <ThemedText style={styles.rankingsTitle}>Rankings</ThemedText>
+        <ThemedText style={[styles.rankingsTitle, { color: appColors.textSecondary }]}>Rankings</ThemedText>
       </View>
     </View>
   );
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: appColors.background }]} edges={['top']}>
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { backgroundColor: appColors.surface, borderBottomColor: appColors.border }]}>
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <Ionicons name="chevron-back" size={24} color={Colors.textPrimary} />
+          <Ionicons name="chevron-back" size={24} color={appColors.textPrimary} />
         </TouchableOpacity>
-        <ThemedText style={styles.headerTitle}>Leaderboard</ThemedText>
+        <ThemedText style={[styles.headerTitle, { color: appColors.textPrimary }]}>Leaderboard</ThemedText>
         <View style={styles.backButton} />
       </View>
 
@@ -252,7 +254,6 @@ export default function LeaderboardScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
   },
   header: {
     flexDirection: 'row',
@@ -260,9 +261,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.sm,
-    backgroundColor: Colors.surface,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
   },
   backButton: {
     width: 40,
@@ -270,7 +269,6 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     ...Typography.heading,
-    color: Colors.textPrimary,
   },
   listContent: {
     paddingBottom: Spacing.xl,
@@ -278,7 +276,6 @@ const styles = StyleSheet.create({
   periodContainer: {
     flexDirection: 'row',
     padding: Spacing.md,
-    backgroundColor: Colors.surface,
     gap: Spacing.sm,
   },
   periodButton: {
@@ -293,7 +290,6 @@ const styles = StyleSheet.create({
   },
   periodText: {
     ...Typography.caption,
-    color: Colors.textSecondary,
     fontWeight: '500',
   },
   periodTextActive: {
@@ -305,7 +301,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'flex-end',
     padding: Spacing.xl,
-    backgroundColor: Colors.surface,
   },
   topThreeItem: {
     alignItems: 'center',
@@ -352,7 +347,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
-    borderColor: Colors.surface,
   },
   topThreeBadgeText: {
     ...Typography.small,
@@ -362,12 +356,10 @@ const styles = StyleSheet.create({
   topThreeName: {
     ...Typography.caption,
     fontWeight: '600',
-    color: Colors.textPrimary,
     marginTop: Spacing.sm,
   },
   topThreePoints: {
     ...Typography.small,
-    color: Colors.textSecondary,
   },
   myStatsContainer: {
     margin: Spacing.md,
@@ -390,11 +382,9 @@ const styles = StyleSheet.create({
   },
   myStatValue: {
     ...Typography.heading,
-    color: Colors.textPrimary,
   },
   myStatLabel: {
     ...Typography.small,
-    color: Colors.textSecondary,
   },
   rankingsHeader: {
     padding: Spacing.lg,
@@ -403,7 +393,6 @@ const styles = StyleSheet.create({
   rankingsTitle: {
     ...Typography.caption,
     fontWeight: '600',
-    color: Colors.textSecondary,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
@@ -411,9 +400,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     padding: Spacing.lg,
-    backgroundColor: Colors.surface,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
   },
   entryItemCurrent: {
     backgroundColor: Colors.primary + '08',
@@ -426,7 +413,6 @@ const styles = StyleSheet.create({
   rankNumber: {
     ...Typography.body,
     fontWeight: '600',
-    color: Colors.textSecondary,
   },
   entryAvatar: {
     width: 44,
@@ -450,11 +436,9 @@ const styles = StyleSheet.create({
   entryName: {
     ...Typography.body,
     fontWeight: '600',
-    color: Colors.textPrimary,
   },
   entryLevel: {
     ...Typography.small,
-    color: Colors.textSecondary,
   },
   entryPoints: {
     alignItems: 'flex-end',
@@ -466,6 +450,5 @@ const styles = StyleSheet.create({
   },
   entryPointsLabel: {
     ...Typography.small,
-    color: Colors.textSecondary,
   },
 });

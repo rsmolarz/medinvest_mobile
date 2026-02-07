@@ -20,6 +20,7 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 
 import { ThemedText } from '@/components/ThemedText';
 import { Colors, Spacing, BorderRadius, Typography } from '@/constants/theme';
+import { useAppColors } from '@/hooks/useAppColors';
 import { useAuth } from '@/contexts/AuthContext';
 import { subscriptionApi } from '@/lib/api';
 
@@ -49,35 +50,36 @@ function SettingItem({
   danger,
 }: SettingItemProps) {
   const IconComponent = iconFamily === 'material' ? MaterialCommunityIcons : Ionicons;
+  const appColors = useAppColors();
 
   return (
     <TouchableOpacity
-      style={styles.settingItem}
+      style={[styles.settingItem, { borderBottomColor: appColors.border }]}
       onPress={onPress}
       disabled={isSwitch}
     >
-      <View style={[styles.settingIcon, danger && styles.settingIconDanger]}>
+      <View style={[styles.settingIcon, danger && { backgroundColor: appColors.error + '15' }]}>
         <IconComponent
           name={icon as any}
           size={20}
-          color={danger ? Colors.error : Colors.primary}
+          color={danger ? appColors.error : Colors.primary}
         />
       </View>
       <View style={styles.settingContent}>
-        <ThemedText style={[styles.settingLabel, danger && styles.settingLabelDanger]}>
+        <ThemedText style={[styles.settingLabel, { color: appColors.textPrimary }, danger && { color: appColors.error }]}>
           {label}
         </ThemedText>
-        {value && <ThemedText style={styles.settingValue}>{value}</ThemedText>}
+        {value && <ThemedText style={[styles.settingValue, { color: appColors.textSecondary }]}>{value}</ThemedText>}
       </View>
       {isSwitch ? (
         <Switch
           value={switchValue}
           onValueChange={onSwitchChange}
-          trackColor={{ false: Colors.border, true: Colors.primary + '50' }}
+          trackColor={{ false: appColors.border, true: Colors.primary + '50' }}
           thumbColor={switchValue ? Colors.primary : Colors.light.backgroundTertiary}
         />
       ) : showArrow ? (
-        <Ionicons name="chevron-forward" size={20} color={Colors.textSecondary} />
+        <Ionicons name="chevron-forward" size={20} color={appColors.textSecondary} />
       ) : null}
     </TouchableOpacity>
   );
@@ -86,6 +88,7 @@ function SettingItem({
 export default function SettingsScreen() {
   const navigation = useNavigation<any>();
   const { user, logout, changePassword } = useAuth();
+  const appColors = useAppColors();
 
   // Notification preferences
   const [pushEnabled, setPushEnabled] = useState(true);
@@ -122,7 +125,6 @@ export default function SettingsScreen() {
           text: 'Delete',
           style: 'destructive',
           onPress: () => {
-            // TODO: Implement account deletion
             Alert.alert('Contact Support', 'Please contact support to delete your account.');
           },
         },
@@ -177,21 +179,21 @@ export default function SettingsScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: appColors.background }]} edges={['top']}>
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { backgroundColor: appColors.surface, borderBottomColor: appColors.border }]}>
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <Ionicons name="chevron-back" size={24} color={Colors.textPrimary} />
+          <Ionicons name="chevron-back" size={24} color={appColors.textPrimary} />
         </TouchableOpacity>
-        <ThemedText style={styles.headerTitle}>Settings</ThemedText>
+        <ThemedText style={[styles.headerTitle, { color: appColors.textPrimary }]}>Settings</ThemedText>
         <View style={styles.backButton} />
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* Account Section */}
         <View style={styles.section}>
-          <ThemedText style={styles.sectionTitle}>Account</ThemedText>
-          <View style={styles.sectionContent}>
+          <ThemedText style={[styles.sectionTitle, { color: appColors.textSecondary }]}>Account</ThemedText>
+          <View style={[styles.sectionContent, { backgroundColor: appColors.surface, borderColor: appColors.border }]}>
             <SettingItem
               icon="person-outline"
               label="Edit Profile"
@@ -218,8 +220,8 @@ export default function SettingsScreen() {
 
         {/* Subscription Section */}
         <View style={styles.section}>
-          <ThemedText style={styles.sectionTitle}>Subscription</ThemedText>
-          <View style={styles.sectionContent}>
+          <ThemedText style={[styles.sectionTitle, { color: appColors.textSecondary }]}>Subscription</ThemedText>
+          <View style={[styles.sectionContent, { backgroundColor: appColors.surface, borderColor: appColors.border }]}>
             <SettingItem
               icon="crown"
               iconFamily="material"
@@ -239,8 +241,8 @@ export default function SettingsScreen() {
 
         {/* Notifications Section */}
         <View style={styles.section}>
-          <ThemedText style={styles.sectionTitle}>Notifications</ThemedText>
-          <View style={styles.sectionContent}>
+          <ThemedText style={[styles.sectionTitle, { color: appColors.textSecondary }]}>Notifications</ThemedText>
+          <View style={[styles.sectionContent, { backgroundColor: appColors.surface, borderColor: appColors.border }]}>
             <SettingItem
               icon="notifications-outline"
               label="Push Notifications"
@@ -265,8 +267,8 @@ export default function SettingsScreen() {
 
         {/* Privacy Section */}
         <View style={styles.section}>
-          <ThemedText style={styles.sectionTitle}>Privacy</ThemedText>
-          <View style={styles.sectionContent}>
+          <ThemedText style={[styles.sectionTitle, { color: appColors.textSecondary }]}>Privacy</ThemedText>
+          <View style={[styles.sectionContent, { backgroundColor: appColors.surface, borderColor: appColors.border }]}>
             <SettingItem
               icon="eye-off-outline"
               label="Private Profile"
@@ -289,8 +291,8 @@ export default function SettingsScreen() {
 
         {/* Appearance Section */}
         <View style={styles.section}>
-          <ThemedText style={styles.sectionTitle}>Appearance</ThemedText>
-          <View style={styles.sectionContent}>
+          <ThemedText style={[styles.sectionTitle, { color: appColors.textSecondary }]}>Appearance</ThemedText>
+          <View style={[styles.sectionContent, { backgroundColor: appColors.surface, borderColor: appColors.border }]}>
             <SettingItem
               icon="moon-outline"
               label="Dark Mode"
@@ -303,8 +305,8 @@ export default function SettingsScreen() {
 
         {/* Support Section */}
         <View style={styles.section}>
-          <ThemedText style={styles.sectionTitle}>Support</ThemedText>
-          <View style={styles.sectionContent}>
+          <ThemedText style={[styles.sectionTitle, { color: appColors.textSecondary }]}>Support</ThemedText>
+          <View style={[styles.sectionContent, { backgroundColor: appColors.surface, borderColor: appColors.border }]}>
             <SettingItem
               icon="help-circle-outline"
               label="Help Center"
@@ -330,7 +332,7 @@ export default function SettingsScreen() {
 
         {/* Account Actions */}
         <View style={styles.section}>
-          <View style={styles.sectionContent}>
+          <View style={[styles.sectionContent, { backgroundColor: appColors.surface, borderColor: appColors.border }]}>
             <SettingItem
               icon="log-out-outline"
               label="Sign Out"
@@ -349,8 +351,8 @@ export default function SettingsScreen() {
 
         {/* App Info */}
         <View style={styles.appInfo}>
-          <ThemedText style={styles.appVersion}>MedInvest v1.0.0</ThemedText>
-          <ThemedText style={styles.appCopyright}>© 2024 MedInvest Inc.</ThemedText>
+          <ThemedText style={[styles.appVersion, { color: appColors.textSecondary }]}>MedInvest v1.0.0</ThemedText>
+          <ThemedText style={[styles.appCopyright, { color: appColors.textSecondary }]}>© 2024 MedInvest Inc.</ThemedText>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -360,7 +362,6 @@ export default function SettingsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
   },
   header: {
     flexDirection: 'row',
@@ -368,9 +369,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.md,
-    backgroundColor: Colors.surface,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
   },
   backButton: {
     width: 40,
@@ -380,7 +379,6 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     ...Typography.heading,
-    color: Colors.textPrimary,
   },
   content: {
     flex: 1,
@@ -390,7 +388,6 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     ...Typography.caption,
-    color: Colors.textSecondary,
     fontWeight: '600',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
@@ -398,10 +395,8 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.sm,
   },
   sectionContent: {
-    backgroundColor: Colors.surface,
     borderTopWidth: 1,
     borderBottomWidth: 1,
-    borderColor: Colors.border,
   },
   settingItem: {
     flexDirection: 'row',
@@ -409,7 +404,6 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.md,
     paddingHorizontal: Spacing.lg,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
   },
   settingIcon: {
     width: 36,
@@ -420,22 +414,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginRight: Spacing.md,
   },
-  settingIconDanger: {
-    backgroundColor: Colors.error + '15',
-  },
   settingContent: {
     flex: 1,
   },
   settingLabel: {
     ...Typography.body,
-    color: Colors.textPrimary,
-  },
-  settingLabelDanger: {
-    color: Colors.error,
   },
   settingValue: {
     ...Typography.small,
-    color: Colors.textSecondary,
     marginTop: 2,
   },
   appInfo: {
@@ -444,11 +430,9 @@ const styles = StyleSheet.create({
   },
   appVersion: {
     ...Typography.caption,
-    color: Colors.textSecondary,
   },
   appCopyright: {
     ...Typography.small,
-    color: Colors.textSecondary,
     marginTop: Spacing.xs,
   },
 });

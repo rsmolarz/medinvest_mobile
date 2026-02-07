@@ -19,11 +19,13 @@ import { useQuery } from '@tanstack/react-query';
 
 import { ThemedText } from '@/components/ThemedText';
 import { Colors, Spacing, BorderRadius, Typography, Shadows } from '@/constants/theme';
+import { useAppColors } from '@/hooks/useAppColors';
 import { messagesApi, Conversation } from '@/lib/api';
 import { formatRelativeTime } from '@/lib/utils';
 
 export default function MessagesScreen() {
   const navigation = useNavigation<any>();
+  const appColors = useAppColors();
 
   const {
     data: conversationsData,
@@ -36,7 +38,7 @@ export default function MessagesScreen() {
       const response = await messagesApi.getConversations();
       return response.data?.conversations || [];
     },
-    refetchInterval: 30000, // Refresh every 30 seconds
+    refetchInterval: 30000,
   });
 
   const conversations = conversationsData || [];
@@ -51,7 +53,7 @@ export default function MessagesScreen() {
 
   const renderConversation = ({ item }: { item: Conversation }) => (
     <TouchableOpacity
-      style={styles.conversationItem}
+      style={[styles.conversationItem, { backgroundColor: appColors.surface, borderBottomColor: appColors.border }]}
       onPress={() => handleConversationPress(item.other_user.id)}
     >
       {/* Avatar */}
@@ -69,7 +71,7 @@ export default function MessagesScreen() {
       <View style={styles.conversationContent}>
         <View style={styles.conversationHeader}>
           <View style={styles.nameContainer}>
-            <ThemedText style={styles.userName} numberOfLines={1}>
+            <ThemedText style={[styles.userName, { color: appColors.textPrimary }]} numberOfLines={1}>
               {item.other_user.full_name}
             </ThemedText>
             {item.other_user.is_verified && (
@@ -77,7 +79,7 @@ export default function MessagesScreen() {
             )}
           </View>
           {item.last_message_at && (
-            <ThemedText style={styles.timestamp}>
+            <ThemedText style={[styles.timestamp, { color: appColors.textSecondary }]}>
               {formatRelativeTime(item.last_message_at)}
             </ThemedText>
           )}
@@ -86,7 +88,8 @@ export default function MessagesScreen() {
           <ThemedText
             style={[
               styles.lastMessage,
-              item.unread_count > 0 && styles.lastMessageUnread,
+              { color: appColors.textSecondary },
+              item.unread_count > 0 && { color: appColors.textPrimary, fontWeight: '500' },
             ]}
             numberOfLines={1}
           >
@@ -106,9 +109,9 @@ export default function MessagesScreen() {
 
   const renderEmpty = () => (
     <View style={styles.emptyContainer}>
-      <Ionicons name="chatbubbles-outline" size={64} color={Colors.textSecondary} />
-      <ThemedText style={styles.emptyTitle}>No messages yet</ThemedText>
-      <ThemedText style={styles.emptySubtitle}>
+      <Ionicons name="chatbubbles-outline" size={64} color={appColors.textSecondary} />
+      <ThemedText style={[styles.emptyTitle, { color: appColors.textPrimary }]}>No messages yet</ThemedText>
+      <ThemedText style={[styles.emptySubtitle, { color: appColors.textSecondary }]}>
         Start a conversation with someone!
       </ThemedText>
       <TouchableOpacity style={styles.emptyButton} onPress={handleNewMessage}>
@@ -118,10 +121,10 @@ export default function MessagesScreen() {
   );
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: appColors.background }]} edges={['top']}>
       {/* Header */}
-      <View style={styles.header}>
-        <ThemedText style={styles.headerTitle}>Messages</ThemedText>
+      <View style={[styles.header, { backgroundColor: appColors.surface, borderBottomColor: appColors.border }]}>
+        <ThemedText style={[styles.headerTitle, { color: appColors.textPrimary }]}>Messages</ThemedText>
         <TouchableOpacity style={styles.newMessageButton} onPress={handleNewMessage}>
           <Ionicons name="create-outline" size={24} color={Colors.primary} />
         </TouchableOpacity>
@@ -150,7 +153,6 @@ export default function MessagesScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
   },
   header: {
     flexDirection: 'row',
@@ -158,13 +160,10 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.md,
-    backgroundColor: Colors.surface,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
   },
   headerTitle: {
     ...Typography.title,
-    color: Colors.textPrimary,
   },
   newMessageButton: {
     padding: Spacing.sm,
@@ -173,9 +172,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     padding: Spacing.lg,
-    backgroundColor: Colors.surface,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
   },
   avatar: {
     width: 56,
@@ -211,12 +208,10 @@ const styles = StyleSheet.create({
   userName: {
     ...Typography.body,
     fontWeight: '600',
-    color: Colors.textPrimary,
     flex: 1,
   },
   timestamp: {
     ...Typography.small,
-    color: Colors.textSecondary,
   },
   messageRow: {
     flexDirection: 'row',
@@ -225,12 +220,7 @@ const styles = StyleSheet.create({
   },
   lastMessage: {
     ...Typography.caption,
-    color: Colors.textSecondary,
     flex: 1,
-  },
-  lastMessageUnread: {
-    color: Colors.textPrimary,
-    fontWeight: '500',
   },
   unreadBadge: {
     backgroundColor: Colors.primary,
@@ -259,12 +249,10 @@ const styles = StyleSheet.create({
   },
   emptyTitle: {
     ...Typography.heading,
-    color: Colors.textPrimary,
     marginTop: Spacing.lg,
   },
   emptySubtitle: {
     ...Typography.body,
-    color: Colors.textSecondary,
     textAlign: 'center',
     marginTop: Spacing.sm,
   },

@@ -21,6 +21,7 @@ import { useQuery } from '@tanstack/react-query';
 
 import { ThemedText } from '@/components/ThemedText';
 import { Colors, Spacing, BorderRadius, Typography } from '@/constants/theme';
+import { useAppColors } from '@/hooks/useAppColors';
 import { searchApi, feedApi } from '@/lib/api';
 import { SearchType, Post, User, Room, TrendingTopic } from '@/types';
 import { formatNumber, debounce } from '@/lib/utils';
@@ -31,6 +32,7 @@ type TabType = 'top' | 'posts' | 'users' | 'rooms' | 'tags';
 export default function SearchScreen() {
   const navigation = useNavigation<any>();
   const inputRef = useRef<TextInput>(null);
+  const appColors = useAppColors();
   
   const [query, setQuery] = useState('');
   const [activeTab, setActiveTab] = useState<TabType>('top');
@@ -93,14 +95,14 @@ export default function SearchScreen() {
   };
 
   const renderTabs = () => (
-    <View style={styles.tabsContainer}>
+    <View style={[styles.tabsContainer, { backgroundColor: appColors.surface, borderBottomColor: appColors.border }]}>
       {(['top', 'posts', 'users', 'rooms', 'tags'] as TabType[]).map((tab) => (
         <TouchableOpacity
           key={tab}
           style={[styles.tab, activeTab === tab && styles.tabActive]}
           onPress={() => setActiveTab(tab)}
         >
-          <ThemedText style={[styles.tabText, activeTab === tab && styles.tabTextActive]}>
+          <ThemedText style={[styles.tabText, { color: appColors.textSecondary }, activeTab === tab && styles.tabTextActive]}>
             {tab.charAt(0).toUpperCase() + tab.slice(1)}
           </ThemedText>
         </TouchableOpacity>
@@ -109,7 +111,7 @@ export default function SearchScreen() {
   );
 
   const renderUserItem = ({ item }: { item: User }) => (
-    <TouchableOpacity style={styles.userItem} onPress={() => handleUserPress(item.id)}>
+    <TouchableOpacity style={[styles.userItem, { backgroundColor: appColors.surface, borderBottomColor: appColors.border }]} onPress={() => handleUserPress(item.id)}>
       {item.avatar_url ? (
         <Image source={{ uri: item.avatar_url }} style={styles.userAvatar} />
       ) : (
@@ -121,33 +123,33 @@ export default function SearchScreen() {
       )}
       <View style={styles.userInfo}>
         <View style={styles.userNameRow}>
-          <ThemedText style={styles.userName}>{item.full_name}</ThemedText>
+          <ThemedText style={[styles.userName, { color: appColors.textPrimary }]}>{item.full_name}</ThemedText>
           {item.is_verified && (
             <Ionicons name="checkmark-circle" size={14} color={Colors.primary} />
           )}
         </View>
         {item.specialty && (
-          <ThemedText style={styles.userSpecialty}>{item.specialty}</ThemedText>
+          <ThemedText style={[styles.userSpecialty, { color: appColors.textSecondary }]}>{item.specialty}</ThemedText>
         )}
-        <ThemedText style={styles.userFollowers}>
+        <ThemedText style={[styles.userFollowers, { color: appColors.textSecondary }]}>
           {formatNumber(item.followers_count)} followers
         </ThemedText>
       </View>
-      <Ionicons name="chevron-forward" size={20} color={Colors.textSecondary} />
+      <Ionicons name="chevron-forward" size={20} color={appColors.textSecondary} />
     </TouchableOpacity>
   );
 
   const renderRoomItem = ({ item }: { item: Room }) => (
-    <TouchableOpacity style={styles.roomItem} onPress={() => handleRoomPress(item.slug)}>
+    <TouchableOpacity style={[styles.roomItem, { backgroundColor: appColors.surface, borderBottomColor: appColors.border }]} onPress={() => handleRoomPress(item.slug)}>
       <View style={[styles.roomIcon, { backgroundColor: item.color + '20' }]}>
         <ThemedText style={styles.roomEmoji}>{item.icon}</ThemedText>
       </View>
       <View style={styles.roomInfo}>
-        <ThemedText style={styles.roomName}>{item.name}</ThemedText>
-        <ThemedText style={styles.roomDescription} numberOfLines={1}>
+        <ThemedText style={[styles.roomName, { color: appColors.textPrimary }]}>{item.name}</ThemedText>
+        <ThemedText style={[styles.roomDescription, { color: appColors.textSecondary }]} numberOfLines={1}>
           {item.description}
         </ThemedText>
-        <ThemedText style={styles.roomMembers}>
+        <ThemedText style={[styles.roomMembers, { color: appColors.textSecondary }]}>
           {formatNumber(item.members_count)} members · {formatNumber(item.posts_count)} posts
         </ThemedText>
       </View>
@@ -160,20 +162,20 @@ export default function SearchScreen() {
   );
 
   const renderHashtagItem = ({ item }: { item: TrendingTopic }) => (
-    <TouchableOpacity style={styles.hashtagItem} onPress={() => handleHashtagPress(item.hashtag)}>
+    <TouchableOpacity style={[styles.hashtagItem, { backgroundColor: appColors.surface, borderBottomColor: appColors.border }]} onPress={() => handleHashtagPress(item.hashtag)}>
       <View style={styles.hashtagIcon}>
         <ThemedText style={styles.hashtagSymbol}>#</ThemedText>
       </View>
       <View style={styles.hashtagInfo}>
-        <ThemedText style={styles.hashtagName}>{item.hashtag}</ThemedText>
-        <ThemedText style={styles.hashtagCount}>
+        <ThemedText style={[styles.hashtagName, { color: appColors.textPrimary }]}>{item.hashtag}</ThemedText>
+        <ThemedText style={[styles.hashtagCount, { color: appColors.textSecondary }]}>
           {formatNumber(item.count)} posts
         </ThemedText>
       </View>
       <Ionicons 
         name={item.trend === 'up' ? 'trending-up' : item.trend === 'down' ? 'trending-down' : 'remove'} 
         size={20} 
-        color={item.trend === 'up' ? Colors.secondary : item.trend === 'down' ? Colors.error : Colors.textSecondary} 
+        color={item.trend === 'up' ? Colors.secondary : item.trend === 'down' ? appColors.error : appColors.textSecondary} 
       />
     </TouchableOpacity>
   );
@@ -183,24 +185,24 @@ export default function SearchScreen() {
       // Show trending topics
       return (
         <View style={styles.trendingContainer}>
-          <ThemedText style={styles.trendingTitle}>Trending Topics</ThemedText>
+          <ThemedText style={[styles.trendingTitle, { color: appColors.textPrimary }]}>Trending Topics</ThemedText>
           {trendingData?.map((topic, index) => (
             <TouchableOpacity
               key={topic.hashtag}
-              style={styles.trendingItem}
+              style={[styles.trendingItem, { borderBottomColor: appColors.border }]}
               onPress={() => handleHashtagPress(topic.hashtag)}
             >
-              <ThemedText style={styles.trendingRank}>{index + 1}</ThemedText>
+              <ThemedText style={[styles.trendingRank, { color: appColors.textSecondary }]}>{index + 1}</ThemedText>
               <View style={styles.trendingInfo}>
-                <ThemedText style={styles.trendingTag}>#{topic.hashtag}</ThemedText>
-                <ThemedText style={styles.trendingCount}>
+                <ThemedText style={[styles.trendingTag, { color: appColors.textPrimary }]}>#{topic.hashtag}</ThemedText>
+                <ThemedText style={[styles.trendingCount, { color: appColors.textSecondary }]}>
                   {formatNumber(topic.count)} posts
                 </ThemedText>
               </View>
               <Ionicons 
                 name={topic.trend === 'up' ? 'trending-up' : 'trending-down'} 
                 size={18} 
-                color={topic.trend === 'up' ? Colors.secondary : Colors.error} 
+                color={topic.trend === 'up' ? Colors.secondary : appColors.error} 
               />
             </TouchableOpacity>
           ))}
@@ -226,7 +228,7 @@ export default function SearchScreen() {
             keyExtractor={(item) => item.id.toString()}
             ListEmptyComponent={
               <View style={styles.emptyContainer}>
-                <ThemedText style={styles.emptyText}>No users found</ThemedText>
+                <ThemedText style={[styles.emptyText, { color: appColors.textSecondary }]}>No users found</ThemedText>
               </View>
             }
           />
@@ -239,7 +241,7 @@ export default function SearchScreen() {
             keyExtractor={(item) => item.id.toString()}
             ListEmptyComponent={
               <View style={styles.emptyContainer}>
-                <ThemedText style={styles.emptyText}>No rooms found</ThemedText>
+                <ThemedText style={[styles.emptyText, { color: appColors.textSecondary }]}>No rooms found</ThemedText>
               </View>
             }
           />
@@ -252,7 +254,7 @@ export default function SearchScreen() {
             keyExtractor={(item) => item.hashtag}
             ListEmptyComponent={
               <View style={styles.emptyContainer}>
-                <ThemedText style={styles.emptyText}>No hashtags found</ThemedText>
+                <ThemedText style={[styles.emptyText, { color: appColors.textSecondary }]}>No hashtags found</ThemedText>
               </View>
             }
           />
@@ -276,7 +278,7 @@ export default function SearchScreen() {
             keyExtractor={(item) => item.id.toString()}
             ListEmptyComponent={
               <View style={styles.emptyContainer}>
-                <ThemedText style={styles.emptyText}>No posts found</ThemedText>
+                <ThemedText style={[styles.emptyText, { color: appColors.textSecondary }]}>No posts found</ThemedText>
               </View>
             }
           />
@@ -285,19 +287,19 @@ export default function SearchScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: appColors.background }]} edges={['top']}>
       {/* Search Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { backgroundColor: appColors.surface, borderBottomColor: appColors.border }]}>
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <Ionicons name="chevron-back" size={24} color={Colors.textPrimary} />
+          <Ionicons name="chevron-back" size={24} color={appColors.textPrimary} />
         </TouchableOpacity>
         <View style={styles.searchInputContainer}>
-          <Ionicons name="search" size={20} color={Colors.textSecondary} />
+          <Ionicons name="search" size={20} color={appColors.textSecondary} />
           <TextInput
             ref={inputRef}
-            style={styles.searchInput}
+            style={[styles.searchInput, { color: appColors.textPrimary }]}
             placeholder="Search MedInvest..."
-            placeholderTextColor={Colors.textSecondary}
+            placeholderTextColor={appColors.textSecondary}
             value={query}
             onChangeText={handleQueryChange}
             autoFocus
@@ -306,7 +308,7 @@ export default function SearchScreen() {
           />
           {query.length > 0 && (
             <TouchableOpacity onPress={handleClear}>
-              <Ionicons name="close-circle" size={20} color={Colors.textSecondary} />
+              <Ionicons name="close-circle" size={20} color={appColors.textSecondary} />
             </TouchableOpacity>
           )}
         </View>
@@ -324,16 +326,13 @@ export default function SearchScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.sm,
-    backgroundColor: Colors.surface,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
   },
   backButton: {
     padding: Spacing.sm,
@@ -352,14 +351,11 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     ...Typography.body,
-    color: Colors.textPrimary,
     height: '100%',
   },
   tabsContainer: {
     flexDirection: 'row',
-    backgroundColor: Colors.surface,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
   },
   tab: {
     flex: 1,
@@ -372,7 +368,6 @@ const styles = StyleSheet.create({
   },
   tabText: {
     ...Typography.caption,
-    color: Colors.textSecondary,
   },
   tabTextActive: {
     color: Colors.primary,
@@ -390,14 +385,12 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     ...Typography.body,
-    color: Colors.textSecondary,
   },
   trendingContainer: {
     padding: Spacing.lg,
   },
   trendingTitle: {
     ...Typography.heading,
-    color: Colors.textPrimary,
     marginBottom: Spacing.lg,
   },
   trendingItem: {
@@ -405,12 +398,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: Spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
   },
   trendingRank: {
     ...Typography.body,
     fontWeight: '700',
-    color: Colors.textSecondary,
     width: 24,
   },
   trendingInfo: {
@@ -420,19 +411,15 @@ const styles = StyleSheet.create({
   trendingTag: {
     ...Typography.body,
     fontWeight: '600',
-    color: Colors.textPrimary,
   },
   trendingCount: {
     ...Typography.small,
-    color: Colors.textSecondary,
   },
   userItem: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: Spacing.lg,
-    backgroundColor: Colors.surface,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
   },
   userAvatar: {
     width: 48,
@@ -461,25 +448,20 @@ const styles = StyleSheet.create({
   userName: {
     ...Typography.body,
     fontWeight: '600',
-    color: Colors.textPrimary,
   },
   userSpecialty: {
     ...Typography.small,
-    color: Colors.textSecondary,
     marginTop: 2,
   },
   userFollowers: {
     ...Typography.small,
-    color: Colors.textSecondary,
     marginTop: 2,
   },
   roomItem: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: Spacing.lg,
-    backgroundColor: Colors.surface,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
   },
   roomIcon: {
     width: 48,
@@ -498,16 +480,13 @@ const styles = StyleSheet.create({
   roomName: {
     ...Typography.body,
     fontWeight: '600',
-    color: Colors.textPrimary,
   },
   roomDescription: {
     ...Typography.small,
-    color: Colors.textSecondary,
     marginTop: 2,
   },
   roomMembers: {
     ...Typography.small,
-    color: Colors.textSecondary,
     marginTop: 2,
   },
   joinButton: {
@@ -525,9 +504,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     padding: Spacing.lg,
-    backgroundColor: Colors.surface,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
   },
   hashtagIcon: {
     width: 48,
@@ -548,11 +525,9 @@ const styles = StyleSheet.create({
   hashtagName: {
     ...Typography.body,
     fontWeight: '600',
-    color: Colors.textPrimary,
   },
   hashtagCount: {
     ...Typography.small,
-    color: Colors.textSecondary,
     marginTop: 2,
   },
 });

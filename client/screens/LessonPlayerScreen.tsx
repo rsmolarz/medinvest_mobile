@@ -20,6 +20,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ThemedText } from '@/components/ThemedText';
 import VideoPlayer from '@/components/VideoPlayer';
 import { Colors, Spacing, BorderRadius, Typography, Shadows } from '@/constants/theme';
+import { useAppColors } from '@/hooks/useAppColors';
 import { coursesApi } from '@/lib/api';
 import { formatDuration } from '@/lib/utils';
 
@@ -52,6 +53,7 @@ interface QuizQuestion {
 
 export default function LessonPlayerScreen() {
   const navigation = useNavigation<any>();
+  const appColors = useAppColors();
   const route = useRoute<RouteProp<LessonPlayerRouteParams, 'LessonPlayer'>>();
   const { courseId, lessonId } = route.params;
   const queryClient = useQueryClient();
@@ -61,7 +63,6 @@ export default function LessonPlayerScreen() {
   const [showQuizResults, setShowQuizResults] = useState(false);
   const [videoCompleted, setVideoCompleted] = useState(false);
 
-  // Fetch lesson
   const {
     data: lesson,
     isLoading,
@@ -73,7 +74,6 @@ export default function LessonPlayerScreen() {
     },
   });
 
-  // Fetch course lessons for navigation
   const { data: courseLessons } = useQuery({
     queryKey: ['courseLessons', courseId],
     queryFn: async () => {
@@ -82,7 +82,6 @@ export default function LessonPlayerScreen() {
     },
   });
 
-  // Complete lesson mutation
   const completeLessonMutation = useMutation({
     mutationFn: async () => {
       return coursesApi.completeLesson(courseId, lessonId);
@@ -93,32 +92,27 @@ export default function LessonPlayerScreen() {
     },
   });
 
-  // Find next/prev lessons
   const currentIndex = courseLessons?.findIndex((l: Lesson) => l.id === lessonId) ?? -1;
   const prevLesson = currentIndex > 0 ? courseLessons?.[currentIndex - 1] : null;
   const nextLesson = currentIndex < (courseLessons?.length ?? 0) - 1 
     ? courseLessons?.[currentIndex + 1] 
     : null;
 
-  // Mark lesson complete
   const handleMarkComplete = useCallback(() => {
     if (!lesson?.is_completed) {
       completeLessonMutation.mutate();
     }
   }, [lesson, completeLessonMutation]);
 
-  // Video completion handler
   const handleVideoEnd = useCallback(() => {
     setVideoCompleted(true);
     handleMarkComplete();
   }, [handleMarkComplete]);
 
-  // Navigate to lesson
   const navigateToLesson = useCallback((nextLessonId: number) => {
     navigation.replace('LessonPlayer', { courseId, lessonId: nextLessonId });
   }, [navigation, courseId]);
 
-  // Quiz handlers
   const handleSelectAnswer = useCallback((optionIndex: number) => {
     const newAnswers = [...selectedAnswers];
     newAnswers[currentQuizIndex] = optionIndex;
@@ -157,7 +151,6 @@ export default function LessonPlayerScreen() {
     setShowQuizResults(false);
   }, []);
 
-  // Render video lesson
   const renderVideoLesson = () => (
     <View style={styles.videoContainer}>
       <VideoPlayer
@@ -168,10 +161,10 @@ export default function LessonPlayerScreen() {
         style={styles.videoPlayer}
       />
       
-      <View style={styles.lessonInfo}>
-        <ThemedText style={styles.lessonTitle}>{lesson!.title}</ThemedText>
+      <View style={[styles.lessonInfo, { backgroundColor: appColors.surface }]}>
+        <ThemedText style={[styles.lessonTitle, { color: appColors.textPrimary }]}>{lesson!.title}</ThemedText>
         {lesson!.description && (
-          <ThemedText style={styles.lessonDescription}>{lesson!.description}</ThemedText>
+          <ThemedText style={[styles.lessonDescription, { color: appColors.textSecondary }]}>{lesson!.description}</ThemedText>
         )}
         
         {(videoCompleted || lesson!.is_completed) && (
@@ -184,21 +177,20 @@ export default function LessonPlayerScreen() {
     </View>
   );
 
-  // Render text lesson
   const renderTextLesson = () => (
     <ScrollView style={styles.textContainer} showsVerticalScrollIndicator={false}>
-      <View style={styles.lessonInfo}>
-        <ThemedText style={styles.lessonTitle}>{lesson!.title}</ThemedText>
+      <View style={[styles.lessonInfo, { backgroundColor: appColors.surface }]}>
+        <ThemedText style={[styles.lessonTitle, { color: appColors.textPrimary }]}>{lesson!.title}</ThemedText>
         {lesson!.duration && (
-          <ThemedText style={styles.readTime}>
-            <Ionicons name="time-outline" size={14} color={Colors.textSecondary} />
+          <ThemedText style={[styles.readTime, { color: appColors.textSecondary }]}>
+            <Ionicons name="time-outline" size={14} color={appColors.textSecondary} />
             {' '}{Math.ceil(lesson!.duration / 60)} min read
           </ThemedText>
         )}
       </View>
       
-      <View style={styles.textContent}>
-        <ThemedText style={styles.contentText}>{lesson!.content}</ThemedText>
+      <View style={[styles.textContent, { backgroundColor: appColors.surface }]}>
+        <ThemedText style={[styles.contentText, { color: appColors.textPrimary }]}>{lesson!.content}</ThemedText>
       </View>
 
       <TouchableOpacity
@@ -221,7 +213,6 @@ export default function LessonPlayerScreen() {
     </ScrollView>
   );
 
-  // Render quiz lesson
   const renderQuizLesson = () => {
     if (showQuizResults) {
       const score = calculateQuizScore();
@@ -230,13 +221,13 @@ export default function LessonPlayerScreen() {
       return (
         <View style={styles.quizResultsContainer}>
           <View style={[styles.scoreCircle, passed ? styles.passedCircle : styles.failedCircle]}>
-            <ThemedText style={styles.scoreText}>{score}%</ThemedText>
+            <ThemedText style={[styles.scoreText, { color: appColors.textPrimary }]}>{score}%</ThemedText>
           </View>
           
-          <ThemedText style={styles.resultTitle}>
+          <ThemedText style={[styles.resultTitle, { color: appColors.textPrimary }]}>
             {passed ? 'Congratulations!' : 'Keep Learning!'}
           </ThemedText>
-          <ThemedText style={styles.resultSubtitle}>
+          <ThemedText style={[styles.resultSubtitle, { color: appColors.textSecondary }]}>
             {passed 
               ? 'You passed the quiz and completed this lesson.' 
               : 'You need 70% to pass. Review the material and try again.'}
@@ -268,7 +259,6 @@ export default function LessonPlayerScreen() {
 
     return (
       <View style={styles.quizContainer}>
-        {/* Progress */}
         <View style={styles.quizProgress}>
           <View style={styles.progressBarBg}>
             <View 
@@ -278,27 +268,27 @@ export default function LessonPlayerScreen() {
               ]} 
             />
           </View>
-          <ThemedText style={styles.progressText}>
+          <ThemedText style={[styles.progressText, { color: appColors.textSecondary }]}>
             {currentQuizIndex + 1} of {totalQuestions}
           </ThemedText>
         </View>
 
-        {/* Question */}
-        <ThemedText style={styles.questionText}>{currentQuestion.question}</ThemedText>
+        <ThemedText style={[styles.questionText, { color: appColors.textPrimary }]}>{currentQuestion.question}</ThemedText>
 
-        {/* Options */}
         <View style={styles.optionsContainer}>
           {currentQuestion.options.map((option, index) => (
             <TouchableOpacity
               key={index}
               style={[
                 styles.optionButton,
+                { backgroundColor: appColors.surface, borderColor: appColors.border },
                 selectedAnswers[currentQuizIndex] === index && styles.optionSelected,
               ]}
               onPress={() => handleSelectAnswer(index)}
             >
               <View style={[
                 styles.optionRadio,
+                { borderColor: appColors.border },
                 selectedAnswers[currentQuizIndex] === index && styles.optionRadioSelected,
               ]}>
                 {selectedAnswers[currentQuizIndex] === index && (
@@ -307,6 +297,7 @@ export default function LessonPlayerScreen() {
               </View>
               <ThemedText style={[
                 styles.optionText,
+                { color: appColors.textPrimary },
                 selectedAnswers[currentQuizIndex] === index && styles.optionTextSelected,
               ]}>
                 {option}
@@ -315,15 +306,14 @@ export default function LessonPlayerScreen() {
           ))}
         </View>
 
-        {/* Navigation */}
         <View style={styles.quizNavigation}>
           <TouchableOpacity
             style={[styles.quizNavButton, currentQuizIndex === 0 && styles.quizNavButtonDisabled]}
             onPress={handlePrevQuestion}
             disabled={currentQuizIndex === 0}
           >
-            <Ionicons name="chevron-back" size={20} color={currentQuizIndex === 0 ? Colors.textSecondary : Colors.primary} />
-            <ThemedText style={[styles.quizNavText, currentQuizIndex === 0 && styles.quizNavTextDisabled]}>
+            <Ionicons name="chevron-back" size={20} color={currentQuizIndex === 0 ? appColors.textSecondary : Colors.primary} />
+            <ThemedText style={[styles.quizNavText, currentQuizIndex === 0 && { color: appColors.textSecondary }]}>
               Previous
             </ThemedText>
           </TouchableOpacity>
@@ -349,7 +339,7 @@ export default function LessonPlayerScreen() {
 
   if (isLoading) {
     return (
-      <SafeAreaView style={styles.loadingContainer}>
+      <SafeAreaView style={[styles.loadingContainer, { backgroundColor: appColors.background }]}>
         <ActivityIndicator size="large" color={Colors.primary} />
       </SafeAreaView>
     );
@@ -357,49 +347,47 @@ export default function LessonPlayerScreen() {
 
   if (!lesson) {
     return (
-      <SafeAreaView style={styles.loadingContainer}>
+      <SafeAreaView style={[styles.loadingContainer, { backgroundColor: appColors.background }]}>
         <ThemedText>Lesson not found</ThemedText>
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: appColors.background }]} edges={['top']}>
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { backgroundColor: appColors.surface, borderBottomColor: appColors.border }]}>
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <Ionicons name="chevron-back" size={24} color={Colors.textPrimary} />
+          <Ionicons name="chevron-back" size={24} color={appColors.textPrimary} />
         </TouchableOpacity>
         <View style={styles.headerInfo}>
-          <ThemedText style={styles.headerTitle} numberOfLines={1}>
+          <ThemedText style={[styles.headerTitle, { color: appColors.textPrimary }]} numberOfLines={1}>
             {lesson.title}
           </ThemedText>
-          <ThemedText style={styles.headerSubtitle}>
+          <ThemedText style={[styles.headerSubtitle, { color: appColors.textSecondary }]}>
             Lesson {currentIndex + 1} of {courseLessons?.length || 0}
           </ThemedText>
         </View>
         <TouchableOpacity style={styles.closeButton} onPress={() => navigation.navigate('CourseDetail', { courseId })}>
-          <Ionicons name="close" size={24} color={Colors.textPrimary} />
+          <Ionicons name="close" size={24} color={appColors.textPrimary} />
         </TouchableOpacity>
       </View>
 
-      {/* Content */}
       <View style={styles.content}>
         {lesson.type === 'video' && renderVideoLesson()}
         {lesson.type === 'text' && renderTextLesson()}
         {lesson.type === 'quiz' && renderQuizLesson()}
       </View>
 
-      {/* Bottom Navigation */}
       {lesson.type !== 'quiz' && (
-        <View style={styles.bottomNav}>
+        <View style={[styles.bottomNav, { backgroundColor: appColors.surface, borderTopColor: appColors.border }]}>
           <TouchableOpacity
             style={[styles.navButton, !prevLesson && styles.navButtonDisabled]}
             onPress={() => prevLesson && navigateToLesson(prevLesson.id)}
             disabled={!prevLesson}
           >
-            <Ionicons name="chevron-back" size={20} color={prevLesson ? Colors.textPrimary : Colors.textSecondary} />
-            <ThemedText style={[styles.navButtonText, !prevLesson && styles.navButtonTextDisabled]}>
+            <Ionicons name="chevron-back" size={20} color={prevLesson ? appColors.textPrimary : appColors.textSecondary} />
+            <ThemedText style={[styles.navButtonText, { color: appColors.textPrimary }, !prevLesson && { color: appColors.textSecondary }]}>
               Previous
             </ThemedText>
           </TouchableOpacity>
@@ -409,10 +397,10 @@ export default function LessonPlayerScreen() {
             onPress={() => nextLesson && navigateToLesson(nextLesson.id)}
             disabled={!nextLesson}
           >
-            <ThemedText style={[styles.navButtonText, styles.navButtonTextNext, !nextLesson && styles.navButtonTextDisabled]}>
+            <ThemedText style={[styles.navButtonText, styles.navButtonTextNext, !nextLesson && { color: appColors.textSecondary }]}>
               Next
             </ThemedText>
-            <Ionicons name="chevron-forward" size={20} color={nextLesson ? 'white' : Colors.textSecondary} />
+            <Ionicons name="chevron-forward" size={20} color={nextLesson ? 'white' : appColors.textSecondary} />
           </TouchableOpacity>
         </View>
       )}
@@ -423,22 +411,18 @@ export default function LessonPlayerScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
   },
   loadingContainer: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: Colors.background,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.sm,
-    backgroundColor: Colors.surface,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
   },
   backButton: {
     padding: Spacing.sm,
@@ -450,11 +434,9 @@ const styles = StyleSheet.create({
   headerTitle: {
     ...Typography.body,
     fontWeight: '600',
-    color: Colors.textPrimary,
   },
   headerSubtitle: {
     ...Typography.small,
-    color: Colors.textSecondary,
   },
   closeButton: {
     padding: Spacing.sm,
@@ -462,7 +444,6 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
   },
-  // Video styles
   videoContainer: {
     flex: 1,
   },
@@ -471,16 +452,13 @@ const styles = StyleSheet.create({
   },
   lessonInfo: {
     padding: Spacing.lg,
-    backgroundColor: Colors.surface,
   },
   lessonTitle: {
     ...Typography.title,
-    color: Colors.textPrimary,
     marginBottom: Spacing.sm,
   },
   lessonDescription: {
     ...Typography.body,
-    color: Colors.textSecondary,
     lineHeight: 24,
   },
   completedBadge: {
@@ -494,22 +472,18 @@ const styles = StyleSheet.create({
     color: Colors.secondary,
     fontWeight: '600',
   },
-  // Text styles
   textContainer: {
     flex: 1,
   },
   readTime: {
     ...Typography.small,
-    color: Colors.textSecondary,
     marginTop: Spacing.xs,
   },
   textContent: {
     padding: Spacing.lg,
-    backgroundColor: Colors.surface,
   },
   contentText: {
     ...Typography.body,
-    color: Colors.textPrimary,
     lineHeight: 28,
   },
   completeButton: {
@@ -534,7 +508,6 @@ const styles = StyleSheet.create({
   completedButtonText: {
     color: Colors.secondary,
   },
-  // Quiz styles
   quizContainer: {
     flex: 1,
     padding: Spacing.lg,
@@ -555,12 +528,10 @@ const styles = StyleSheet.create({
   },
   progressText: {
     ...Typography.small,
-    color: Colors.textSecondary,
     textAlign: 'center',
   },
   questionText: {
     ...Typography.title,
-    color: Colors.textPrimary,
     marginBottom: Spacing.xl,
   },
   optionsContainer: {
@@ -570,10 +541,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     padding: Spacing.lg,
-    backgroundColor: Colors.surface,
     borderRadius: BorderRadius.md,
     borderWidth: 2,
-    borderColor: Colors.border,
   },
   optionSelected: {
     borderColor: Colors.primary,
@@ -584,7 +553,6 @@ const styles = StyleSheet.create({
     height: 24,
     borderRadius: 12,
     borderWidth: 2,
-    borderColor: Colors.border,
     marginRight: Spacing.md,
     alignItems: 'center',
     justifyContent: 'center',
@@ -600,7 +568,6 @@ const styles = StyleSheet.create({
   },
   optionText: {
     ...Typography.body,
-    color: Colors.textPrimary,
     flex: 1,
   },
   optionTextSelected: {
@@ -626,9 +593,6 @@ const styles = StyleSheet.create({
     ...Typography.body,
     color: Colors.primary,
   },
-  quizNavTextDisabled: {
-    color: Colors.textSecondary,
-  },
   quizNextButton: {
     backgroundColor: Colors.primary,
     borderRadius: BorderRadius.md,
@@ -639,7 +603,6 @@ const styles = StyleSheet.create({
     color: 'white',
     fontWeight: '600',
   },
-  // Quiz results
   quizResultsContainer: {
     flex: 1,
     alignItems: 'center',
@@ -658,21 +621,18 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.secondary + '20',
   },
   failedCircle: {
-    backgroundColor: Colors.error + '20',
+    backgroundColor: Colors.light.backgroundSecondary,
   },
   scoreText: {
     fontSize: 36,
     fontWeight: '700',
-    color: Colors.textPrimary,
   },
   resultTitle: {
     ...Typography.title,
-    color: Colors.textPrimary,
     marginBottom: Spacing.sm,
   },
   resultSubtitle: {
     ...Typography.body,
-    color: Colors.textSecondary,
     textAlign: 'center',
     marginBottom: Spacing.xl,
   },
@@ -708,14 +668,11 @@ const styles = StyleSheet.create({
     color: 'white',
     fontWeight: '600',
   },
-  // Bottom nav
   bottomNav: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     padding: Spacing.lg,
-    backgroundColor: Colors.surface,
     borderTopWidth: 1,
-    borderTopColor: Colors.border,
   },
   navButton: {
     flexDirection: 'row',
@@ -733,13 +690,9 @@ const styles = StyleSheet.create({
   },
   navButtonText: {
     ...Typography.body,
-    color: Colors.textPrimary,
   },
   navButtonTextNext: {
     color: 'white',
     fontWeight: '600',
-  },
-  navButtonTextDisabled: {
-    color: Colors.textSecondary,
   },
 });

@@ -24,6 +24,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 
 import { ThemedText } from '@/components/ThemedText';
 import { Colors, Spacing, BorderRadius, Typography, Shadows } from '@/constants/theme';
+import { useAppColors } from '@/hooks/useAppColors';
 import { aiApi } from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
 import { formatRelativeTime } from '@/lib/utils';
@@ -80,6 +81,7 @@ export default function AIChatScreen() {
   const { user } = useAuth();
   const flatListRef = useRef<FlatList>(null);
   const inputRef = useRef<TextInput>(null);
+  const appColors = useAppColors();
 
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState('');
@@ -207,7 +209,7 @@ export default function AIChatScreen() {
           <View style={styles.assistantAvatar}>
             <MaterialCommunityIcons name="robot" size={20} color={Colors.primary} />
           </View>
-          <View style={styles.typingIndicator}>
+          <View style={[styles.typingIndicator, { backgroundColor: appColors.surface }]}>
             <Animated.View
               style={[
                 styles.typingDot,
@@ -253,11 +255,11 @@ export default function AIChatScreen() {
             <MaterialCommunityIcons name="robot" size={20} color={Colors.primary} />
           </View>
         )}
-        <View style={[styles.messageBubble, isUser ? styles.userBubble : styles.assistantBubble]}>
-          <ThemedText style={[styles.messageText, isUser && styles.userMessageText]}>
+        <View style={[styles.messageBubble, isUser ? styles.userBubble : [styles.assistantBubble, { backgroundColor: appColors.surface }]]}>
+          <ThemedText style={[styles.messageText, { color: appColors.textPrimary }, isUser && styles.userMessageText]}>
             {item.content}
           </ThemedText>
-          <ThemedText style={[styles.messageTime, isUser && styles.userMessageTime]}>
+          <ThemedText style={[styles.messageTime, { color: appColors.textSecondary }, isUser && styles.userMessageTime]}>
             {formatRelativeTime(item.timestamp.toISOString())}
           </ThemedText>
         </View>
@@ -288,23 +290,23 @@ export default function AIChatScreen() {
         <MaterialCommunityIcons name="robot" size={48} color="white" />
       </LinearGradient>
 
-      <ThemedText style={styles.emptyTitle}>MedInvest AI Assistant</ThemedText>
-      <ThemedText style={styles.emptySubtitle}>
+      <ThemedText style={[styles.emptyTitle, { color: appColors.textPrimary }]}>MedInvest AI Assistant</ThemedText>
+      <ThemedText style={[styles.emptySubtitle, { color: appColors.textSecondary }]}>
         I'm here to help you with healthcare investment insights, market analysis, and due diligence questions.
       </ThemedText>
 
       {/* Suggested Prompts */}
       <View style={styles.promptsContainer}>
-        <ThemedText style={styles.promptsTitle}>Try asking about:</ThemedText>
+        <ThemedText style={[styles.promptsTitle, { color: appColors.textSecondary }]}>Try asking about:</ThemedText>
         <View style={styles.promptsGrid}>
           {SUGGESTED_PROMPTS.map((prompt, index) => (
             <TouchableOpacity
               key={index}
-              style={styles.promptCard}
+              style={[styles.promptCard, { backgroundColor: appColors.surface }]}
               onPress={() => handlePromptPress(prompt.query)}
             >
               <ThemedText style={styles.promptIcon}>{prompt.icon}</ThemedText>
-              <ThemedText style={styles.promptText}>{prompt.text}</ThemedText>
+              <ThemedText style={[styles.promptText, { color: appColors.textPrimary }]}>{prompt.text}</ThemedText>
             </TouchableOpacity>
           ))}
         </View>
@@ -312,8 +314,8 @@ export default function AIChatScreen() {
 
       {/* Disclaimer */}
       <View style={styles.disclaimerContainer}>
-        <Ionicons name="information-circle-outline" size={16} color={Colors.textSecondary} />
-        <ThemedText style={styles.disclaimerText}>
+        <Ionicons name="information-circle-outline" size={16} color={appColors.textSecondary} />
+        <ThemedText style={[styles.disclaimerText, { color: appColors.textSecondary }]}>
           AI responses are for informational purposes only. Always consult with qualified professionals for investment decisions.
         </ThemedText>
       </View>
@@ -321,29 +323,29 @@ export default function AIChatScreen() {
   );
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: appColors.background }]} edges={['top']}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardView}
         keyboardVerticalOffset={0}
       >
         {/* Header */}
-        <View style={styles.header}>
+        <View style={[styles.header, { backgroundColor: appColors.surface, borderBottomColor: appColors.border }]}>
           <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-            <Ionicons name="chevron-back" size={24} color={Colors.textPrimary} />
+            <Ionicons name="chevron-back" size={24} color={appColors.textPrimary} />
           </TouchableOpacity>
           <View style={styles.headerCenter}>
             <View style={styles.headerAvatar}>
               <MaterialCommunityIcons name="robot" size={20} color={Colors.primary} />
             </View>
             <View>
-              <ThemedText style={styles.headerTitle}>AI Assistant</ThemedText>
-              <ThemedText style={styles.headerSubtitle}>Powered by MedInvest AI</ThemedText>
+              <ThemedText style={[styles.headerTitle, { color: appColors.textPrimary }]}>AI Assistant</ThemedText>
+              <ThemedText style={[styles.headerSubtitle, { color: appColors.textSecondary }]}>Powered by MedInvest AI</ThemedText>
             </View>
           </View>
           {messages.length > 0 && (
             <TouchableOpacity style={styles.clearButton} onPress={handleClearChat}>
-              <Ionicons name="trash-outline" size={20} color={Colors.textSecondary} />
+              <Ionicons name="trash-outline" size={20} color={appColors.textSecondary} />
             </TouchableOpacity>
           )}
         </View>
@@ -363,13 +365,13 @@ export default function AIChatScreen() {
         />
 
         {/* Input */}
-        <View style={styles.inputContainer}>
+        <View style={[styles.inputContainer, { backgroundColor: appColors.surface, borderTopColor: appColors.border }]}>
           <View style={styles.inputWrapper}>
             <TextInput
               ref={inputRef}
-              style={styles.input}
+              style={[styles.input, { color: appColors.textPrimary }]}
               placeholder="Ask about healthcare investments..."
-              placeholderTextColor={Colors.textSecondary}
+              placeholderTextColor={appColors.textSecondary}
               value={inputText}
               onChangeText={setInputText}
               multiline
@@ -383,7 +385,7 @@ export default function AIChatScreen() {
             disabled={!inputText.trim() || sendMessageMutation.isPending}
           >
             <LinearGradient
-              colors={inputText.trim() && !sendMessageMutation.isPending ? [Colors.primary, Colors.secondary] : [Colors.border, Colors.border]}
+              colors={inputText.trim() && !sendMessageMutation.isPending ? [Colors.primary, Colors.secondary] : [appColors.border, appColors.border]}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
               style={styles.sendButtonGradient}
@@ -400,7 +402,6 @@ export default function AIChatScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
   },
   keyboardView: {
     flex: 1,
@@ -410,9 +411,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.sm,
-    backgroundColor: Colors.surface,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
   },
   backButton: {
     padding: Spacing.sm,
@@ -435,11 +434,9 @@ const styles = StyleSheet.create({
   headerTitle: {
     ...Typography.body,
     fontWeight: '600',
-    color: Colors.textPrimary,
   },
   headerSubtitle: {
     ...Typography.small,
-    color: Colors.textSecondary,
   },
   clearButton: {
     padding: Spacing.sm,
@@ -497,13 +494,11 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 4,
   },
   assistantBubble: {
-    backgroundColor: Colors.surface,
     borderBottomLeftRadius: 4,
     ...Shadows.card,
   },
   messageText: {
     ...Typography.body,
-    color: Colors.textPrimary,
     lineHeight: 22,
   },
   userMessageText: {
@@ -511,7 +506,6 @@ const styles = StyleSheet.create({
   },
   messageTime: {
     ...Typography.small,
-    color: Colors.textSecondary,
     marginTop: Spacing.xs,
   },
   userMessageTime: {
@@ -520,7 +514,6 @@ const styles = StyleSheet.create({
   typingIndicator: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.surface,
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.md,
     borderRadius: BorderRadius.lg,
@@ -549,12 +542,10 @@ const styles = StyleSheet.create({
   },
   emptyTitle: {
     ...Typography.title,
-    color: Colors.textPrimary,
     marginBottom: Spacing.sm,
   },
   emptySubtitle: {
     ...Typography.body,
-    color: Colors.textSecondary,
     textAlign: 'center',
     lineHeight: 22,
     marginBottom: Spacing.xl,
@@ -565,7 +556,6 @@ const styles = StyleSheet.create({
   promptsTitle: {
     ...Typography.caption,
     fontWeight: '600',
-    color: Colors.textSecondary,
     marginBottom: Spacing.md,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
@@ -579,7 +569,6 @@ const styles = StyleSheet.create({
     width: '48%',
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.surface,
     padding: Spacing.md,
     borderRadius: BorderRadius.md,
     ...Shadows.card,
@@ -590,7 +579,6 @@ const styles = StyleSheet.create({
   },
   promptText: {
     ...Typography.caption,
-    color: Colors.textPrimary,
     fontWeight: '500',
     flex: 1,
   },
@@ -605,7 +593,6 @@ const styles = StyleSheet.create({
   },
   disclaimerText: {
     ...Typography.small,
-    color: Colors.textSecondary,
     flex: 1,
     lineHeight: 18,
   },
@@ -613,9 +600,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-end',
     padding: Spacing.md,
-    backgroundColor: Colors.surface,
     borderTopWidth: 1,
-    borderTopColor: Colors.border,
     gap: Spacing.sm,
   },
   inputWrapper: {
@@ -628,7 +613,6 @@ const styles = StyleSheet.create({
   },
   input: {
     ...Typography.body,
-    color: Colors.textPrimary,
     maxHeight: 100,
   },
   sendButton: {

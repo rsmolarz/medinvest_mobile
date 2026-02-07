@@ -22,6 +22,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { ThemedText } from '@/components/ThemedText';
 import { Colors, Spacing, BorderRadius, Typography } from '@/constants/theme';
+import { useAppColors } from '@/hooks/useAppColors';
 import { messagesApi, ApiUser, Message } from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
 import { formatRelativeTime } from '@/lib/utils';
@@ -40,6 +41,7 @@ export default function ConversationScreen() {
   const { user: currentUser } = useAuth();
   const queryClient = useQueryClient();
   const flatListRef = useRef<FlatList>(null);
+  const appColors = useAppColors();
 
   const [messageText, setMessageText] = useState('');
   const [otherUser, setOtherUser] = useState<ApiUser | null>(null);
@@ -58,7 +60,7 @@ export default function ConversationScreen() {
       }
       return response.data?.messages || [];
     },
-    refetchInterval: 3000, // Poll every 3 seconds for new messages
+    refetchInterval: 3000,
   });
 
   const messages = messagesData || [];
@@ -75,7 +77,6 @@ export default function ConversationScreen() {
     onSuccess: () => {
       setMessageText('');
       refetch();
-      // Scroll to bottom
       setTimeout(() => {
         flatListRef.current?.scrollToEnd({ animated: true });
       }, 100);
@@ -144,13 +145,13 @@ export default function ConversationScreen() {
         {!showAvatar && !isOwn && <View style={styles.messageAvatarSpacer} />}
         
         <View style={[styles.messageBubble, isOwn ? styles.messageBubbleOwn : styles.messageBubbleOther]}>
-          <ThemedText style={[styles.messageText, isOwn && styles.messageTextOwn]}>
+          <ThemedText style={[styles.messageText, { color: appColors.textPrimary }, isOwn && styles.messageTextOwn]}>
             {item.content}
           </ThemedText>
         </View>
 
         {showTimestamp && (
-          <ThemedText style={styles.messageTimestamp}>
+          <ThemedText style={[styles.messageTimestamp, { color: appColors.textSecondary }]}>
             {formatRelativeTime(item.created_at)}
           </ThemedText>
         )}
@@ -160,23 +161,23 @@ export default function ConversationScreen() {
 
   if (isLoading) {
     return (
-      <SafeAreaView style={styles.loadingContainer}>
+      <SafeAreaView style={[styles.loadingContainer, { backgroundColor: appColors.background }]}>
         <ActivityIndicator size="large" color={Colors.primary} />
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: appColors.background }]} edges={['top']}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardView}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
       >
         {/* Header */}
-        <View style={styles.header}>
+        <View style={[styles.header, { backgroundColor: appColors.surface, borderBottomColor: appColors.border }]}>
           <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-            <Ionicons name="chevron-back" size={24} color={Colors.textPrimary} />
+            <Ionicons name="chevron-back" size={24} color={appColors.textPrimary} />
           </TouchableOpacity>
           
           <TouchableOpacity style={styles.headerUser} onPress={handleUserPress}>
@@ -191,7 +192,7 @@ export default function ConversationScreen() {
             )}
             <View style={styles.headerInfo}>
               <View style={styles.headerNameRow}>
-                <ThemedText style={styles.headerName} numberOfLines={1}>
+                <ThemedText style={[styles.headerName, { color: appColors.textPrimary }]} numberOfLines={1}>
                   {otherUser?.full_name}
                 </ThemedText>
                 {otherUser?.is_verified && (
@@ -199,7 +200,7 @@ export default function ConversationScreen() {
                 )}
               </View>
               {otherUser?.specialty && (
-                <ThemedText style={styles.headerSpecialty} numberOfLines={1}>
+                <ThemedText style={[styles.headerSpecialty, { color: appColors.textSecondary }]} numberOfLines={1}>
                   {otherUser.specialty}
                 </ThemedText>
               )}
@@ -215,7 +216,7 @@ export default function ConversationScreen() {
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.moreButton}>
-            <Ionicons name="ellipsis-horizontal" size={24} color={Colors.textPrimary} />
+            <Ionicons name="ellipsis-horizontal" size={24} color={appColors.textPrimary} />
           </TouchableOpacity>
         </View>
 
@@ -229,7 +230,7 @@ export default function ConversationScreen() {
           showsVerticalScrollIndicator={false}
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
-              <ThemedText style={styles.emptyText}>
+              <ThemedText style={[styles.emptyText, { color: appColors.textSecondary }]}>
                 Start your conversation with {otherUser?.first_name}
               </ThemedText>
             </View>
@@ -237,19 +238,19 @@ export default function ConversationScreen() {
         />
 
         {/* Input */}
-        <View style={styles.inputContainer}>
+        <View style={[styles.inputContainer, { backgroundColor: appColors.surface, borderTopColor: appColors.border }]}>
           <View style={styles.inputWrapper}>
             <TextInput
-              style={styles.input}
+              style={[styles.input, { color: appColors.textPrimary }]}
               placeholder="Type a message..."
-              placeholderTextColor={Colors.textSecondary}
+              placeholderTextColor={appColors.textSecondary}
               value={messageText}
               onChangeText={setMessageText}
               multiline
               maxLength={2000}
             />
             <TouchableOpacity style={styles.attachButton}>
-              <Ionicons name="add-circle-outline" size={24} color={Colors.textSecondary} />
+              <Ionicons name="add-circle-outline" size={24} color={appColors.textSecondary} />
             </TouchableOpacity>
           </View>
           <TouchableOpacity
@@ -272,13 +273,11 @@ export default function ConversationScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
   },
   loadingContainer: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: Colors.background,
   },
   keyboardView: {
     flex: 1,
@@ -288,9 +287,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.sm,
-    backgroundColor: Colors.surface,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
   },
   backButton: {
     padding: Spacing.sm,
@@ -328,11 +325,9 @@ const styles = StyleSheet.create({
   headerName: {
     ...Typography.body,
     fontWeight: '600',
-    color: Colors.textPrimary,
   },
   headerSpecialty: {
     ...Typography.small,
-    color: Colors.textSecondary,
   },
   callButton: {
     width: 36,
@@ -394,14 +389,12 @@ const styles = StyleSheet.create({
   },
   messageText: {
     ...Typography.body,
-    color: Colors.textPrimary,
   },
   messageTextOwn: {
     color: 'white',
   },
   messageTimestamp: {
     ...Typography.small,
-    color: Colors.textSecondary,
     marginLeft: Spacing.sm,
     marginBottom: 2,
   },
@@ -413,16 +406,13 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     ...Typography.body,
-    color: Colors.textSecondary,
     textAlign: 'center',
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'flex-end',
     padding: Spacing.md,
-    backgroundColor: Colors.surface,
     borderTopWidth: 1,
-    borderTopColor: Colors.border,
     gap: Spacing.sm,
   },
   inputWrapper: {
@@ -437,7 +427,6 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     ...Typography.body,
-    color: Colors.textPrimary,
     maxHeight: 100,
     paddingVertical: 0,
   },
