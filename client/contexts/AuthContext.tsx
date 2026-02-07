@@ -36,18 +36,17 @@ function getGitHubClientId(): string | undefined {
   return GITHUB_MOBILE_CLIENT_ID || GITHUB_WEB_CLIENT_ID;
 }
 
-function getWebRedirectUri(): string {
-  const domain = process.env.EXPO_PUBLIC_DOMAIN;
-  if (domain) {
-    const cleanDomain = domain.replace(/:5000$/, '');
-    return `https://${cleanDomain}`;
-  }
-  return AuthSession.makeRedirectUri({ preferLocalhost: false });
-}
-
 function getOAuthRedirectUri(): string {
   if (Platform.OS === 'web') {
-    return getWebRedirectUri();
+    if (typeof window !== 'undefined') {
+      return window.location.origin;
+    }
+    const domain = process.env.EXPO_PUBLIC_DOMAIN;
+    if (domain) {
+      const cleanDomain = domain.replace(/:5000$/, '');
+      return `https://${cleanDomain}`;
+    }
+    return AuthSession.makeRedirectUri({ preferLocalhost: false });
   }
   return AuthSession.makeRedirectUri({ scheme: 'medinvest' });
 }
