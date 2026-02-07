@@ -36,6 +36,22 @@ function getGitHubClientId(): string | undefined {
   return GITHUB_MOBILE_CLIENT_ID || GITHUB_WEB_CLIENT_ID;
 }
 
+function getWebRedirectUri(): string {
+  const domain = process.env.EXPO_PUBLIC_DOMAIN;
+  if (domain) {
+    const cleanDomain = domain.replace(/:5000$/, '');
+    return `https://${cleanDomain}`;
+  }
+  return AuthSession.makeRedirectUri({ preferLocalhost: false });
+}
+
+function getOAuthRedirectUri(): string {
+  if (Platform.OS === 'web') {
+    return getWebRedirectUri();
+  }
+  return AuthSession.makeRedirectUri({ scheme: 'medinvest' });
+}
+
 const PLACEHOLDER_CLIENT_ID = 'placeholder.apps.googleusercontent.com';
 
 function getHasGoogleCredentialsForPlatform(): boolean {
@@ -102,15 +118,25 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [error, setError] = useState<string | null>(null);
   const [isAppleAuthAvailable, setIsAppleAuthAvailable] = useState(false);
 
+  const oauthRedirectUri = getOAuthRedirectUri();
+
+  if (__DEV__) {
+    console.log('[OAuth] Redirect URI:', oauthRedirectUri);
+    console.log('[OAuth] Platform:', Platform.OS);
+    console.log('[OAuth] Google Web Client ID:', GOOGLE_WEB_CLIENT_ID ? 'configured' : 'missing');
+    console.log('[OAuth] GitHub Client ID:', getGitHubClientId() ? 'configured' : 'missing');
+    console.log('[OAuth] Facebook App ID:', FACEBOOK_APP_ID ? 'configured' : 'missing');
+  }
+
   const [_googleRequest, googleResponse, promptGoogleAsync] = Google.useAuthRequest({
     clientId: GOOGLE_EXPO_CLIENT_ID || PLACEHOLDER_CLIENT_ID,
     webClientId: GOOGLE_WEB_CLIENT_ID || PLACEHOLDER_CLIENT_ID,
     iosClientId: GOOGLE_IOS_CLIENT_ID || PLACEHOLDER_CLIENT_ID,
     androidClientId: GOOGLE_ANDROID_CLIENT_ID || PLACEHOLDER_CLIENT_ID,
     scopes: ['profile', 'email'],
+    redirectUri: Platform.OS === 'web' ? oauthRedirectUri : undefined,
   });
 
-  // GitHub OAuth configuration - use platform-specific client ID
   const githubClientId = getGitHubClientId();
   
   const githubDiscovery = {
@@ -119,42 +145,25 @@ export function AuthProvider({ children }: AuthProviderProps) {
     revocationEndpoint: `https://github.com/settings/connections/applications/${githubClientId}`,
   };
 
-  // Use platform-appropriate redirect URI for GitHub
-  // Web uses the domain URL, mobile uses the app scheme
-  const githubRedirectUri = Platform.OS === 'web'
-    ? (process.env.EXPO_PUBLIC_DOMAIN 
-        ? `https://${process.env.EXPO_PUBLIC_DOMAIN.replace(/:5000$/, '')}`
-        : AuthSession.makeRedirectUri({ preferLocalhost: false }))
-    : AuthSession.makeRedirectUri({ scheme: 'medinvest' });
-
   const [_githubRequest, githubResponse, promptGithubAsync] = AuthSession.useAuthRequest(
     {
       clientId: githubClientId || 'placeholder',
       scopes: ['read:user', 'user:email'],
-      redirectUri: githubRedirectUri,
+      redirectUri: oauthRedirectUri,
     },
     githubDiscovery
   );
 
-  // Facebook OAuth configuration
   const facebookDiscovery = {
     authorizationEndpoint: 'https://www.facebook.com/v18.0/dialog/oauth',
     tokenEndpoint: 'https://graph.facebook.com/v18.0/oauth/access_token',
   };
 
-  // Use platform-appropriate redirect URI for Facebook
-  // Web uses the domain URL, mobile uses the app scheme
-  const facebookRedirectUri = Platform.OS === 'web'
-    ? (process.env.EXPO_PUBLIC_DOMAIN 
-        ? `https://${process.env.EXPO_PUBLIC_DOMAIN.replace(/:5000$/, '')}`
-        : AuthSession.makeRedirectUri({ preferLocalhost: false }))
-    : AuthSession.makeRedirectUri({ scheme: 'medinvest' });
-
   const [_facebookRequest, facebookResponse, promptFacebookAsync] = AuthSession.useAuthRequest(
     {
       clientId: FACEBOOK_APP_ID || 'placeholder',
       scopes: ['public_profile', 'email'],
-      redirectUri: facebookRedirectUri,
+      redirectUri: oauthRedirectUri,
       responseType: AuthSession.ResponseType.Code,
     },
     facebookDiscovery
@@ -325,7 +334,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
     handleGoogleResponse();
   }, [handleGoogleResponse]);
 
-  // Handle GitHub OAuth response
   const handleGithubResponse = useCallback(async () => {
     if (githubResponse?.type === 'success') {
       const { code } = githubResponse.params;
@@ -334,16 +342,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
           setIsLoading(true);
           setError(null);
 
-          // Exchange code for access token via backend (use same redirect URI as auth request)
-          const redirectUri = Platform.OS === 'web'
-            ? AuthSession.makeRedirectUri({ preferLocalhost: false })
-            : AuthSession.makeRedirectUri({ scheme: 'medinvest' });
-          
-          // Send platform so backend uses correct OAuth credentials
           const tokenResponse = await apiClient.post('/auth/github/token', {
             code,
-            redirect_uri: redirectUri,
-            platform: Platform.OS, // 'web', 'ios', or 'android'
+            redirect_uri: oauthRedirectUri,
+            platform: Platform.OS,
           });
 
           const { access_token } = tokenResponse.data;
@@ -367,7 +369,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
     handleGithubResponse();
   }, [handleGithubResponse]);
 
-  // Handle Facebook OAuth response
   const handleFacebookResponse = useCallback(async () => {
     if (facebookResponse?.type === 'success') {
       const { code } = facebookResponse.params;
@@ -376,14 +377,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
           setIsLoading(true);
           setError(null);
 
-          // Exchange code for access token via backend
-          const redirectUri = Platform.OS === 'web'
-            ? AuthSession.makeRedirectUri({ preferLocalhost: false })
-            : AuthSession.makeRedirectUri({ scheme: 'medinvest' });
-          
           const tokenResponse = await apiClient.post('/auth/facebook/token', {
             code,
-            redirect_uri: redirectUri,
+            redirect_uri: oauthRedirectUri,
           });
 
           const { access_token } = tokenResponse.data;
@@ -410,77 +406,82 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const signInWithGoogle = useCallback(async () => {
     try {
       setError(null);
-      console.log('Google Sign-In: Starting...');
-      console.log('Google Web Client ID:', GOOGLE_WEB_CLIENT_ID ? 'Set' : 'Not set');
-      console.log('Platform:', Platform.OS);
-      console.log('Has credentials:', getHasGoogleCredentialsForPlatform());
+      console.log('[OAuth] Google Sign-In starting, redirect URI:', oauthRedirectUri);
 
       if (!getHasGoogleCredentialsForPlatform()) {
-        const errorMsg = Platform.OS === 'web' 
-          ? 'Google Sign-In is not configured. Please contact support.'
-          : 'Google Sign-In is not available on this device. Please use Apple Sign-In or email login.';
-        console.log('Google Sign-In Error:', errorMsg);
-        setError(errorMsg);
+        setError('Google Sign-In is not configured for this platform.');
         return;
       }
 
-      console.log('Google Sign-In: Prompting...');
       const result = await promptGoogleAsync();
-      console.log('Google Sign-In result:', result);
+      console.log('[OAuth] Google Sign-In result:', result?.type);
+      
+      if (result?.type === 'error') {
+        const errMsg = (result as any).error?.message || 'Google sign-in was rejected';
+        if (errMsg.includes('redirect_uri_mismatch')) {
+          console.error('[OAuth] Redirect URI mismatch. Add this URI to Google Cloud Console:', oauthRedirectUri);
+          setError('Google Sign-In redirect is not configured. Please use email login instead.');
+        } else {
+          setError(errMsg);
+        }
+      } else if (result?.type === 'dismiss') {
+        console.log('[OAuth] Google sign-in dismissed by user');
+      }
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Google sign-in failed';
       setError(message);
-      console.error('Google sign-in error:', err);
+      console.error('[OAuth] Google sign-in error:', err);
     }
-  }, [promptGoogleAsync]);
+  }, [promptGoogleAsync, oauthRedirectUri]);
 
   const signInWithGithub = useCallback(async () => {
     try {
       setError(null);
       const currentClientId = getGitHubClientId();
-      console.log('GitHub Sign-In: Starting...');
-      console.log('GitHub Client ID:', currentClientId ? 'Set' : 'Not set');
-      console.log('Platform:', Platform.OS);
-      console.log('GitHub Redirect URI:', githubRedirectUri);
+      console.log('[OAuth] GitHub Sign-In starting, redirect URI:', oauthRedirectUri);
 
       if (!currentClientId) {
-        const errorMsg = Platform.OS === 'web'
-          ? 'GitHub Sign-In is not configured for web. Please contact support.'
-          : 'GitHub Sign-In is not configured for mobile. Please set up EXPO_PUBLIC_GITHUB_MOBILE_CLIENT_ID.';
-        setError(errorMsg);
+        setError('GitHub Sign-In is not configured for this platform.');
         return;
       }
 
-      console.log('GitHub Sign-In: Prompting...');
       const result = await promptGithubAsync();
-      console.log('GitHub Sign-In result:', result);
+      console.log('[OAuth] GitHub Sign-In result:', result?.type);
+      
+      if (result?.type === 'error') {
+        console.error('[OAuth] GitHub error. Ensure callback URL is set to:', oauthRedirectUri);
+        setError('GitHub Sign-In failed. Please use email login instead.');
+      }
     } catch (err) {
       const message = err instanceof Error ? err.message : 'GitHub sign-in failed';
       setError(message);
-      console.error('GitHub sign-in error:', err);
+      console.error('[OAuth] GitHub sign-in error:', err);
     }
-  }, [promptGithubAsync, githubRedirectUri]);
+  }, [promptGithubAsync, oauthRedirectUri]);
 
   const signInWithFacebook = useCallback(async () => {
     try {
       setError(null);
-      console.log('Facebook Sign-In: Starting...');
-      console.log('Facebook App ID:', FACEBOOK_APP_ID ? 'Set' : 'Not set');
+      console.log('[OAuth] Facebook Sign-In starting, redirect URI:', oauthRedirectUri);
 
       if (!FACEBOOK_APP_ID) {
-        setError('Facebook Sign-In is not configured. Please contact support.');
+        setError('Facebook Sign-In is not configured.');
         return;
       }
 
-      console.log('Facebook Sign-In: Prompting...');
       const result = await promptFacebookAsync();
-      console.log('Facebook Sign-In result:', result);
+      console.log('[OAuth] Facebook Sign-In result:', result?.type);
+      
+      if (result?.type === 'error') {
+        console.error('[OAuth] Facebook error. Ensure redirect URI is set to:', oauthRedirectUri);
+        setError('Facebook Sign-In failed. Please use email login instead.');
+      }
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Facebook sign-in failed';
       setError(message);
-      console.error('Facebook sign-in error:', err);
+      console.error('[OAuth] Facebook sign-in error:', err);
     }
-  }, [promptFacebookAsync]);
+  }, [promptFacebookAsync, oauthRedirectUri]);
 
   const mockSignIn = useCallback(async () => {
     try {
