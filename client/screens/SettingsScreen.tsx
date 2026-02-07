@@ -22,6 +22,7 @@ import { ThemedText } from '@/components/ThemedText';
 import { Colors, Spacing, BorderRadius, Typography } from '@/constants/theme';
 import { useAppColors } from '@/hooks/useAppColors';
 import { useAuth } from '@/contexts/AuthContext';
+import { useThemeContext } from '@/contexts/ThemeContext';
 import { subscriptionApi } from '@/lib/api';
 
 interface SettingItemProps {
@@ -89,11 +90,11 @@ export default function SettingsScreen() {
   const navigation = useNavigation<any>();
   const { user, logout, changePassword } = useAuth();
   const appColors = useAppColors();
+  const { mode, setMode, isDark } = useThemeContext();
 
   // Notification preferences
   const [pushEnabled, setPushEnabled] = useState(true);
   const [emailEnabled, setEmailEnabled] = useState(true);
-  const [darkMode, setDarkMode] = useState(false);
 
   // Subscription status
   const { data: subscriptionStatus } = useQuery({
@@ -297,8 +298,14 @@ export default function SettingsScreen() {
               icon="moon-outline"
               label="Dark Mode"
               isSwitch
-              switchValue={darkMode}
-              onSwitchChange={setDarkMode}
+              switchValue={isDark}
+              onSwitchChange={(value: boolean) => setMode(value ? 'dark' : 'light')}
+            />
+            <SettingItem
+              icon="color-palette-outline"
+              label="Appearance"
+              value={mode === 'system' ? 'System' : mode === 'dark' ? 'Dark' : 'Light'}
+              onPress={() => navigation.navigate('AppearanceSettings')}
             />
           </View>
         </View>
