@@ -23,6 +23,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useThemeContext } from '@/contexts/ThemeContext';
 import { Colors, Spacing, BorderRadius, Typography } from '@/constants/theme';
+import { useAppColors } from '@/hooks/useAppColors';
 import { getApiUrl } from '@/lib/query-client';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -65,13 +66,14 @@ export default function AIChatSheet({
 }: AIChatSheetProps) {
   const { isDark, colors: themeColors } = useThemeContext();
   const { token } = useAuth();
+  const appColors = useAppColors();
   const colors = {
-    primary: themeColors.primary,
-    text: themeColors.textPrimary,
-    textSecondary: themeColors.textSecondary,
-    background: themeColors.background,
-    cardBackground: themeColors.surface,
-    border: themeColors.border,
+    primary: appColors.primary,
+    text: appColors.textPrimary,
+    textSecondary: appColors.textSecondary,
+    background: appColors.background,
+    cardBackground: appColors.surface,
+    border: appColors.border,
   };
   const insets = useSafeAreaInsets();
   

@@ -14,6 +14,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 
 import { Colors, Spacing, BorderRadius } from '@/constants/theme';
+import { useAppColors } from '@/hooks/useAppColors';
 import { useThemeContext } from '@/contexts/ThemeContext';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -273,6 +274,7 @@ export function DealsListSkeleton({ count = 3 }: { count?: number }) {
 // Profile header skeleton
 export function ProfileHeaderSkeleton() {
   const { colors } = useThemeContext();
+  const appColors = useAppColors();
   
   return (
     <View style={[styles.profileHeader, { backgroundColor: colors.surface }]}>
@@ -281,7 +283,7 @@ export function ProfileHeaderSkeleton() {
       
       {/* Avatar */}
       <View style={styles.profileAvatarContainer}>
-        <CircleSkeleton size={100} style={styles.profileAvatar} />
+        <CircleSkeleton size={100} style={[styles.profileAvatar, { borderColor: appColors.surface }]} />
       </View>
       
       {/* Info */}
@@ -467,7 +469,6 @@ const styles = StyleSheet.create({
   },
   profileAvatar: {
     borderWidth: 4,
-    borderColor: Colors.surface,
   },
   profileInfo: {
     alignItems: 'center',

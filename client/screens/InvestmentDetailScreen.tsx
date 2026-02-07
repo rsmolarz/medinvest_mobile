@@ -24,6 +24,7 @@ import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { useTheme } from "@/hooks/useTheme";
 import { Colors, Spacing, BorderRadius, Shadows } from "@/constants/theme";
+import { useAppColors } from '@/hooks/useAppColors';
 import { investmentOpportunities } from "@/lib/mockData";
 import { DiscoverStackParamList } from "@/navigation/DiscoverStackNavigator";
 import { RootStackParamList } from "@/navigation/RootStackNavigator";
@@ -37,6 +38,7 @@ export default function InvestmentDetailScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const insets = useSafeAreaInsets();
   const { theme } = useTheme();
+  const appColors = useAppColors();
   const scale = useSharedValue(1);
 
   const opportunity = investmentOpportunities.find(
@@ -87,9 +89,9 @@ export default function InvestmentDetailScreen() {
       case "low":
         return Colors.secondary;
       case "medium":
-        return Colors.warning;
+        return appColors.warning;
       case "high":
-        return Colors.error;
+        return appColors.error;
     }
   };
 
@@ -162,7 +164,7 @@ export default function InvestmentDetailScreen() {
                 </ThemedText>
               </View>
               <View style={styles.daysContainer}>
-                <ThemedText type="heading" style={{ color: Colors.warning }}>
+                <ThemedText type="heading" style={{ color: appColors.warning }}>
                   {opportunity.daysRemaining}
                 </ThemedText>
                 <ThemedText type="small" style={{ color: theme.textSecondary }}>
@@ -171,7 +173,7 @@ export default function InvestmentDetailScreen() {
               </View>
             </View>
 
-            <View style={styles.progressBar}>
+            <View style={[styles.progressBar, { backgroundColor: appColors.border }]}>
               <LinearGradient
                 colors={[Colors.gradient.start, Colors.gradient.end]}
                 start={{ x: 0, y: 0 }}
@@ -253,6 +255,7 @@ export default function InvestmentDetailScreen() {
           {
             backgroundColor: theme.backgroundDefault,
             paddingBottom: insets.bottom + Spacing.lg,
+            borderTopColor: appColors.border,
           },
         ]}
       >
@@ -356,7 +359,6 @@ const styles = StyleSheet.create({
   },
   progressBar: {
     height: 8,
-    backgroundColor: Colors.border,
     borderRadius: 4,
     overflow: "hidden",
   },
@@ -417,7 +419,6 @@ const styles = StyleSheet.create({
     padding: Spacing.lg,
     paddingTop: Spacing.lg,
     borderTopWidth: 1,
-    borderTopColor: Colors.border,
   },
   investButton: {
     borderRadius: BorderRadius.full,

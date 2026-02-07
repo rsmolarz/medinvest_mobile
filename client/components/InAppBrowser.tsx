@@ -22,6 +22,7 @@ import * as Clipboard from 'expo-clipboard';
 
 import { ThemedText } from '@/components/ThemedText';
 import { Colors, Spacing, BorderRadius, Typography } from '@/constants/theme';
+import { useAppColors } from '@/hooks/useAppColors';
 import { useThemeContext } from '@/contexts/ThemeContext';
 import { haptics } from '@/lib/haptics';
 
@@ -39,6 +40,7 @@ export default function InAppBrowser({
   title,
 }: InAppBrowserProps) {
   const { colors, isDark } = useThemeContext();
+  const appColors = useAppColors();
   const webViewRef = useRef<WebView>(null);
   
   const [currentUrl, setCurrentUrl] = useState(url);
@@ -177,7 +179,7 @@ export default function InAppBrowser({
           onLoadProgress={({ nativeEvent }) => setProgress(nativeEvent.progress)}
           startInLoadingState
           renderLoading={() => (
-            <View style={styles.loadingContainer}>
+            <View style={[styles.loadingContainer, { backgroundColor: appColors.surface }]}>
               <ActivityIndicator size="large" color={colors.primary} />
             </View>
           )}
@@ -273,7 +275,7 @@ export default function InAppBrowser({
               </TouchableOpacity>
 
               <TouchableOpacity
-                style={[styles.menuItem, styles.menuCancel]}
+                style={[styles.menuItem, styles.menuCancel, { borderTopColor: appColors.border }]}
                 onPress={() => setShowMenu(false)}
               >
                 <ThemedText style={[styles.menuCancelText, { color: colors.error }]}>
@@ -389,7 +391,6 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: Colors.surface,
   },
   toolbar: {
     flexDirection: 'row',
@@ -440,7 +441,6 @@ const styles = StyleSheet.create({
   menuCancel: {
     justifyContent: 'center',
     borderTopWidth: 1,
-    borderTopColor: Colors.border,
     marginTop: Spacing.sm,
   },
   menuCancelText: {

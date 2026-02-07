@@ -24,6 +24,7 @@ import { KeyboardAwareScrollViewCompat } from "@/components/KeyboardAwareScrollV
 import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
 import { Colors, Spacing, BorderRadius, Shadows, Typography } from "@/constants/theme";
+import { useAppColors } from '@/hooks/useAppColors';
 import { investmentOpportunities } from "@/lib/mockData";
 import { storage } from "@/lib/storage";
 import { RootStackParamList } from "@/navigation/RootStackNavigator";
@@ -39,6 +40,7 @@ export default function InvestModalScreen() {
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
   const { theme } = useTheme();
+  const appColors = useAppColors();
 
   const [amount, setAmount] = useState("");
   const [riskAcknowledged, setRiskAcknowledged] = useState(false);
@@ -202,9 +204,9 @@ export default function InvestModalScreen() {
                   style={{
                     color:
                       opportunity.riskLevel === "high"
-                        ? Colors.error
+                        ? appColors.error
                         : opportunity.riskLevel === "medium"
-                        ? Colors.warning
+                        ? appColors.warning
                         : Colors.secondary,
                     fontWeight: "600",
                     textTransform: "capitalize",
@@ -224,7 +226,7 @@ export default function InvestModalScreen() {
           <View
             style={[
               styles.amountInput,
-              { backgroundColor: theme.backgroundDefault, borderColor: Colors.border },
+              { backgroundColor: theme.backgroundDefault, borderColor: appColors.border },
             ]}
           >
             <ThemedText type="title" style={{ color: theme.textSecondary }}>
@@ -312,7 +314,7 @@ export default function InvestModalScreen() {
                   backgroundColor: riskAcknowledged
                     ? Colors.primary
                     : "transparent",
-                  borderColor: riskAcknowledged ? Colors.primary : Colors.border,
+                  borderColor: riskAcknowledged ? Colors.primary : appColors.border,
                 },
               ]}
             >
@@ -337,7 +339,7 @@ export default function InvestModalScreen() {
                   backgroundColor: termsAccepted
                     ? Colors.primary
                     : "transparent",
-                  borderColor: termsAccepted ? Colors.primary : Colors.border,
+                  borderColor: termsAccepted ? Colors.primary : appColors.border,
                 },
               ]}
             >
@@ -358,6 +360,7 @@ export default function InvestModalScreen() {
           {
             backgroundColor: theme.backgroundDefault,
             paddingBottom: insets.bottom + Spacing.lg,
+            borderTopColor: appColors.border,
           },
         ]}
       >
@@ -483,7 +486,6 @@ const styles = StyleSheet.create({
     padding: Spacing.lg,
     paddingTop: Spacing.lg,
     borderTopWidth: 1,
-    borderTopColor: Colors.border,
   },
   summaryRow: {
     flexDirection: "row",

@@ -15,6 +15,7 @@ import { Ionicons } from '@expo/vector-icons';
 
 import { ThemedText } from '@/components/ThemedText';
 import { Colors, Spacing, Typography } from '@/constants/theme';
+import { useAppColors } from '@/hooks/useAppColors';
 import { useThemeContext } from '@/contexts/ThemeContext';
 
 // =============================================================================
@@ -80,6 +81,7 @@ export const ReadReceiptWithAvatars = memo(function ReadReceiptWithAvatars({
   maxAvatars = 3,
 }: ReadReceiptWithAvatarsProps) {
   const { colors } = useThemeContext();
+  const appColors = useAppColors();
   const displayedAvatars = readBy.slice(0, maxAvatars);
   const remainingCount = readBy.length - maxAvatars;
 
@@ -109,7 +111,7 @@ export const ReadReceiptWithAvatars = memo(function ReadReceiptWithAvatars({
             ]}
           >
             {user.avatar_url ? (
-              <Image source={{ uri: user.avatar_url }} style={styles.miniAvatar} />
+              <Image source={{ uri: user.avatar_url }} style={[styles.miniAvatar, { borderColor: appColors.surface }]} />
             ) : (
               <View style={[styles.miniAvatar, styles.miniAvatarPlaceholder, { backgroundColor: colors.primary }]}>
                 <ThemedText style={styles.miniAvatarText}>
@@ -267,11 +269,13 @@ export const TypingBubble = memo(function TypingBubble({
 // Simple typing dots (no vertical animation, just opacity)
 const TypingDotsSimple = memo(function TypingDotsSimple({
   dotSize = 6,
-  color = Colors.textSecondary,
+  color,
 }: {
   dotSize?: number;
   color?: string;
 }) {
+  const appColors = useAppColors();
+  const dotColor = color ?? appColors.textSecondary;
   const opacity1 = useRef(new Animated.Value(0.3)).current;
   const opacity2 = useRef(new Animated.Value(0.3)).current;
   const opacity3 = useRef(new Animated.Value(0.3)).current;
@@ -310,19 +314,19 @@ const TypingDotsSimple = memo(function TypingDotsSimple({
       <Animated.View
         style={[
           styles.simpleDot,
-          { width: dotSize, height: dotSize, backgroundColor: color, opacity: opacity1 },
+          { width: dotSize, height: dotSize, backgroundColor: dotColor, opacity: opacity1 },
         ]}
       />
       <Animated.View
         style={[
           styles.simpleDot,
-          { width: dotSize, height: dotSize, backgroundColor: color, opacity: opacity2 },
+          { width: dotSize, height: dotSize, backgroundColor: dotColor, opacity: opacity2 },
         ]}
       />
       <Animated.View
         style={[
           styles.simpleDot,
-          { width: dotSize, height: dotSize, backgroundColor: color, opacity: opacity3 },
+          { width: dotSize, height: dotSize, backgroundColor: dotColor, opacity: opacity3 },
         ]}
       />
     </View>
@@ -467,7 +471,6 @@ const styles = StyleSheet.create({
     height: 20,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: Colors.surface,
   },
   miniAvatarPlaceholder: {
     alignItems: 'center',

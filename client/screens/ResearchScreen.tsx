@@ -20,6 +20,7 @@ import Animated, {
 import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
 import { Colors, Spacing, BorderRadius, Shadows } from "@/constants/theme";
+import { useAppColors } from '@/hooks/useAppColors';
 import { articles, Article } from "@/lib/mockData";
 import { storage } from "@/lib/storage";
 
@@ -28,6 +29,7 @@ const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 export default function ResearchScreen() {
   const insets = useSafeAreaInsets();
   const { theme } = useTheme();
+  const appColors = useAppColors();
   const [refreshing, setRefreshing] = useState(false);
   const [bookmarkedIds, setBookmarkedIds] = useState<string[]>([]);
 
@@ -108,11 +110,11 @@ export default function ResearchScreen() {
             <ThemedText type="small" style={{ color: theme.textSecondary }}>
               {featuredArticle.source}
             </ThemedText>
-            <View style={styles.metaDot} />
+            <View style={[styles.metaDot, { backgroundColor: appColors.border }]} />
             <ThemedText type="small" style={{ color: theme.textSecondary }}>
               {featuredArticle.publishedAt}
             </ThemedText>
-            <View style={styles.metaDot} />
+            <View style={[styles.metaDot, { backgroundColor: appColors.border }]} />
             <ThemedText type="small" style={{ color: theme.textSecondary }}>
               {featuredArticle.readTime}
             </ThemedText>
@@ -185,6 +187,7 @@ function ArticleCard({
   onBookmark: () => void;
 }) {
   const { theme } = useTheme();
+  const appColors = useAppColors();
   const scale = useSharedValue(1);
 
   const animatedStyle = useAnimatedStyle(() => ({
@@ -240,7 +243,7 @@ function ArticleCard({
             <ThemedText type="small" style={{ color: theme.textSecondary }}>
               {article.source}
             </ThemedText>
-            <View style={styles.metaDot} />
+            <View style={[styles.metaDot, { backgroundColor: appColors.border }]} />
             <ThemedText type="small" style={{ color: theme.textSecondary }}>
               {article.publishedAt}
             </ThemedText>
@@ -335,7 +338,6 @@ const styles = StyleSheet.create({
     width: 3,
     height: 3,
     borderRadius: 1.5,
-    backgroundColor: Colors.border,
     marginHorizontal: Spacing.sm,
   },
 });

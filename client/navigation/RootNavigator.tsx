@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { NavigationContainer } from '@react-navigation/native';
+import { NavigationContainer, DefaultTheme, DarkTheme } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
@@ -12,6 +12,7 @@ import { View, ActivityIndicator, Platform } from 'react-native';
 
 import { Colors, Spacing } from '@/constants/theme';
 import { useAuth } from '@/contexts/AuthContext';
+import { useAppColors } from '@/hooks/useAppColors';
 import { linkingConfig } from '@/lib/deep-linking';
 
 // Auth Screens
@@ -93,15 +94,16 @@ function AuthNavigator() {
 
 // Tab Navigator
 function MainTabNavigator() {
+  const appColors = useAppColors();
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
         headerShown: false,
         tabBarActiveTintColor: Colors.primary,
-        tabBarInactiveTintColor: Colors.textSecondary,
+        tabBarInactiveTintColor: appColors.textSecondary,
         tabBarStyle: {
-          backgroundColor: Colors.surface,
-          borderTopColor: Colors.border,
+          backgroundColor: appColors.surface,
+          borderTopColor: appColors.border,
           paddingBottom: Platform.OS === 'ios' ? Spacing.lg : Spacing.sm,
           paddingTop: Spacing.sm,
           height: Platform.OS === 'ios' ? 84 : 64,
@@ -167,7 +169,30 @@ function MainTabNavigator() {
 // Root Navigator
 export default function RootNavigator() {
   const { isAuthenticated, isLoading } = useAuth();
+  const appColors = useAppColors();
   const [hasOnboarded, setHasOnboarded] = useState<boolean | null>(null);
+
+  const navigationTheme = appColors.isDark ? {
+    ...DarkTheme,
+    colors: {
+      ...DarkTheme.colors,
+      primary: Colors.primary,
+      background: appColors.background,
+      card: appColors.surface,
+      text: appColors.textPrimary,
+      border: appColors.border,
+    },
+  } : {
+    ...DefaultTheme,
+    colors: {
+      ...DefaultTheme.colors,
+      primary: Colors.primary,
+      background: appColors.background,
+      card: appColors.surface,
+      text: appColors.textPrimary,
+      border: appColors.border,
+    },
+  };
 
   // Check onboarding status on mount
   useEffect(() => {
@@ -181,14 +206,14 @@ export default function RootNavigator() {
 
   if (isLoading || hasOnboarded === null) {
     return (
-      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: Colors.surface }}>
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: appColors.surface }}>
         <ActivityIndicator size="large" color={Colors.primary} />
       </View>
     );
   }
 
   return (
-    <NavigationContainer linking={linkingConfig}>
+    <NavigationContainer linking={linkingConfig} theme={navigationTheme}>
       <Stack.Navigator
         screenOptions={{
           headerShown: false,

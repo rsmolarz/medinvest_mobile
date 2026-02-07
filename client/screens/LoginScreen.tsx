@@ -10,10 +10,12 @@ import { Button } from "@/components/Button";
 import { useTheme } from "@/hooks/useTheme";
 import { useAuth } from "@/contexts/AuthContext";
 import { Colors, Spacing, BorderRadius } from "@/constants/theme";
+import { useAppColors } from '@/hooks/useAppColors';
 
 export default function LoginScreen() {
   const insets = useSafeAreaInsets();
   const { theme } = useTheme();
+  const appColors = useAppColors();
   const navigation = useNavigation<any>();
   const { signInWithApple, signInWithGoogle, isAppleAuthAvailable, isLoading, error } = useAuth();
 
@@ -94,7 +96,7 @@ export default function LoginScreen() {
         ) : null}
         <Pressable
           onPress={handleGoogleSignIn}
-          style={[styles.googleButton, { backgroundColor: theme.backgroundSecondary, padding: Spacing.md, borderRadius: BorderRadius.md, alignItems: 'center' }]}
+          style={[styles.googleButton, { backgroundColor: theme.backgroundSecondary, padding: Spacing.md, borderRadius: BorderRadius.md, alignItems: 'center', borderColor: appColors.border }]}
           disabled={isLoading}
         >
           <Text style={{ color: theme.text, fontSize: 16 }}>
@@ -103,13 +105,13 @@ export default function LoginScreen() {
         </Pressable>
         <Button
           onPress={handleEmailSignIn}
-          style={[styles.googleButton, { backgroundColor: 'transparent', borderWidth: 1, borderColor: Colors.border }]}
+          style={[styles.googleButton, { backgroundColor: 'transparent', borderWidth: 1, borderColor: appColors.border }]}
         >
           {"Sign Up with Email"}
         </Button>
 
         {error ? (
-          <ThemedText type="small" style={[styles.errorText, { color: Colors.error }]}>
+          <ThemedText type="small" style={[styles.errorText, { color: appColors.error }]}>
             {error}
           </ThemedText>
         ) : null}
@@ -201,7 +203,6 @@ const styles = StyleSheet.create({
   },
   googleButton: {
     borderWidth: 1,
-    borderColor: Colors.border,
   },
   terms: {
     textAlign: "center",
