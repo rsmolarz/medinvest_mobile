@@ -409,19 +409,24 @@ export function AuthProvider({ children }: AuthProviderProps) {
       console.log('[OAuth] Another sign-in is already in progress');
       return;
     }
+    console.log('[OAuth] Google Sign-In starting, redirect URI:', oauthRedirectUri);
+
+    if (!getHasGoogleCredentialsForPlatform()) {
+      setError('Google Sign-In is not configured for this platform. Please use email login.');
+      return;
+    }
+
+    // IMPORTANT: Call promptAsync IMMEDIATELY - no async state updates before this
+    // or the browser's popup blocker will block the OAuth window
+    const startTime = Date.now();
+    const result = await promptGoogleAsync();
+    const elapsed = Date.now() - startTime;
+    
+    // State updates happen AFTER the popup is already open
+    setError(null);
+    setIsOAuthInProgress(true);
+    
     try {
-      setError(null);
-      setIsOAuthInProgress(true);
-      console.log('[OAuth] Google Sign-In starting, redirect URI:', oauthRedirectUri);
-
-      if (!getHasGoogleCredentialsForPlatform()) {
-        setError('Google Sign-In is not configured for this platform. Please use email login.');
-        return;
-      }
-
-      const startTime = Date.now();
-      const result = await promptGoogleAsync();
-      const elapsed = Date.now() - startTime;
       console.log('[OAuth] Google Sign-In result:', result?.type, 'elapsed:', elapsed, 'ms');
       
       if (result?.type === 'error') {
@@ -461,18 +466,23 @@ export function AuthProvider({ children }: AuthProviderProps) {
       console.log('[OAuth] Another sign-in is already in progress');
       return;
     }
+    const currentClientId = getGitHubClientId();
+    console.log('[OAuth] GitHub Sign-In starting, redirect URI:', oauthRedirectUri);
+
+    if (!currentClientId) {
+      setError('GitHub Sign-In is not configured. Please use email login.');
+      return;
+    }
+
+    // IMPORTANT: Call promptAsync IMMEDIATELY - no async state updates before this
+    // or the browser's popup blocker will block the OAuth window
+    const result = await promptGithubAsync();
+    
+    // State updates happen AFTER the popup is already open
+    setError(null);
+    setIsOAuthInProgress(true);
+    
     try {
-      setError(null);
-      setIsOAuthInProgress(true);
-      const currentClientId = getGitHubClientId();
-      console.log('[OAuth] GitHub Sign-In starting, redirect URI:', oauthRedirectUri);
-
-      if (!currentClientId) {
-        setError('GitHub Sign-In is not configured. Please use email login.');
-        return;
-      }
-
-      const result = await promptGithubAsync();
       console.log('[OAuth] GitHub Sign-In result:', result?.type);
       
       if (result?.type === 'error') {
@@ -501,17 +511,22 @@ export function AuthProvider({ children }: AuthProviderProps) {
       console.log('[OAuth] Another sign-in is already in progress');
       return;
     }
+    console.log('[OAuth] Facebook Sign-In starting, redirect URI:', oauthRedirectUri);
+
+    if (!FACEBOOK_APP_ID) {
+      setError('Facebook Sign-In is not configured. Please use email login.');
+      return;
+    }
+
+    // IMPORTANT: Call promptAsync IMMEDIATELY - no async state updates before this
+    // or the browser's popup blocker will block the OAuth window
+    const result = await promptFacebookAsync();
+    
+    // State updates happen AFTER the popup is already open
+    setError(null);
+    setIsOAuthInProgress(true);
+    
     try {
-      setError(null);
-      setIsOAuthInProgress(true);
-      console.log('[OAuth] Facebook Sign-In starting, redirect URI:', oauthRedirectUri);
-
-      if (!FACEBOOK_APP_ID) {
-        setError('Facebook Sign-In is not configured. Please use email login.');
-        return;
-      }
-
-      const result = await promptFacebookAsync();
       console.log('[OAuth] Facebook Sign-In result:', result?.type);
       
       if (result?.type === 'error') {
