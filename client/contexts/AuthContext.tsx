@@ -419,19 +419,26 @@ export function AuthProvider({ children }: AuthProviderProps) {
         return;
       }
 
+      const startTime = Date.now();
       const result = await promptGoogleAsync();
-      console.log('[OAuth] Google Sign-In result:', result?.type);
+      const elapsed = Date.now() - startTime;
+      console.log('[OAuth] Google Sign-In result:', result?.type, 'elapsed:', elapsed, 'ms');
       
       if (result?.type === 'error') {
         const errMsg = (result as any).error?.message || 'Google sign-in was rejected';
-        if (errMsg.includes('redirect_uri_mismatch') || errMsg.includes('invalid_client')) {
+        if (errMsg.includes('redirect_uri_mismatch') || errMsg.includes('invalid_client') || errMsg.includes('invalid_request')) {
           console.error('[OAuth] Redirect URI mismatch. Add this URI to Google Cloud Console:', oauthRedirectUri);
-          setError('Google Sign-In needs configuration. Please use email login or the demo account.');
+          setError(`Google Sign-In redirect URI mismatch. Go to Google Cloud Console → Credentials → your OAuth Client → add this Authorized Redirect URI: ${oauthRedirectUri}`);
         } else {
           setError(errMsg);
         }
       } else if (result?.type === 'dismiss') {
-        console.log('[OAuth] Google sign-in dismissed by user');
+        if (elapsed < 5000) {
+          console.warn('[OAuth] Google sign-in dismissed very quickly - likely redirect_uri_mismatch on Google side');
+          setError(`Google Sign-In failed (redirect_uri_mismatch). Add this redirect URI in Google Cloud Console → Credentials → OAuth Client → Authorized Redirect URIs: ${oauthRedirectUri}`);
+        } else {
+          console.log('[OAuth] Google sign-in dismissed by user');
+        }
       } else if (result?.type === 'locked') {
         console.log('[OAuth] Google sign-in locked - another session active');
         setError('Another sign-in is in progress. Please wait a moment and try again.');
