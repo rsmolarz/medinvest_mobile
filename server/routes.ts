@@ -43,6 +43,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
     postsRoutes(req, res, next);
   });
 
+  app.get('/api/oauth-debug', (req, res) => {
+    const forwardedProto = req.header('x-forwarded-proto') || req.protocol || 'https';
+    const forwardedHost = req.header('x-forwarded-host') || req.get('host');
+    const currentOrigin = `${forwardedProto}://${forwardedHost}`;
+    const callbackUri = `${currentOrigin}/api/auth/callback`;
+    const devDomain = process.env.REPLIT_DEV_DOMAIN;
+    const pubDomains = process.env.REPLIT_DOMAINS;
+    const uris: string[] = [callbackUri];
+    if (devDomain) uris.push(`https://${devDomain}/api/auth/callback`);
+    if (pubDomains) {
+      for (const d of pubDomains.split(',')) {
+        const u = `https://${d.trim()}/api/auth/callback`;
+        if (!uris.includes(u)) uris.push(u);
+      }
+    }
+    for (const d of ['themedicineandmoneyshow.com', 'medinvest-mobile--rsmolarz.replit.app']) {
+      const u = `https://${d}/api/auth/callback`;
+      if (!uris.includes(u)) uris.push(u);
+    }
+    const origins = [...new Set(uris.map(u => u.replace('/api/auth/callback', '')))];
+    res.send(`<!DOCTYPE html><html><head><title>OAuth Debug</title>
+    <style>body{font-family:system-ui;max-width:800px;margin:40px auto;padding:20px;background:#1a1a2e;color:#e0e0e0}
+    h1{color:#00a86b}h2{color:#0066cc;margin-top:20px}code{background:#2d2d44;padding:4px 8px;border-radius:4px;display:block;margin:5px 0;word-break:break-all;font-size:14px}
+    .s{background:#2d2d44;padding:15px;border-radius:8px;margin:10px 0}
+    .ok{color:#00a86b}.miss{color:#cc4444}</style></head>
+    <body><h1>OAuth Redirect URI Setup Guide</h1>
+    <div class="s"><h2>Step 1: Copy These Redirect URIs</h2>
+    <p>Add ALL of these to each OAuth provider:</p>
+    ${uris.map(u => `<code>${u}</code>`).join('')}</div>
+    <div class="s"><h2>Step 2: Google Cloud Console</h2>
+    <p><a href="https://console.cloud.google.com/apis/credentials" style="color:#00a86b">Open Google Cloud Console</a></p>
+    <p><b>Authorized JavaScript Origins:</b></p>
+    ${origins.map(u => `<code>${u}</code>`).join('')}
+    <p><b>Authorized Redirect URIs:</b></p>
+    ${uris.map(u => `<code>${u}</code>`).join('')}
+    <p><b>IMPORTANT:</b> OAuth consent screen must be "External" type. If in "Testing" mode, add your Google email as a test user.</p></div>
+    <div class="s"><h2>Step 3: GitHub Developer Settings</h2>
+    <p><a href="https://github.com/settings/developers" style="color:#00a86b">Open GitHub Developer Settings</a></p>
+    <p><b>Authorization callback URL:</b> (only supports ONE)</p>
+    <code>${callbackUri}</code></div>
+    <div class="s"><h2>Step 4: Facebook Developers</h2>
+    <p><a href="https://developers.facebook.com" style="color:#00a86b">Open Facebook Developers</a> → Your App → Use Cases → Facebook Login → Customize → Settings</p>
+    <p><b>Valid OAuth Redirect URIs:</b></p>
+    ${uris.map(u => `<code>${u}</code>`).join('')}</div>
+    <div class="s"><h2>Provider Credentials Status</h2>
+    <p>Google: <span class="${process.env.GOOGLE_WEB_CLIENT_ID || process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID ? 'ok' : 'miss'}">${process.env.GOOGLE_WEB_CLIENT_ID || process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID ? 'Configured' : 'Missing'}</span></p>
+    <p>GitHub: <span class="${process.env.GITHUB_CLIENT_ID || process.env.EXPO_PUBLIC_GITHUB_CLIENT_ID ? 'ok' : 'miss'}">${process.env.GITHUB_CLIENT_ID || process.env.EXPO_PUBLIC_GITHUB_CLIENT_ID ? 'Configured' : 'Missing'}</span></p>
+    <p>Facebook: <span class="${process.env.FACEBOOK_APP_ID || process.env.EXPO_PUBLIC_FACEBOOK_APP_ID ? 'ok' : 'miss'}">${process.env.FACEBOOK_APP_ID || process.env.EXPO_PUBLIC_FACEBOOK_APP_ID ? 'Configured' : 'Missing'}</span></p></div>
+    </body></html>`);
+  });
+
   app.use('/api/*', (req, res) => {
     res.status(404).json({ message: 'Endpoint not found' });
   });

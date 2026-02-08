@@ -1161,4 +1161,74 @@ router.post('/reset-password', async (req: Request, res: Response) => {
   }
 });
 
+/**
+ * GET /api/auth/oauth-debug
+ * Shows exact redirect URIs that need to be registered with OAuth providers
+ */
+router.get('/oauth-debug', (req: Request, res: Response) => {
+  const forwardedProto = req.header('x-forwarded-proto') || req.protocol || 'https';
+  const forwardedHost = req.header('x-forwarded-host') || req.get('host');
+  const currentOrigin = `${forwardedProto}://${forwardedHost}`;
+  const callbackUri = `${currentOrigin}/api/auth/callback`;
+
+  const devDomain = process.env.REPLIT_DEV_DOMAIN;
+  const pubDomains = process.env.REPLIT_DOMAINS;
+
+  const allCallbackUris: string[] = [callbackUri];
+  if (devDomain) {
+    allCallbackUris.push(`https://${devDomain}/api/auth/callback`);
+  }
+  if (pubDomains) {
+    const domainList = pubDomains.split(',');
+    for (const d of domainList) {
+      const uri = `https://${d.trim()}/api/auth/callback`;
+      if (!allCallbackUris.includes(uri)) allCallbackUris.push(uri);
+    }
+  }
+  const knownDomains = ['themedicineandmoneyshow.com', 'medinvest-mobile--rsmolarz.replit.app'];
+  for (const d of knownDomains) {
+    const uri = `https://${d}/api/auth/callback`;
+    if (!allCallbackUris.includes(uri)) allCallbackUris.push(uri);
+  }
+
+  const hasGoogle = !!(process.env.GOOGLE_WEB_CLIENT_ID || process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID);
+  const hasGithub = !!(process.env.GITHUB_CLIENT_ID || process.env.EXPO_PUBLIC_GITHUB_CLIENT_ID);
+  const hasFacebook = !!(process.env.FACEBOOK_APP_ID || process.env.EXPO_PUBLIC_FACEBOOK_APP_ID);
+
+  const html = `<!DOCTYPE html><html><head><title>OAuth Debug</title>
+  <style>body{font-family:system-ui;max-width:800px;margin:40px auto;padding:20px;background:#1a1a2e;color:#e0e0e0}
+  h1{color:#00a86b}h2{color:#0066cc;margin-top:30px}code{background:#2d2d44;padding:4px 8px;border-radius:4px;display:block;margin:5px 0;word-break:break-all;font-size:14px}
+  .status{padding:4px 8px;border-radius:4px;font-weight:bold}.ok{background:#00a86b33;color:#00a86b}.missing{background:#cc000033;color:#cc4444}
+  .section{background:#2d2d44;padding:15px;border-radius:8px;margin:10px 0}</style></head>
+  <body><h1>OAuth Redirect URI Debug</h1>
+  <div class="section"><h2>Current Request Origin</h2><code>${currentOrigin}</code></div>
+  <div class="section"><h2>Callback URI (for token exchange)</h2><code>${callbackUri}</code></div>
+  <div class="section"><h2>All Redirect URIs to Register</h2>
+  <p>Copy-paste ALL of these into each OAuth provider's console:</p>
+  ${allCallbackUris.map(u => `<code>${u}</code>`).join('')}</div>
+  <div class="section"><h2>Provider Status</h2>
+  <p>Google: <span class="status ${hasGoogle ? 'ok' : 'missing'}">${hasGoogle ? 'Configured' : 'Missing credentials'}</span></p>
+  <p>GitHub: <span class="status ${hasGithub ? 'ok' : 'missing'}">${hasGithub ? 'Configured' : 'Missing credentials'}</span></p>
+  <p>Facebook: <span class="status ${hasFacebook ? 'ok' : 'missing'}">${hasFacebook ? 'Configured' : 'Missing credentials'}</span></p></div>
+  <div class="section"><h2>Google Console Setup</h2>
+  <p>In <a href="https://console.cloud.google.com/apis/credentials" style="color:#00a86b">Google Cloud Console</a>:</p>
+  <p><b>Authorized JavaScript Origins:</b></p>
+  ${[...new Set(allCallbackUris.map(u => u.replace('/api/auth/callback', '')))].map(u => `<code>${u}</code>`).join('')}
+  <p><b>Authorized Redirect URIs:</b></p>
+  ${allCallbackUris.map(u => `<code>${u}</code>`).join('')}
+  <p><b>OAuth Consent Screen:</b> Must be "External" user type and "In production" (or add test users)</p></div>
+  <div class="section"><h2>GitHub Console Setup</h2>
+  <p>In <a href="https://github.com/settings/developers" style="color:#00a86b">GitHub Developer Settings</a>:</p>
+  <p><b>Authorization callback URL:</b> (can only have ONE per app)</p>
+  <code>${callbackUri}</code>
+  <p>Note: If testing from multiple domains, you may need separate GitHub OAuth apps.</p></div>
+  <div class="section"><h2>Facebook Console Setup</h2>
+  <p>In <a href="https://developers.facebook.com" style="color:#00a86b">Facebook Developers</a> &gt; App Settings &gt; Facebook Login &gt; Settings:</p>
+  <p><b>Valid OAuth Redirect URIs:</b></p>
+  ${allCallbackUris.map(u => `<code>${u}</code>`).join('')}</div>
+  </body></html>`;
+
+  res.send(html);
+});
+
 export default router;
