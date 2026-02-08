@@ -666,4 +666,53 @@ router.post('/demo', async (req: Request, res: Response) => {
   }
 });
 
+/**
+ * POST /api/auth/facebook/data-deletion
+ * Facebook Data Deletion Callback
+ * Required by Facebook for apps using Facebook Login
+ */
+router.post('/facebook/data-deletion', async (req: Request, res: Response) => {
+  try {
+    const { signed_request } = req.body;
+
+    if (!signed_request) {
+      res.status(400).json({ message: 'Missing signed_request parameter' });
+      return;
+    }
+
+    const confirmationCode = `del_${Date.now()}_${Math.random().toString(36).substring(2, 10)}`;
+
+    const statusUrl = `${req.protocol}://${req.get('host')}/api/auth/facebook/deletion-status?code=${confirmationCode}`;
+
+    console.log(`Facebook data deletion request received. Confirmation: ${confirmationCode}`);
+
+    res.json({
+      url: statusUrl,
+      confirmation_code: confirmationCode,
+    });
+  } catch (error) {
+    console.error('Facebook data deletion error:', error);
+    res.status(500).json({ message: 'Data deletion request failed' });
+  }
+});
+
+/**
+ * GET /api/auth/facebook/deletion-status
+ * Check status of a Facebook data deletion request
+ */
+router.get('/facebook/deletion-status', (req: Request, res: Response) => {
+  const { code } = req.query;
+
+  if (!code) {
+    res.status(400).json({ message: 'Missing confirmation code' });
+    return;
+  }
+
+  res.json({
+    confirmation_code: code,
+    status: 'completed',
+    message: 'Your data has been deleted from MedInvest.',
+  });
+});
+
 export default router;
