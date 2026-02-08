@@ -65,15 +65,15 @@ export default function ForgotPasswordScreen() {
 
   if (sent) {
     return (
-      <SafeAreaView style={[styles.container, { backgroundColor: appColors.surface }]}>
+      <SafeAreaView style={[styles.container, { backgroundColor: appColors.background }]}>
         <View style={styles.header}>
-          <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+          <TouchableOpacity style={[styles.backButton, { backgroundColor: appColors.surfaceSecondary }]} onPress={() => navigation.goBack()}>
             <Ionicons name="chevron-back" size={24} color={appColors.textPrimary} />
           </TouchableOpacity>
         </View>
 
         <View style={styles.successContent}>
-          <View style={styles.successIcon}>
+          <View style={[styles.successIcon, { backgroundColor: Colors.primary + '15' }]}>
             <Ionicons name="mail" size={48} color={Colors.primary} />
           </View>
           <ThemedText style={[styles.successTitle, { color: appColors.textPrimary }]}>Check Your Email</ThemedText>
@@ -82,7 +82,7 @@ export default function ForgotPasswordScreen() {
             <ThemedText style={[styles.emailHighlight, { color: appColors.textPrimary }]}>{email}</ThemedText>
           </ThemedText>
 
-          <View style={styles.instructionsContainer}>
+          <View style={[styles.instructionsContainer, { backgroundColor: appColors.surfaceSecondary }]}>
             <View style={styles.instructionItem}>
               <View style={styles.instructionNumber}>
                 <ThemedText style={styles.instructionNumberText}>1</ThemedText>
@@ -128,7 +128,7 @@ export default function ForgotPasswordScreen() {
   }
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: appColors.surface }]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: appColors.background }]}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardView}
@@ -140,14 +140,14 @@ export default function ForgotPasswordScreen() {
         >
           {/* Header */}
           <View style={styles.header}>
-            <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+            <TouchableOpacity style={[styles.backButton, { backgroundColor: appColors.surfaceSecondary }]} onPress={() => navigation.goBack()}>
               <Ionicons name="chevron-back" size={24} color={appColors.textPrimary} />
             </TouchableOpacity>
           </View>
 
           {/* Content */}
           <View style={styles.content}>
-            <View style={styles.iconContainer}>
+            <View style={[styles.iconContainer, { backgroundColor: Colors.primary + '15' }]}>
               <Ionicons name="lock-closed-outline" size={48} color={Colors.primary} />
             </View>
             <ThemedText style={[styles.title, { color: appColors.textPrimary }]}>Forgot Password?</ThemedText>
@@ -158,7 +158,7 @@ export default function ForgotPasswordScreen() {
             {/* Email Input */}
             <View style={styles.inputContainer}>
               <ThemedText style={[styles.label, { color: appColors.textPrimary }]}>Email Address</ThemedText>
-              <View style={[styles.inputWrapper, emailError && [styles.inputError, { borderColor: appColors.error }]]}>
+              <View style={[styles.inputWrapper, { backgroundColor: appColors.input }, emailError ? [styles.inputError, { borderColor: appColors.error }] : null]}>
                 <Ionicons name="mail-outline" size={20} color={appColors.textSecondary} />
                 <TextInput
                   style={[styles.input, { color: appColors.textPrimary }]}
@@ -172,6 +172,7 @@ export default function ForgotPasswordScreen() {
                   keyboardType="email-address"
                   autoCapitalize="none"
                   autoComplete="email"
+                  testID="input-forgot-email"
                 />
               </View>
               {emailError ? (
@@ -184,6 +185,7 @@ export default function ForgotPasswordScreen() {
               style={[styles.submitButton, isLoading && styles.submitButtonDisabled]}
               onPress={handleSubmit}
               disabled={isLoading}
+              testID="button-send-reset"
             >
               {isLoading ? (
                 <ActivityIndicator color="white" />
@@ -225,7 +227,6 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: Colors.light.backgroundSecondary,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -238,7 +239,6 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: Colors.primary + '15',
     alignItems: 'center',
     justifyContent: 'center',
     alignSelf: 'center',
@@ -266,7 +266,6 @@ const styles = StyleSheet.create({
   inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.light.backgroundSecondary,
     borderRadius: BorderRadius.md,
     paddingHorizontal: Spacing.md,
     height: 52,
@@ -323,7 +322,6 @@ const styles = StyleSheet.create({
     width: 96,
     height: 96,
     borderRadius: 48,
-    backgroundColor: Colors.primary + '15',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: Spacing.xl,
@@ -343,7 +341,6 @@ const styles = StyleSheet.create({
   },
   instructionsContainer: {
     width: '100%',
-    backgroundColor: Colors.light.backgroundSecondary,
     borderRadius: BorderRadius.md,
     padding: Spacing.lg,
     marginBottom: Spacing.xl,

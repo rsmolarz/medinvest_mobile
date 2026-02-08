@@ -114,6 +114,7 @@ export interface AuthContextType extends AuthState {
   refreshUser: () => Promise<void>;
   updateUser: (userData: Partial<User>) => Promise<void>;
   mockSignIn: () => Promise<void>;
+  forgotPassword: (email: string) => Promise<boolean>;
   isAppleAuthAvailable: boolean;
 }
 
@@ -759,6 +760,23 @@ export function AuthProvider({ children }: AuthProviderProps) {
     await saveAuthData(authToken, normalizedUser);
   }, []);
 
+  const forgotPassword = useCallback(async (email: string): Promise<boolean> => {
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      await apiClient.post('/auth/forgot-password', { email });
+      return true;
+    } catch (err: any) {
+      const message = err?.response?.data?.message || err?.message || 'Failed to send reset link';
+      setError(message);
+      console.error('Forgot password error:', err);
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
   const isAuthenticated = useMemo(() => {
     return !!user && !!token;
   }, [user, token]);
@@ -782,6 +800,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       refreshUser,
       updateUser,
       mockSignIn,
+      forgotPassword,
       isAppleAuthAvailable,
     }),
     [
@@ -802,6 +821,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       refreshUser,
       updateUser,
       mockSignIn,
+      forgotPassword,
       isAppleAuthAvailable,
     ]
   );

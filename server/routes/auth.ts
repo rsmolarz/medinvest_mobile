@@ -1,6 +1,6 @@
 import { Router, Request, Response } from 'express';
-import { db, users, userSessions, notificationPreferences } from '../db';
-import { eq } from 'drizzle-orm';
+import { db, users, userSessions, notificationPreferences, passwordResetTokens } from '../db';
+import { eq, and, gt, isNull } from 'drizzle-orm';
 import { authMiddleware, generateToken } from '../middleware/auth';
 import { verifyAppleToken, verifyGoogleToken, verifyGithubToken, verifyFacebookToken } from '../services/socialAuth';
 import bcrypt from 'bcrypt';
@@ -1046,6 +1046,119 @@ router.get('/facebook/deletion-status', (req: Request, res: Response) => {
     status: 'completed',
     message: 'Your data has been deleted from MedInvest.',
   });
+});
+
+/**
+ * POST /api/auth/forgot-password
+ * Request a password reset link
+ */
+router.post('/forgot-password', async (req: Request, res: Response) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      res.status(400).json({ message: 'Email is required' });
+      return;
+    }
+
+    const [user] = await db
+      .select()
+      .from(users)
+      .where(eq(users.email, email.toLowerCase()))
+      .limit(1);
+
+    if (!user) {
+      res.json({ success: true, message: 'If an account with that email exists, we have sent password reset instructions.' });
+      return;
+    }
+
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    const expiresAt = new Date();
+    expiresAt.setHours(expiresAt.getHours() + 1);
+
+    await db.insert(passwordResetTokens).values({
+      userId: user.id,
+      token: resetToken,
+      expiresAt,
+    });
+
+    console.log(`[Auth] Password reset requested for ${email}. Token: ${resetToken}`);
+
+    res.json({
+      success: true,
+      message: 'If an account with that email exists, we have sent password reset instructions.',
+    });
+  } catch (error) {
+    console.error('[Auth] Forgot password error:', error);
+    res.status(500).json({ message: 'Something went wrong. Please try again.' });
+  }
+});
+
+/**
+ * POST /api/auth/reset-password
+ * Reset password using a token
+ */
+router.post('/reset-password', async (req: Request, res: Response) => {
+  try {
+    const { token, newPassword } = req.body;
+
+    if (!token || !newPassword) {
+      res.status(400).json({ message: 'Token and new password are required' });
+      return;
+    }
+
+    if (newPassword.length < 8) {
+      res.status(400).json({ message: 'Password must be at least 8 characters' });
+      return;
+    }
+
+    const hasUppercase = /[A-Z]/.test(newPassword);
+    const hasLowercase = /[a-z]/.test(newPassword);
+    const hasNumber = /[0-9]/.test(newPassword);
+
+    if (!hasUppercase || !hasLowercase || !hasNumber) {
+      res.status(400).json({
+        message: 'Password must contain uppercase, lowercase, and number',
+      });
+      return;
+    }
+
+    const [resetRecord] = await db
+      .select()
+      .from(passwordResetTokens)
+      .where(
+        and(
+          eq(passwordResetTokens.token, token),
+          gt(passwordResetTokens.expiresAt, new Date()),
+          isNull(passwordResetTokens.usedAt)
+        )
+      )
+      .limit(1);
+
+    if (!resetRecord) {
+      res.status(400).json({ message: 'Invalid or expired reset link. Please request a new one.' });
+      return;
+    }
+
+    const passwordHash = await bcrypt.hash(newPassword, 12);
+
+    await db
+      .update(users)
+      .set({ passwordHash, updatedAt: new Date() })
+      .where(eq(users.id, resetRecord.userId));
+
+    await db
+      .update(passwordResetTokens)
+      .set({ usedAt: new Date() })
+      .where(eq(passwordResetTokens.id, resetRecord.id));
+
+    console.log(`[Auth] Password reset completed for user ${resetRecord.userId}`);
+
+    res.json({ success: true, message: 'Password has been reset successfully. You can now sign in with your new password.' });
+  } catch (error) {
+    console.error('[Auth] Reset password error:', error);
+    res.status(500).json({ message: 'Something went wrong. Please try again.' });
+  }
 });
 
 export default router;

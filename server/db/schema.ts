@@ -128,6 +128,28 @@ export const userSessions = pgTable(
 );
 
 // ============================================
+// Password Reset Tokens Table
+// ============================================
+
+export const passwordResetTokens = pgTable(
+  'password_reset_tokens',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    token: varchar('token', { length: 64 }).notNull().unique(),
+    expiresAt: timestamp('expires_at').notNull(),
+    usedAt: timestamp('used_at'),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+  },
+  (table) => ({
+    tokenIdx: uniqueIndex('password_reset_token_idx').on(table.token),
+    userIdIdx: index('password_reset_user_id_idx').on(table.userId),
+  })
+);
+
+// ============================================
 // Push Tokens Table
 // ============================================
 
