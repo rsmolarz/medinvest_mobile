@@ -4,6 +4,7 @@ import { eq } from 'drizzle-orm';
 import { authMiddleware, generateToken } from '../middleware/auth';
 import { verifyAppleToken, verifyGoogleToken, verifyGithubToken, verifyFacebookToken } from '../services/socialAuth';
 import bcrypt from 'bcrypt';
+import crypto from 'crypto';
 
 const router = Router();
 
@@ -353,6 +354,286 @@ router.post('/facebook/token', async (req: Request, res: Response) => {
     res.status(500).json({ message: 'Token exchange failed' });
   }
 });
+
+/**
+ * GET /api/auth/callback
+ * Server-side OAuth callback handler
+ * Handles the redirect from OAuth providers, exchanges code for token,
+ * creates/finds user, generates JWT, and passes it back via cookie
+ */
+router.get('/callback', async (req: Request, res: Response) => {
+  try {
+    const { code, state, error: oauthError, error_description } = req.query;
+
+    if (oauthError) {
+      console.error('[OAuth Callback] Error from provider:', oauthError, error_description);
+      return res.status(400).send(getOAuthResultPage('error', `Authentication failed: ${error_description || oauthError}`));
+    }
+
+    if (!code || !state || typeof code !== 'string' || typeof state !== 'string') {
+      return res.status(400).send(getOAuthResultPage('error', 'Missing authorization code or state'));
+    }
+
+    const separatorIndex = state.indexOf('_');
+    if (separatorIndex === -1) {
+      return res.status(400).send(getOAuthResultPage('error', 'Invalid state parameter'));
+    }
+
+    const provider = state.substring(0, separatorIndex);
+    if (!['google', 'github', 'facebook'].includes(provider)) {
+      return res.status(400).send(getOAuthResultPage('error', 'Unknown provider'));
+    }
+
+    console.log(`[OAuth Callback] Provider: ${provider}, code length: ${code.length}`);
+
+    const forwardedProto = req.header('x-forwarded-proto') || req.protocol || 'https';
+    const forwardedHost = req.header('x-forwarded-host') || req.get('host');
+    const callbackUri = `${forwardedProto}://${forwardedHost}/api/auth/callback`;
+
+    let accessToken: string | undefined;
+
+    if (provider === 'github') {
+      const clientId = process.env.GITHUB_CLIENT_ID || process.env.EXPO_PUBLIC_GITHUB_CLIENT_ID;
+      const clientSecret = process.env.GITHUB_CLIENT_SECRET;
+      if (!clientId || !clientSecret) {
+        return res.status(500).send(getOAuthResultPage('error', 'GitHub OAuth is not configured'));
+      }
+      const tokenResponse = await fetch('https://github.com/login/oauth/access_token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify({ client_id: clientId, client_secret: clientSecret, code, redirect_uri: callbackUri }),
+      });
+      const tokenData = await tokenResponse.json();
+      if (tokenData.error) {
+        console.error('[OAuth Callback] GitHub token error:', tokenData);
+        return res.status(401).send(getOAuthResultPage('error', tokenData.error_description || 'GitHub token exchange failed'));
+      }
+      accessToken = tokenData.access_token;
+    } else if (provider === 'google') {
+      const clientId = process.env.GOOGLE_WEB_CLIENT_ID || process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID;
+      const clientSecret = process.env.GOOGLE_WEB_CLIENT_SECRET;
+      if (!clientId || !clientSecret) {
+        return res.status(500).send(getOAuthResultPage('error', 'Google OAuth is not configured'));
+      }
+      const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({ code, client_id: clientId, client_secret: clientSecret, redirect_uri: callbackUri, grant_type: 'authorization_code' }).toString(),
+      });
+      const tokenData = await tokenResponse.json();
+      if (tokenData.error) {
+        console.error('[OAuth Callback] Google token error:', tokenData);
+        return res.status(401).send(getOAuthResultPage('error', tokenData.error_description || 'Google token exchange failed'));
+      }
+      accessToken = tokenData.access_token;
+    } else if (provider === 'facebook') {
+      const appId = process.env.FACEBOOK_APP_ID || process.env.EXPO_PUBLIC_FACEBOOK_APP_ID;
+      const appSecret = process.env.FACEBOOK_APP_SECRET;
+      if (!appId || !appSecret) {
+        return res.status(500).send(getOAuthResultPage('error', 'Facebook OAuth is not configured'));
+      }
+      const tokenUrl = new URL('https://graph.facebook.com/v18.0/oauth/access_token');
+      tokenUrl.searchParams.append('client_id', appId);
+      tokenUrl.searchParams.append('client_secret', appSecret);
+      tokenUrl.searchParams.append('code', code);
+      tokenUrl.searchParams.append('redirect_uri', callbackUri);
+      const tokenResponse = await fetch(tokenUrl.toString());
+      const tokenData = await tokenResponse.json();
+      if (tokenData.error) {
+        console.error('[OAuth Callback] Facebook token error:', tokenData);
+        return res.status(401).send(getOAuthResultPage('error', tokenData.error?.message || 'Facebook token exchange failed'));
+      }
+      accessToken = tokenData.access_token;
+    }
+
+    if (!accessToken) {
+      return res.status(401).send(getOAuthResultPage('error', 'Failed to obtain access token'));
+    }
+
+    let verifiedEmail: string | undefined;
+    let providerUserId: string | undefined;
+    let verifiedFirstName: string | undefined;
+    let verifiedLastName: string | undefined;
+    let verifiedAvatarUrl: string | undefined;
+
+    if (provider === 'google') {
+      const googleData = await verifyGoogleToken(accessToken);
+      if (!googleData) return res.status(401).send(getOAuthResultPage('error', 'Invalid Google token'));
+      verifiedEmail = googleData.email;
+      providerUserId = googleData.sub;
+      verifiedFirstName = googleData.given_name;
+      verifiedLastName = googleData.family_name;
+      verifiedAvatarUrl = googleData.picture;
+    } else if (provider === 'github') {
+      const githubData = await verifyGithubToken(accessToken);
+      if (!githubData) return res.status(401).send(getOAuthResultPage('error', 'Invalid GitHub token'));
+      verifiedEmail = githubData.email;
+      providerUserId = githubData.sub;
+      if (githubData.name) {
+        const nameParts = githubData.name.split(' ');
+        verifiedFirstName = nameParts[0];
+        verifiedLastName = nameParts.slice(1).join(' ');
+      }
+      verifiedAvatarUrl = githubData.picture;
+    } else if (provider === 'facebook') {
+      const facebookData = await verifyFacebookToken(accessToken);
+      if (!facebookData) return res.status(401).send(getOAuthResultPage('error', 'Invalid Facebook token'));
+      verifiedEmail = facebookData.email;
+      providerUserId = facebookData.sub;
+      verifiedFirstName = facebookData.first_name;
+      verifiedLastName = facebookData.last_name;
+      verifiedAvatarUrl = facebookData.picture;
+    }
+
+    if (!verifiedEmail) {
+      return res.status(400).send(getOAuthResultPage('error', 'Email is required. Please ensure your account has a verified email.'));
+    }
+
+    let [existingUser] = await db
+      .select()
+      .from(users)
+      .where(eq(users.email, verifiedEmail))
+      .limit(1);
+
+    let userId: string;
+
+    if (existingUser) {
+      userId = existingUser.id;
+      await db
+        .update(users)
+        .set({
+          provider: provider as any,
+          providerUserId,
+          lastLoginAt: new Date(),
+          updatedAt: new Date(),
+          ...(verifiedFirstName ? { firstName: verifiedFirstName } : {}),
+          ...(verifiedLastName ? { lastName: verifiedLastName } : {}),
+          ...(verifiedAvatarUrl ? { avatarUrl: verifiedAvatarUrl } : {}),
+        })
+        .where(eq(users.id, userId));
+    } else {
+      const [newUser] = await db
+        .insert(users)
+        .values({
+          email: verifiedEmail,
+          firstName: verifiedFirstName || null,
+          lastName: verifiedLastName || null,
+          avatarUrl: verifiedAvatarUrl || null,
+          provider: provider as any,
+          providerUserId,
+          isVerified: true,
+          lastLoginAt: new Date(),
+        })
+        .returning();
+      userId = newUser.id;
+      await db.insert(notificationPreferences).values({ userId });
+    }
+
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 30);
+
+    const [session] = await db
+      .insert(userSessions)
+      .values({ userId, token: crypto.randomUUID(), expiresAt })
+      .returning();
+
+    const jwtToken = generateToken(userId, session.id);
+
+    const [user] = await db
+      .select({
+        id: users.id,
+        email: users.email,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        avatarUrl: users.avatarUrl,
+        provider: users.provider,
+        isVerified: users.isVerified,
+        isAccredited: users.isAccredited,
+        createdAt: users.createdAt,
+      })
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1);
+
+    const userData = {
+      ...user,
+      fullName: [user.firstName, user.lastName].filter(Boolean).join(' ') || undefined,
+    };
+
+    console.log(`[OAuth Callback] Success: ${verifiedEmail} via ${provider}`);
+
+    res.cookie('medinvest_auth_token', jwtToken, {
+      maxAge: 120000,
+      path: '/',
+      sameSite: 'lax',
+      secure: true,
+      httpOnly: false,
+    });
+    res.cookie('medinvest_auth_user', JSON.stringify(userData), {
+      maxAge: 120000,
+      path: '/',
+      sameSite: 'lax',
+      secure: true,
+      httpOnly: false,
+    });
+
+    return res.send(getOAuthResultPage('success', 'Login successful!', jwtToken, userData));
+  } catch (error) {
+    console.error('[OAuth Callback] Error:', error);
+    return res.status(500).send(getOAuthResultPage('error', 'Authentication failed. Please try again.'));
+  }
+});
+
+function getOAuthResultPage(status: 'success' | 'error', message: string, token?: string, user?: any): string {
+  const isSuccess = status === 'success';
+  return `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MedInvest - ${isSuccess ? 'Login Successful' : 'Login Failed'}</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0a0a0a; color: #fff; display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+    .container { text-align: center; padding: 40px; max-width: 400px; }
+    .icon { font-size: 64px; margin-bottom: 20px; }
+    h1 { font-size: 24px; margin-bottom: 12px; }
+    p { color: #999; font-size: 16px; margin-bottom: 24px; }
+    .btn { display: inline-block; padding: 14px 32px; background: linear-gradient(135deg, #0066CC, #00A86B); color: #fff; text-decoration: none; border-radius: 12px; font-size: 16px; font-weight: 600; border: none; cursor: pointer; }
+    .spinner { border: 3px solid #333; border-top: 3px solid #0066CC; border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite; display: inline-block; margin-bottom: 16px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+  <div class="container">
+    ${isSuccess ? `
+      <div class="spinner"></div>
+      <h1>Login Successful</h1>
+      <p>Redirecting to the app...</p>
+      <script>
+        try {
+          var scheme = 'medinvest://auth?token=${token}';
+          var isExpoGo = /expo/i.test(navigator.userAgent);
+          if (isExpoGo || /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+            window.location.href = scheme;
+          }
+          setTimeout(function() {
+            window.location.href = '/';
+          }, 2000);
+        } catch(e) {
+          window.location.href = '/';
+        }
+      </script>
+    ` : `
+      <div class="icon">&#10060;</div>
+      <h1>Login Failed</h1>
+      <p>${message}</p>
+      <a href="/" class="btn">Try Again</a>
+    `}
+  </div>
+</body>
+</html>`;
+}
 
 /**
  * POST /api/auth/social
