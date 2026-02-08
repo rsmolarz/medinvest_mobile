@@ -36,17 +36,21 @@ function getGitHubClientId(): string | undefined {
   return GITHUB_MOBILE_CLIENT_ID || GITHUB_WEB_CLIENT_ID;
 }
 
+function getServerCallbackUri(): string {
+  if (typeof window !== 'undefined') {
+    return `${window.location.origin}/api/auth/callback`;
+  }
+  const domain = process.env.EXPO_PUBLIC_DOMAIN;
+  if (domain) {
+    const cleanDomain = domain.replace(/:5000$/, '');
+    return `https://${cleanDomain}/api/auth/callback`;
+  }
+  return '/api/auth/callback';
+}
+
 function getOAuthRedirectUri(): string {
   if (Platform.OS === 'web') {
-    if (typeof window !== 'undefined') {
-      return window.location.origin;
-    }
-    const domain = process.env.EXPO_PUBLIC_DOMAIN;
-    if (domain) {
-      const cleanDomain = domain.replace(/:5000$/, '');
-      return `https://${cleanDomain}`;
-    }
-    return AuthSession.makeRedirectUri({ preferLocalhost: false });
+    return getServerCallbackUri();
   }
   return AuthSession.makeRedirectUri({ scheme: 'medinvest' });
 }
@@ -233,69 +237,54 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   useEffect(() => {
     if (Platform.OS !== 'web') return;
+    if (typeof window === 'undefined') return;
     
-    const handleOAuthCallback = async () => {
-      if (typeof window === 'undefined') return;
-      
-      const url = new URL(window.location.href);
-      const code = url.searchParams.get('code');
-      const state = url.searchParams.get('state');
-      const storedState = sessionStorage.getItem('oauth_state');
-      const provider = sessionStorage.getItem('oauth_provider');
-      
-      if (!code || !state || !storedState || state !== storedState) return;
-      
-      sessionStorage.removeItem('oauth_state');
-      sessionStorage.removeItem('oauth_provider');
-      
-      window.history.replaceState({}, document.title, window.location.pathname);
-      
-      console.log('[OAuth] Handling callback for provider:', provider, 'code length:', code.length);
-      
+    const checkOAuthCookie = async () => {
       try {
-        setIsLoading(true);
-        setError(null);
-        
-        if (provider === 'github') {
-          const tokenResponse = await apiClient.post('/auth/github/token', {
-            code,
-            redirect_uri: oauthRedirectUri,
-            platform: 'web',
-          });
-          const { access_token } = tokenResponse.data;
-          if (access_token) {
-            await authenticateWithBackend('github', { token: access_token });
-          }
-        } else if (provider === 'google') {
-          const tokenResponse = await apiClient.post('/auth/google/token', {
-            code,
-            redirect_uri: oauthRedirectUri,
-          });
-          const { access_token } = tokenResponse.data;
-          if (access_token) {
-            await authenticateWithBackend('google', { token: access_token });
-          }
-        } else if (provider === 'facebook') {
-          const tokenResponse = await apiClient.post('/auth/facebook/token', {
-            code,
-            redirect_uri: oauthRedirectUri,
-          });
-          const { access_token } = tokenResponse.data;
-          if (access_token) {
-            await authenticateWithBackend('facebook', { token: access_token });
+        const cookies = document.cookie.split(';').reduce((acc: Record<string, string>, c) => {
+          const [key, ...val] = c.trim().split('=');
+          if (key) acc[key] = decodeURIComponent(val.join('='));
+          return acc;
+        }, {});
+
+        const authToken = cookies['medinvest_auth_token'];
+        const authUserRaw = cookies['medinvest_auth_user'];
+
+        if (!authToken) return;
+
+        console.log('[OAuth] Found auth cookie from server-side callback');
+
+        document.cookie = 'medinvest_auth_token=; Path=/; Max-Age=0; SameSite=Lax; Secure';
+        document.cookie = 'medinvest_auth_user=; Path=/; Max-Age=0; SameSite=Lax; Secure';
+
+        let userData: User | null = null;
+        if (authUserRaw) {
+          try {
+            userData = JSON.parse(authUserRaw);
+          } catch {}
+        }
+
+        if (userData) {
+          await saveAuthData(authToken, userData);
+          console.log('[OAuth] Logged in via server-side callback:', userData.email);
+        } else {
+          try {
+            const response = await apiClient.get('/users/me', {
+              headers: { Authorization: `Bearer ${authToken}` },
+            });
+            await saveAuthData(authToken, response.data as User);
+            console.log('[OAuth] Logged in via API verification');
+          } catch (err) {
+            console.error('[OAuth] Failed to verify token from cookie:', err);
           }
         }
-      } catch (err: any) {
-        console.error('[OAuth] Callback handling error:', err);
-        const message = err?.response?.data?.message || err?.message || 'Sign-in failed';
-        setError(message);
-      } finally {
-        setIsLoading(false);
+      } catch (err) {
+        console.error('[OAuth] Cookie check error:', err);
       }
     };
-    
-    handleOAuthCallback();
-  }, [oauthRedirectUri]);
+
+    checkOAuthCookie();
+  }, []);
 
   const saveAuthData = async (authToken: string, userData: User) => {
     await Promise.all([
@@ -489,13 +478,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
 
     if (Platform.OS === 'web' && typeof window !== 'undefined') {
-      const state = generateRandomState();
-      sessionStorage.setItem('oauth_state', state);
-      sessionStorage.setItem('oauth_provider', 'google');
+      const state = `google_${generateRandomState()}`;
+      const callbackUri = getServerCallbackUri();
       
       const params = new URLSearchParams({
         client_id: GOOGLE_WEB_CLIENT_ID || '',
-        redirect_uri: oauthRedirectUri,
+        redirect_uri: callbackUri,
         response_type: 'code',
         scope: 'openid profile email',
         state,
@@ -503,7 +491,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         prompt: 'consent',
       });
       
-      console.log('[OAuth] Redirecting to Google OAuth...');
+      console.log('[OAuth] Redirecting to Google OAuth, callback:', callbackUri);
       window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
       return;
     }
@@ -552,18 +540,17 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
 
     if (Platform.OS === 'web' && typeof window !== 'undefined') {
-      const state = generateRandomState();
-      sessionStorage.setItem('oauth_state', state);
-      sessionStorage.setItem('oauth_provider', 'github');
+      const state = `github_${generateRandomState()}`;
+      const callbackUri = getServerCallbackUri();
       
       const params = new URLSearchParams({
         client_id: currentClientId,
-        redirect_uri: oauthRedirectUri,
+        redirect_uri: callbackUri,
         scope: 'read:user user:email',
         state,
       });
       
-      console.log('[OAuth] Redirecting to GitHub OAuth...');
+      console.log('[OAuth] Redirecting to GitHub OAuth, callback:', callbackUri);
       window.location.href = `https://github.com/login/oauth/authorize?${params.toString()}`;
       return;
     }
@@ -606,19 +593,18 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
 
     if (Platform.OS === 'web' && typeof window !== 'undefined') {
-      const state = generateRandomState();
-      sessionStorage.setItem('oauth_state', state);
-      sessionStorage.setItem('oauth_provider', 'facebook');
+      const state = `facebook_${generateRandomState()}`;
+      const callbackUri = getServerCallbackUri();
       
       const params = new URLSearchParams({
         client_id: FACEBOOK_APP_ID,
-        redirect_uri: oauthRedirectUri,
+        redirect_uri: callbackUri,
         scope: 'public_profile,email',
         response_type: 'code',
         state,
       });
       
-      console.log('[OAuth] Redirecting to Facebook OAuth...');
+      console.log('[OAuth] Redirecting to Facebook OAuth, callback:', callbackUri);
       window.location.href = `https://www.facebook.com/v18.0/dialog/oauth?${params.toString()}`;
       return;
     }
