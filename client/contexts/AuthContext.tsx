@@ -489,10 +489,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
         scope: 'openid profile email',
         state,
         access_type: 'offline',
-        prompt: 'consent',
+        prompt: 'select_account',
       });
       
-      console.log('[OAuth] Redirecting to Google OAuth, callback:', callbackUri);
+      console.log('[OAuth] Redirecting to Google OAuth, callback:', callbackUri, 'client_id:', GOOGLE_WEB_CLIENT_ID?.substring(0, 20) + '...');
       window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
       return;
     }
