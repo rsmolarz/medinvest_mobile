@@ -31,6 +31,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { biometricAuth, BiometricStatus } from '@/lib/biometric-auth';
 import type { User } from '@/types';
 
+import mmiLogo from '../../assets/images/mmi-logo.png';
+
 export default function LoginScreen() {
   const navigation = useNavigation<any>();
   const appColors = useAppColors();
@@ -146,14 +148,11 @@ export default function LoginScreen() {
         >
           {/* Logo */}
           <View style={styles.logoContainer}>
-            <LinearGradient
-              colors={[Colors.primary, Colors.secondary]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.logoGradient}
-            >
-              <Ionicons name="medical" size={48} color="white" />
-            </LinearGradient>
+            <Image
+              source={mmiLogo}
+              style={styles.logoImage}
+              resizeMode="contain"
+            />
           </View>
 
           <ThemedText style={[styles.title, { color: appColors.textPrimary }]}>Welcome Back</ThemedText>
@@ -354,13 +353,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: Spacing.xl,
   },
-  logoGradient: {
-    width: 80,
-    height: 80,
+  logoImage: {
+    width: 100,
+    height: 100,
     borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-    ...Shadows.card,
   },
   title: {
     ...Typography.hero,
