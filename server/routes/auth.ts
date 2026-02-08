@@ -1131,6 +1131,31 @@ router.post('/facebook/data-deletion', async (req: Request, res: Response) => {
   }
 });
 
+router.post('/facebook/data-deletion/callback', async (req: Request, res: Response) => {
+  try {
+    const { signed_request } = req.body;
+
+    if (!signed_request) {
+      res.status(400).json({ message: 'Missing signed_request parameter' });
+      return;
+    }
+
+    const confirmationCode = `del_${Date.now()}_${Math.random().toString(36).substring(2, 10)}`;
+    const protocol = req.get('x-forwarded-proto') || req.protocol;
+    const statusUrl = `${protocol}://${req.get('host')}/api/auth/facebook/deletion-status?code=${confirmationCode}`;
+
+    console.log(`Facebook data deletion request received. Confirmation: ${confirmationCode}`);
+
+    res.json({
+      url: statusUrl,
+      confirmation_code: confirmationCode,
+    });
+  } catch (error) {
+    console.error('Facebook data deletion error:', error);
+    res.status(500).json({ message: 'Data deletion request failed' });
+  }
+});
+
 /**
  * GET /api/auth/facebook/deletion-status
  * Check status of a Facebook data deletion request
