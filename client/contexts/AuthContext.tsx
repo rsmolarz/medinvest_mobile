@@ -15,6 +15,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import { Platform } from 'react-native';
 import { apiClient } from '@/api/client';
+import { getApiUrl } from '@/lib/query-client';
 import type { User } from '@/types';
 import { AUTH_TOKEN_KEY, USER_DATA_KEY } from '@/constants/auth';
 
@@ -479,21 +480,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
 
     if (Platform.OS === 'web' && typeof window !== 'undefined') {
-      const state = `google_${generateRandomState()}`;
-      const callbackUri = getServerCallbackUri();
-      
-      const params = new URLSearchParams({
-        client_id: GOOGLE_WEB_CLIENT_ID || '',
-        redirect_uri: callbackUri,
-        response_type: 'code',
-        scope: 'openid profile email',
-        state,
-        access_type: 'offline',
-        prompt: 'select_account',
-      });
-      
-      console.log('[OAuth] Redirecting to Google OAuth, callback:', callbackUri, 'client_id:', GOOGLE_WEB_CLIENT_ID?.substring(0, 20) + '...');
-      window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
+      const serverStartUrl = `${getApiUrl()}api/auth/google/start`;
+      console.log('[OAuth] Redirecting to server-side Google OAuth start:', serverStartUrl);
+      window.location.href = serverStartUrl;
       return;
     }
 
@@ -541,18 +530,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
 
     if (Platform.OS === 'web' && typeof window !== 'undefined') {
-      const state = `github_${generateRandomState()}`;
-      const callbackUri = getServerCallbackUri();
-      
-      const params = new URLSearchParams({
-        client_id: currentClientId,
-        redirect_uri: callbackUri,
-        scope: 'read:user user:email',
-        state,
-      });
-      
-      console.log('[OAuth] Redirecting to GitHub OAuth, callback:', callbackUri);
-      window.location.href = `https://github.com/login/oauth/authorize?${params.toString()}`;
+      const serverStartUrl = `${getApiUrl()}api/auth/github/start`;
+      console.log('[OAuth] Redirecting to server-side GitHub OAuth start:', serverStartUrl);
+      window.location.href = serverStartUrl;
       return;
     }
 
@@ -594,19 +574,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
 
     if (Platform.OS === 'web' && typeof window !== 'undefined') {
-      const state = `facebook_${generateRandomState()}`;
-      const callbackUri = getServerCallbackUri();
-      
-      const params = new URLSearchParams({
-        client_id: FACEBOOK_APP_ID,
-        redirect_uri: callbackUri,
-        scope: 'public_profile,email',
-        response_type: 'code',
-        state,
-      });
-      
-      console.log('[OAuth] Redirecting to Facebook OAuth, callback:', callbackUri);
-      window.location.href = `https://www.facebook.com/v18.0/dialog/oauth?${params.toString()}`;
+      const serverStartUrl = `${getApiUrl()}api/auth/facebook/start`;
+      console.log('[OAuth] Redirecting to server-side Facebook OAuth start:', serverStartUrl);
+      window.location.href = serverStartUrl;
       return;
     }
 

@@ -356,6 +356,97 @@ router.post('/facebook/token', async (req: Request, res: Response) => {
 });
 
 /**
+ * Helper to construct the callback URI from the request
+ */
+function getCallbackUri(req: Request): string {
+  const forwardedProto = req.header('x-forwarded-proto') || req.protocol || 'https';
+  const forwardedHost = req.header('x-forwarded-host') || req.get('host');
+  return `${forwardedProto}://${forwardedHost}/api/auth/callback`;
+}
+
+/**
+ * GET /api/auth/google/start
+ * Server-side Google OAuth initiation - redirects to Google with correct redirect_uri
+ */
+router.get('/google/start', (req: Request, res: Response) => {
+  const clientId = process.env.GOOGLE_WEB_CLIENT_ID || process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID;
+  if (!clientId) {
+    res.status(500).json({ message: 'Google OAuth is not configured' });
+    return;
+  }
+
+  const callbackUri = getCallbackUri(req);
+  const state = `google_${crypto.randomBytes(16).toString('hex')}`;
+
+  console.log(`[OAuth Start] Google - redirect_uri: ${callbackUri}`);
+
+  const params = new URLSearchParams({
+    client_id: clientId,
+    redirect_uri: callbackUri,
+    response_type: 'code',
+    scope: 'openid profile email',
+    state,
+    access_type: 'offline',
+    prompt: 'select_account',
+  });
+
+  res.redirect(`https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`);
+});
+
+/**
+ * GET /api/auth/github/start
+ * Server-side GitHub OAuth initiation
+ */
+router.get('/github/start', (req: Request, res: Response) => {
+  const clientId = process.env.GITHUB_CLIENT_ID || process.env.EXPO_PUBLIC_GITHUB_CLIENT_ID;
+  if (!clientId) {
+    res.status(500).json({ message: 'GitHub OAuth is not configured' });
+    return;
+  }
+
+  const callbackUri = getCallbackUri(req);
+  const state = `github_${crypto.randomBytes(16).toString('hex')}`;
+
+  console.log(`[OAuth Start] GitHub - redirect_uri: ${callbackUri}`);
+
+  const params = new URLSearchParams({
+    client_id: clientId,
+    redirect_uri: callbackUri,
+    scope: 'user:email',
+    state,
+  });
+
+  res.redirect(`https://github.com/login/oauth/authorize?${params.toString()}`);
+});
+
+/**
+ * GET /api/auth/facebook/start
+ * Server-side Facebook OAuth initiation
+ */
+router.get('/facebook/start', (req: Request, res: Response) => {
+  const appId = process.env.FACEBOOK_APP_ID || process.env.EXPO_PUBLIC_FACEBOOK_APP_ID;
+  if (!appId) {
+    res.status(500).json({ message: 'Facebook OAuth is not configured' });
+    return;
+  }
+
+  const callbackUri = getCallbackUri(req);
+  const state = `facebook_${crypto.randomBytes(16).toString('hex')}`;
+
+  console.log(`[OAuth Start] Facebook - redirect_uri: ${callbackUri}`);
+
+  const params = new URLSearchParams({
+    client_id: appId,
+    redirect_uri: callbackUri,
+    scope: 'email,public_profile',
+    state,
+    response_type: 'code',
+  });
+
+  res.redirect(`https://www.facebook.com/v18.0/dialog/oauth?${params.toString()}`);
+});
+
+/**
  * GET /api/auth/callback
  * Server-side OAuth callback handler
  * Handles the redirect from OAuth providers, exchanges code for token,
@@ -386,9 +477,8 @@ router.get('/callback', async (req: Request, res: Response) => {
 
     console.log(`[OAuth Callback] Provider: ${provider}, code length: ${code.length}`);
 
-    const forwardedProto = req.header('x-forwarded-proto') || req.protocol || 'https';
-    const forwardedHost = req.header('x-forwarded-host') || req.get('host');
-    const callbackUri = `${forwardedProto}://${forwardedHost}/api/auth/callback`;
+    const callbackUri = getCallbackUri(req);
+    console.log(`[OAuth Callback] Using redirect_uri for token exchange: ${callbackUri}`);
 
     let accessToken: string | undefined;
 
