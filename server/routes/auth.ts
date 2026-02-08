@@ -1116,7 +1116,8 @@ router.post('/facebook/data-deletion', async (req: Request, res: Response) => {
 
     const confirmationCode = `del_${Date.now()}_${Math.random().toString(36).substring(2, 10)}`;
 
-    const statusUrl = `${req.protocol}://${req.get('host')}/api/auth/facebook/deletion-status?code=${confirmationCode}`;
+    const protocol = req.get('x-forwarded-proto') || req.protocol;
+    const statusUrl = `${protocol}://${req.get('host')}/api/auth/facebook/deletion-status?code=${confirmationCode}`;
 
     console.log(`Facebook data deletion request received. Confirmation: ${confirmationCode}`);
 
