@@ -354,9 +354,9 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.xl,
   },
   logoImage: {
-    width: 200,
-    height: 200,
-    borderRadius: 40,
+    width: 240,
+    height: 240,
+    borderRadius: 48,
   },
   title: {
     ...Typography.hero,
