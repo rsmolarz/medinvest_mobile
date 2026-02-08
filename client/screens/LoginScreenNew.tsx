@@ -41,6 +41,7 @@ export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [loginError, setLoginError] = useState<string | null>(null);
   const [biometricStatus, setBiometricStatus] = useState<BiometricStatus | null>(null);
   const [isBiometricEnabled, setIsBiometricEnabled] = useState(false);
 
@@ -94,8 +95,8 @@ export default function LoginScreen() {
       if (Platform.OS !== 'web') {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       }
-      const message = error?.message || error?.response?.data?.message || 'Login failed';
-      Alert.alert('Login Failed', message);
+      const message = error?.response?.data?.message || error?.message || 'Login failed. Please check your credentials.';
+      setLoginError(message);
     },
   });
 
@@ -111,12 +112,13 @@ export default function LoginScreen() {
 
   // Handle form submission
   const handleLogin = useCallback(() => {
+    setLoginError(null);
     if (!email.trim()) {
-      Alert.alert('Error', 'Please enter your email');
+      setLoginError('Please enter your email address.');
       return;
     }
     if (!password) {
-      Alert.alert('Error', 'Please enter your password');
+      setLoginError('Please enter your password.');
       return;
     }
     
@@ -170,7 +172,7 @@ export default function LoginScreen() {
                 placeholder="Email address"
                 placeholderTextColor={appColors.textSecondary}
                 value={email}
-                onChangeText={setEmail}
+                onChangeText={(text) => { setEmail(text); setLoginError(null); }}
                 keyboardType="email-address"
                 autoCapitalize="none"
                 autoCorrect={false}
@@ -187,7 +189,7 @@ export default function LoginScreen() {
                 placeholder="Password"
                 placeholderTextColor={appColors.textSecondary}
                 value={password}
-                onChangeText={setPassword}
+                onChangeText={(text) => { setPassword(text); setLoginError(null); }}
                 secureTextEntry={!showPassword}
                 editable={!loginMutation.isPending}
                 testID="input-password"
@@ -208,6 +210,20 @@ export default function LoginScreen() {
             <TouchableOpacity style={styles.forgotPassword} onPress={handleForgotPassword}>
               <ThemedText style={styles.forgotPasswordText}>Forgot Password?</ThemedText>
             </TouchableOpacity>
+
+            {/* Login Error Display */}
+            {loginError ? (
+              <TouchableOpacity
+                onPress={() => setLoginError(null)}
+                style={[styles.errorBanner, { backgroundColor: appColors.error + '15', borderColor: appColors.error + '30' }]}
+                testID="login-error-banner"
+                accessibilityRole="alert"
+              >
+                <Ionicons name="alert-circle-outline" size={18} color={appColors.error} />
+                <ThemedText style={[styles.errorBannerText, { color: appColors.error }]}>{loginError}</ThemedText>
+                <Ionicons name="close" size={16} color={appColors.error} />
+              </TouchableOpacity>
+            ) : null}
 
             {/* Login Button */}
             <TouchableOpacity
