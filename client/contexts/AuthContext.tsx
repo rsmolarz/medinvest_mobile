@@ -66,6 +66,15 @@ function getHasGoogleCredentialsForPlatform(): boolean {
   return false;
 }
 
+function generateRandomState(): string {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  let result = '';
+  for (let i = 0; i < 32; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return result;
+}
+
 export interface AuthState {
   user: User | null;
   token: string | null;
@@ -190,7 +199,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
         if (storedToken) {
           setToken(storedToken);
           
-          // Fetch fresh user data from server instead of using cached data
           try {
             const response = await apiClient.get('/users/me', {
               headers: { Authorization: `Bearer ${storedToken}` },
@@ -200,14 +208,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
             await AsyncStorage.setItem(USER_DATA_KEY, JSON.stringify(userData));
           } catch (error: any) {
             console.error('Failed to fetch user on startup:', error);
-            // Token might be invalid, clear auth data
             if (error?.status === 401 || error?.response?.status === 401) {
               await AsyncStorage.removeItem(AUTH_TOKEN_KEY);
               await AsyncStorage.removeItem(USER_DATA_KEY);
               setToken(null);
               setUser(null);
             } else {
-              // Network error - fall back to cached user data
               const storedUser = await AsyncStorage.getItem(USER_DATA_KEY);
               if (storedUser) {
                 setUser(JSON.parse(storedUser));
@@ -224,6 +230,72 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
     loadStoredAuth();
   }, []);
+
+  useEffect(() => {
+    if (Platform.OS !== 'web') return;
+    
+    const handleOAuthCallback = async () => {
+      if (typeof window === 'undefined') return;
+      
+      const url = new URL(window.location.href);
+      const code = url.searchParams.get('code');
+      const state = url.searchParams.get('state');
+      const storedState = sessionStorage.getItem('oauth_state');
+      const provider = sessionStorage.getItem('oauth_provider');
+      
+      if (!code || !state || !storedState || state !== storedState) return;
+      
+      sessionStorage.removeItem('oauth_state');
+      sessionStorage.removeItem('oauth_provider');
+      
+      window.history.replaceState({}, document.title, window.location.pathname);
+      
+      console.log('[OAuth] Handling callback for provider:', provider, 'code length:', code.length);
+      
+      try {
+        setIsLoading(true);
+        setError(null);
+        
+        if (provider === 'github') {
+          const tokenResponse = await apiClient.post('/auth/github/token', {
+            code,
+            redirect_uri: oauthRedirectUri,
+            platform: 'web',
+          });
+          const { access_token } = tokenResponse.data;
+          if (access_token) {
+            await authenticateWithBackend('github', { token: access_token });
+          }
+        } else if (provider === 'google') {
+          const tokenResponse = await apiClient.post('/auth/google/token', {
+            code,
+            redirect_uri: oauthRedirectUri,
+          });
+          const { access_token } = tokenResponse.data;
+          if (access_token) {
+            await authenticateWithBackend('google', { token: access_token });
+          }
+        } else if (provider === 'facebook') {
+          const tokenResponse = await apiClient.post('/auth/facebook/token', {
+            code,
+            redirect_uri: oauthRedirectUri,
+          });
+          const { access_token } = tokenResponse.data;
+          if (access_token) {
+            await authenticateWithBackend('facebook', { token: access_token });
+          }
+        }
+      } catch (err: any) {
+        console.error('[OAuth] Callback handling error:', err);
+        const message = err?.response?.data?.message || err?.message || 'Sign-in failed';
+        setError(message);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    handleOAuthCallback();
+  }, [oauthRedirectUri]);
 
   const saveAuthData = async (authToken: string, userData: User) => {
     await Promise.all([
@@ -416,18 +488,31 @@ export function AuthProvider({ children }: AuthProviderProps) {
       return;
     }
 
-    // Dismiss any stuck auth sessions before starting
-    if (Platform.OS === 'web') {
-      WebBrowser.dismissAuthSession();
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      const state = generateRandomState();
+      sessionStorage.setItem('oauth_state', state);
+      sessionStorage.setItem('oauth_provider', 'google');
+      
+      const params = new URLSearchParams({
+        client_id: GOOGLE_WEB_CLIENT_ID || '',
+        redirect_uri: oauthRedirectUri,
+        response_type: 'code',
+        scope: 'openid profile email',
+        state,
+        access_type: 'offline',
+        prompt: 'consent',
+      });
+      
+      console.log('[OAuth] Redirecting to Google OAuth...');
+      window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
+      return;
     }
 
-    // IMPORTANT: Call promptAsync IMMEDIATELY - no async state updates before this
-    // or the browser's popup blocker will block the OAuth window
+    WebBrowser.dismissAuthSession();
     const startTime = Date.now();
     const result = await promptGoogleAsync();
     const elapsed = Date.now() - startTime;
     
-    // State updates happen AFTER the popup is already open
     setError(null);
     setIsOAuthInProgress(true);
     
@@ -436,30 +521,17 @@ export function AuthProvider({ children }: AuthProviderProps) {
       
       if (result?.type === 'error') {
         const errMsg = (result as any).error?.message || 'Google sign-in was rejected';
-        if (errMsg.includes('redirect_uri_mismatch') || errMsg.includes('invalid_client') || errMsg.includes('invalid_request')) {
-          console.error('[OAuth] Redirect URI mismatch. Add this URI to Google Cloud Console:', oauthRedirectUri);
-          setError(`Google Sign-In redirect URI mismatch. Go to Google Cloud Console → Credentials → your OAuth Client → add this Authorized Redirect URI: ${oauthRedirectUri}`);
-        } else {
-          setError(errMsg);
-        }
+        setError(errMsg);
       } else if (result?.type === 'dismiss') {
         if (elapsed < 5000) {
-          console.warn('[OAuth] Google sign-in dismissed very quickly - likely redirect_uri_mismatch on Google side');
-          setError(`Google Sign-In failed (redirect_uri_mismatch). Add this redirect URI in Google Cloud Console → Credentials → OAuth Client → Authorized Redirect URIs: ${oauthRedirectUri}`);
-        } else {
-          console.log('[OAuth] Google sign-in dismissed by user');
+          setError(`Google Sign-In failed. Please check your Google Cloud Console configuration.`);
         }
       } else if (result?.type === 'locked') {
-        console.log('[OAuth] Google sign-in locked - another session active');
         setError('Another sign-in is in progress. Please wait a moment and try again.');
       }
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Google sign-in failed';
-      if (message.includes('multiple times') || message.includes('already active')) {
-        setError('Another sign-in is in progress. Please wait a moment and try again.');
-      } else {
-        setError(message);
-      }
+      setError(message);
       console.error('[OAuth] Google sign-in error:', err);
     } finally {
       setIsOAuthInProgress(false);
@@ -479,16 +551,26 @@ export function AuthProvider({ children }: AuthProviderProps) {
       return;
     }
 
-    // Dismiss any stuck auth sessions before starting
-    if (Platform.OS === 'web') {
-      WebBrowser.dismissAuthSession();
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      const state = generateRandomState();
+      sessionStorage.setItem('oauth_state', state);
+      sessionStorage.setItem('oauth_provider', 'github');
+      
+      const params = new URLSearchParams({
+        client_id: currentClientId,
+        redirect_uri: oauthRedirectUri,
+        scope: 'read:user user:email',
+        state,
+      });
+      
+      console.log('[OAuth] Redirecting to GitHub OAuth...');
+      window.location.href = `https://github.com/login/oauth/authorize?${params.toString()}`;
+      return;
     }
 
-    // IMPORTANT: Call promptAsync IMMEDIATELY - no async state updates before this
-    // or the browser's popup blocker will block the OAuth window
+    WebBrowser.dismissAuthSession();
     const result = await promptGithubAsync();
     
-    // State updates happen AFTER the popup is already open
     setError(null);
     setIsOAuthInProgress(true);
     
@@ -496,7 +578,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
       console.log('[OAuth] GitHub Sign-In result:', result?.type);
       
       if (result?.type === 'error') {
-        console.error('[OAuth] GitHub error. Ensure callback URL is set to:', oauthRedirectUri);
         setError('GitHub Sign-In needs configuration. Please use email login or the demo account.');
       } else if (result?.type === 'dismiss') {
         console.log('[OAuth] GitHub sign-in dismissed by user');
@@ -505,11 +586,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       }
     } catch (err) {
       const message = err instanceof Error ? err.message : 'GitHub sign-in failed';
-      if (message.includes('multiple times') || message.includes('already active')) {
-        setError('Another sign-in is in progress. Please wait a moment and try again.');
-      } else {
-        setError(message);
-      }
+      setError(message);
       console.error('[OAuth] GitHub sign-in error:', err);
     } finally {
       setIsOAuthInProgress(false);
@@ -528,16 +605,27 @@ export function AuthProvider({ children }: AuthProviderProps) {
       return;
     }
 
-    // Dismiss any stuck auth sessions before starting
-    if (Platform.OS === 'web') {
-      WebBrowser.dismissAuthSession();
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      const state = generateRandomState();
+      sessionStorage.setItem('oauth_state', state);
+      sessionStorage.setItem('oauth_provider', 'facebook');
+      
+      const params = new URLSearchParams({
+        client_id: FACEBOOK_APP_ID,
+        redirect_uri: oauthRedirectUri,
+        scope: 'public_profile,email',
+        response_type: 'code',
+        state,
+      });
+      
+      console.log('[OAuth] Redirecting to Facebook OAuth...');
+      window.location.href = `https://www.facebook.com/v18.0/dialog/oauth?${params.toString()}`;
+      return;
     }
 
-    // IMPORTANT: Call promptAsync IMMEDIATELY - no async state updates before this
-    // or the browser's popup blocker will block the OAuth window
+    WebBrowser.dismissAuthSession();
     const result = await promptFacebookAsync();
     
-    // State updates happen AFTER the popup is already open
     setError(null);
     setIsOAuthInProgress(true);
     
@@ -545,7 +633,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
       console.log('[OAuth] Facebook Sign-In result:', result?.type);
       
       if (result?.type === 'error') {
-        console.error('[OAuth] Facebook error. Ensure redirect URI is set to:', oauthRedirectUri);
         setError('Facebook Sign-In needs configuration. Please use email login or the demo account.');
       } else if (result?.type === 'dismiss') {
         console.log('[OAuth] Facebook sign-in dismissed by user');
@@ -554,11 +641,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       }
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Facebook sign-in failed';
-      if (message.includes('multiple times') || message.includes('already active')) {
-        setError('Another sign-in is in progress. Please wait a moment and try again.');
-      } else {
-        setError(message);
-      }
+      setError(message);
       console.error('[OAuth] Facebook sign-in error:', err);
     } finally {
       setIsOAuthInProgress(false);

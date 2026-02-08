@@ -183,6 +183,58 @@ router.post('/login', async (req: Request, res: Response) => {
 });
 
 /**
+ * POST /api/auth/google/token
+ * Exchange Google authorization code for access token (web redirect flow)
+ */
+router.post('/google/token', async (req: Request, res: Response) => {
+  try {
+    const { code, redirect_uri } = req.body;
+
+    if (!code) {
+      res.status(400).json({ message: 'Authorization code is required' });
+      return;
+    }
+
+    const clientId = process.env.GOOGLE_WEB_CLIENT_ID || process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID;
+    const clientSecret = process.env.GOOGLE_WEB_CLIENT_SECRET;
+
+    if (!clientId || !clientSecret) {
+      res.status(500).json({ message: 'Google OAuth is not configured' });
+      return;
+    }
+
+    console.log('Google token exchange: redirect_uri =', redirect_uri);
+
+    const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: new URLSearchParams({
+        code,
+        client_id: clientId,
+        client_secret: clientSecret,
+        redirect_uri: redirect_uri || '',
+        grant_type: 'authorization_code',
+      }).toString(),
+    });
+
+    const tokenData = await tokenResponse.json();
+
+    if (tokenData.error) {
+      console.error('Google token exchange error:', tokenData);
+      res.status(401).json({ message: tokenData.error_description || 'Failed to exchange code' });
+      return;
+    }
+
+    res.json({ access_token: tokenData.access_token });
+  } catch (error) {
+    console.error('Google token exchange error:', error);
+    res.status(500).json({ message: 'Token exchange failed' });
+  }
+});
+
+/**
  * POST /api/auth/github/token
  * Exchange GitHub authorization code for access token
  * Supports both web and mobile OAuth apps
