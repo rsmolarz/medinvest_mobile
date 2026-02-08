@@ -6,16 +6,24 @@ import { AUTH_TOKEN_KEY } from '@/constants/auth';
 function getApiBaseUrl(): string {
   const extraApiBaseUrl = Constants.expoConfig?.extra?.apiBaseUrl;
   if (extraApiBaseUrl) {
-    return `${extraApiBaseUrl}/api`;
+    let base = extraApiBaseUrl;
+    try {
+      const parsed = new URL(base);
+      if (parsed.hostname !== 'localhost' && parsed.hostname !== '127.0.0.1') {
+        parsed.port = '';
+        base = parsed.href.replace(/\/$/, '');
+      }
+    } catch {}
+    return `${base}/api`;
   }
   
-  const domain = process.env.EXPO_PUBLIC_DOMAIN;
+  let domain = process.env.EXPO_PUBLIC_DOMAIN;
   if (domain) {
+    domain = domain.replace(/:5000$/, '');
     if (domain.includes('localhost')) {
       return `http://${domain}/api`;
     }
-    const protocol = 'https';
-    return `${protocol}://${domain}/api`;
+    return `https://${domain}/api`;
   }
   
   console.warn('[API] No API base URL configured, using localhost fallback');

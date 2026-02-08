@@ -356,12 +356,23 @@ router.post('/facebook/token', async (req: Request, res: Response) => {
 });
 
 /**
- * Helper to construct the callback URI from the request
+ * Helper to construct the callback URI.
+ * Uses a stable published domain so the redirect_uri is consistent
+ * and matches what's registered with OAuth providers.
+ * The dev domain changes every restart - never use it for OAuth.
  */
-function getCallbackUri(req: Request): string {
-  const forwardedProto = req.header('x-forwarded-proto') || req.protocol || 'https';
-  const forwardedHost = req.header('x-forwarded-host') || req.get('host');
-  return `${forwardedProto}://${forwardedHost}/api/auth/callback`;
+function getCallbackUri(_req: Request): string {
+  const oauthDomain = process.env.OAUTH_CALLBACK_DOMAIN;
+  if (oauthDomain) {
+    return `https://${oauthDomain}/api/auth/callback`;
+  }
+
+  const publishedDomain = process.env.EXPO_PUBLIC_DOMAIN?.replace(/:5000$/, '');
+  if (publishedDomain && !publishedDomain.includes('localhost')) {
+    return `https://${publishedDomain}/api/auth/callback`;
+  }
+
+  return 'http://localhost:5000/api/auth/callback';
 }
 
 /**
@@ -1292,7 +1303,7 @@ router.get('/oauth-debug', (req: Request, res: Response) => {
   .section{background:#2d2d44;padding:15px;border-radius:8px;margin:10px 0}</style></head>
   <body><h1>OAuth Redirect URI Debug</h1>
   <div class="section"><h2>Current Request Origin</h2><code>${currentOrigin}</code></div>
-  <div class="section"><h2>Callback URI (for token exchange)</h2><code>${callbackUri}</code></div>
+  <div class="section"><h2>Callback URI (used by OAuth start endpoints)</h2><code>${getCallbackUri(req)}</code></div>
   <div class="section"><h2>All Redirect URIs to Register</h2>
   <p>Copy-paste ALL of these into each OAuth provider's console:</p>
   ${allCallbackUris.map(u => `<code>${u}</code>`).join('')}</div>

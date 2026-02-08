@@ -8,7 +8,15 @@ import Constants from "expo-constants";
 export function getApiUrl(): string {
   const extraApiBaseUrl = Constants.expoConfig?.extra?.apiBaseUrl;
   if (extraApiBaseUrl) {
-    return extraApiBaseUrl.endsWith('/') ? extraApiBaseUrl : `${extraApiBaseUrl}/`;
+    let url = extraApiBaseUrl;
+    try {
+      const parsed = new URL(url);
+      if (parsed.hostname !== 'localhost' && parsed.hostname !== '127.0.0.1') {
+        parsed.port = '';
+        url = parsed.href;
+      }
+    } catch {}
+    return url.endsWith('/') ? url : `${url}/`;
   }
   
   let host = process.env.EXPO_PUBLIC_DOMAIN;
@@ -18,6 +26,7 @@ export function getApiUrl(): string {
     return 'http://localhost:5000/';
   }
 
+  host = host.replace(/:5000$/, '');
   let url = new URL(`https://${host}`);
 
   return url.href;
