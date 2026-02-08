@@ -319,17 +319,38 @@ export function AuthProvider({ children }: AuthProviderProps) {
       avatarUrl?: string;
     }
   ) => {
-    const response = await apiClient.post('/auth/social', {
-      provider,
-      ...tokenData,
-    });
+    const maxRetries = 2;
+    let lastError: any;
 
-    const { token: authToken, user: userData } = response.data as {
-      token: string;
-      user: User;
-    };
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+      try {
+        if (attempt > 0) {
+          console.log(`[Auth] Retry attempt ${attempt} for ${provider} login`);
+          await new Promise(r => setTimeout(r, 1000 * attempt));
+        }
 
-    await saveAuthData(authToken, userData);
+        const response = await apiClient.post('/auth/social', {
+          provider,
+          ...tokenData,
+        });
+
+        const { token: authToken, user: userData } = response.data as {
+          token: string;
+          user: User;
+        };
+
+        await saveAuthData(authToken, userData);
+        return;
+      } catch (err: any) {
+        lastError = err;
+        if (!err?.isNetworkError) {
+          throw err;
+        }
+        console.warn(`[Auth] Network error on attempt ${attempt + 1}:`, err?.url || 'unknown URL');
+      }
+    }
+
+    throw lastError;
   }, []);
 
   const signInWithApple = useCallback(async () => {
@@ -358,13 +379,18 @@ export function AuthProvider({ children }: AuthProviderProps) {
         lastName: fullName?.familyName || undefined,
       });
     } catch (err: any) {
-      if (err.code === 'ERR_REQUEST_CANCELED') {
+      if (err.code === 'ERR_REQUEST_CANCELED' || err.code === 'ERR_CANCELED') {
         return;
       }
 
-      const message = err instanceof Error ? err.message : 'Apple sign-in failed';
-      setError(message);
-      console.error('Apple sign-in error:', err);
+      if (err?.isNetworkError) {
+        setError('Unable to connect to the server. Please check your internet connection and try again.');
+        console.error('[Auth] Apple sign-in network error. API URL:', err?.url);
+      } else {
+        const message = err instanceof Error ? err.message : (err?.message || 'Apple sign-in failed');
+        setError(message);
+      }
+      console.error('[Auth] Apple sign-in error:', JSON.stringify(err));
     } finally {
       setIsLoading(false);
     }
@@ -665,9 +691,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       return true;
     } catch (err: any) {
-      const message = err?.response?.data?.message || err?.message || 'Login failed';
-      setError(message);
-      console.error('Login error:', err);
+      if (err?.isNetworkError) {
+        setError('Unable to connect to the server. Please check your internet connection and try again.');
+        console.error('[Auth] Login network error. API URL:', err?.url);
+      } else {
+        const message = err?.response?.data?.message || err?.message || 'Login failed';
+        setError(message);
+      }
+      console.error('[Auth] Login error:', JSON.stringify(err));
       return false;
     } finally {
       setIsLoading(false);

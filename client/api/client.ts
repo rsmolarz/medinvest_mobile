@@ -31,6 +31,7 @@ function getApiBaseUrl(): string {
 }
 
 const API_BASE_URL = getApiBaseUrl();
+console.log('[API Client] Base URL:', API_BASE_URL);
 
 /**
  * Axios instance with auth interceptors
@@ -80,11 +81,13 @@ apiClient.interceptors.response.use(
       // eventEmitter.emit('unauthorized');
     }
 
-    // Handle network errors
     if (!error.response) {
+      const url = error.config?.baseURL ? `${error.config.baseURL}${error.config.url || ''}` : 'unknown';
+      console.error('[API Client] Network error - no response received. URL:', url, 'Error:', error.message);
       return Promise.reject({
         message: 'Network error. Please check your connection.',
         isNetworkError: true,
+        url,
       });
     }
 

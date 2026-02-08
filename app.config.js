@@ -1,9 +1,16 @@
 const appJson = require('./app.json');
 
 function getApiBaseUrl() {
+  if (process.env.REPLIT_INTERNAL_APP_DOMAIN) {
+    return `https://${process.env.REPLIT_INTERNAL_APP_DOMAIN}`;
+  }
+
+  if (process.env.OAUTH_CALLBACK_DOMAIN) {
+    return `https://${process.env.OAUTH_CALLBACK_DOMAIN}`;
+  }
+
   const domain = process.env.EXPO_PUBLIC_DOMAIN 
-    || process.env.REPLIT_DEV_DOMAIN
-    || process.env.REPLIT_INTERNAL_APP_DOMAIN;
+    || process.env.REPLIT_DEV_DOMAIN;
   
   if (domain) {
     const cleanDomain = domain.replace(/:5000$/, '');
