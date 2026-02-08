@@ -13,7 +13,7 @@ import * as Google from 'expo-auth-session/providers/google';
 import * as AuthSession from 'expo-auth-session';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
-import { Platform } from 'react-native';
+import { Platform, Linking } from 'react-native';
 import { apiClient } from '@/api/client';
 import { getApiUrl } from '@/lib/query-client';
 import type { User } from '@/types';
@@ -286,6 +286,56 @@ export function AuthProvider({ children }: AuthProviderProps) {
     };
 
     checkOAuthCookie();
+  }, []);
+
+  useEffect(() => {
+    if (Platform.OS === 'web') return;
+
+    const handleOAuthDeepLink = async (url: string) => {
+      try {
+        const parsed = new URL(url.replace('medinvest://', 'https://medinvest.app/'));
+        const authToken = parsed.searchParams.get('token');
+        const error = parsed.searchParams.get('error');
+
+        if (error) {
+          console.error('[OAuth] Deep link error:', error);
+          setError(decodeURIComponent(error));
+          return;
+        }
+
+        if (authToken && parsed.pathname === '/auth') {
+          console.log('[OAuth] Received token via deep link');
+          setIsLoading(true);
+          try {
+            const response = await apiClient.get('/users/me', {
+              headers: { Authorization: `Bearer ${authToken}` },
+            });
+            await saveAuthData(authToken, response.data as User);
+            console.log('[OAuth] Logged in via deep link callback');
+          } catch (err) {
+            console.error('[OAuth] Failed to verify deep link token:', err);
+            setError('Failed to complete sign-in. Please try again.');
+          } finally {
+            setIsLoading(false);
+          }
+        }
+      } catch (err) {
+        console.error('[OAuth] Deep link parse error:', err);
+      }
+    };
+
+    const handleUrl = ({ url }: { url: string }) => {
+      if (url.includes('auth') && (url.includes('token=') || url.includes('error='))) {
+        handleOAuthDeepLink(url);
+      }
+    };
+
+    Linking.getInitialURL().then((url) => {
+      if (url) handleUrl({ url });
+    });
+
+    const subscription = Linking.addEventListener('url', handleUrl);
+    return () => subscription.remove();
   }, []);
 
   const saveAuthData = async (authToken: string, userData: User) => {

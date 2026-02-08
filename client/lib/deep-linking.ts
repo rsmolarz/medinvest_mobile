@@ -171,6 +171,8 @@ export async function handleDeepLink(url: string): Promise<{
       return { screen: 'VerifyEmail', params: { token: second } };
     case 'reset-password':
       return { screen: 'ResetPassword', params: { token: second } };
+    case 'auth':
+      return { screen: 'OAuthCallback', params: { token: parsed.queryParams?.token, error: parsed.queryParams?.error } };
     default:
       return null;
   }

@@ -19,6 +19,10 @@ export function getApiUrl(): string {
     return url.endsWith('/') ? url : `${url}/`;
   }
   
+  if (typeof window !== 'undefined' && window.location) {
+    return window.location.origin.endsWith('/') ? window.location.origin : `${window.location.origin}/`;
+  }
+
   let host = process.env.EXPO_PUBLIC_DOMAIN;
 
   if (!host) {

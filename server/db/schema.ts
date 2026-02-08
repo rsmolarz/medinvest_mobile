@@ -17,7 +17,7 @@ import { relations } from 'drizzle-orm';
 // Enums
 // ============================================
 
-export const authProviderEnum = pgEnum('auth_provider', ['apple', 'google', 'email']);
+export const authProviderEnum = pgEnum('auth_provider', ['apple', 'google', 'email', 'demo', 'github', 'facebook']);
 
 export const investmentCategoryEnum = pgEnum('investment_category', [
   'Biotech',

@@ -23,6 +23,9 @@ function getApiBaseUrl(): string {
     if (domain.includes('localhost')) {
       return `http://${domain}/api`;
     }
+    if (typeof window !== 'undefined' && window.location) {
+      return `${window.location.origin}/api`;
+    }
     return `https://${domain}/api`;
   }
   

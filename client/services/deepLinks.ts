@@ -59,6 +59,10 @@ export const linkingConfig = {
       Support: 'support',
       Legal: 'legal',
       
+      OAuthCallback: {
+        path: 'auth',
+      },
+
       // Auth (when not authenticated)
       Auth: {
         screens: {
@@ -105,6 +109,12 @@ export function parseDeepLink(url: string): {
           params: segments[1] ? { investmentId: segments[1] } : undefined,
         };
         
+      case 'auth':
+        return {
+          screen: 'OAuthCallback' as any,
+          params: { token: queryParams?.token, error: queryParams?.error },
+        };
+
       case 'discover':
         return {
           screen: 'Main',
