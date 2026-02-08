@@ -13,7 +13,7 @@ import {
   Platform,
   ScrollView,
   ActivityIndicator,
-  Alert,
+  Linking,
   Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -28,6 +28,7 @@ import { Colors, Spacing, BorderRadius, Typography, Shadows } from '@/constants/
 import { useAppColors } from '@/hooks/useAppColors';
 import { apiClient } from '@/api/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { getApiUrl } from '@/lib/query-client';
 import { biometricAuth, BiometricStatus } from '@/lib/biometric-auth';
 import type { User } from '@/types';
 
@@ -346,6 +347,26 @@ export default function LoginScreen() {
             <Ionicons name="flask-outline" size={18} color={appColors.textSecondary} />
             <ThemedText style={[styles.demoButtonText, { color: appColors.textSecondary }]}>Try Demo Account</ThemedText>
           </TouchableOpacity>
+
+          {/* Legal Links */}
+          <View style={styles.legalContainer}>
+            <ThemedText style={[styles.legalText, { color: appColors.textSecondary }]}>
+              By signing in, you agree to our{' '}
+            </ThemedText>
+            <TouchableOpacity
+              onPress={() => Linking.openURL(`${getApiUrl()}/terms`)}
+              testID="link-terms"
+            >
+              <ThemedText style={styles.legalLink}>Terms of Service</ThemedText>
+            </TouchableOpacity>
+            <ThemedText style={[styles.legalText, { color: appColors.textSecondary }]}> and </ThemedText>
+            <TouchableOpacity
+              onPress={() => Linking.openURL(`${getApiUrl()}/privacy`)}
+              testID="link-privacy"
+            >
+              <ThemedText style={styles.legalLink}>Privacy Policy</ThemedText>
+            </TouchableOpacity>
+          </View>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -516,5 +537,23 @@ const styles = StyleSheet.create({
   demoButtonText: {
     ...Typography.caption,
     fontWeight: '500',
+  },
+  legalContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    marginTop: Spacing.lg,
+    marginBottom: Spacing.md,
+    paddingHorizontal: Spacing.md,
+  },
+  legalText: {
+    fontSize: 12,
+    lineHeight: 18,
+  },
+  legalLink: {
+    fontSize: 12,
+    lineHeight: 18,
+    color: Colors.primary,
+    fontWeight: '600',
   },
 });
