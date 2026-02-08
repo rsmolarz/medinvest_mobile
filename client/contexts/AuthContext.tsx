@@ -402,13 +402,20 @@ export function AuthProvider({ children }: AuthProviderProps) {
     handleFacebookResponse();
   }, [handleFacebookResponse]);
 
+  const [isOAuthInProgress, setIsOAuthInProgress] = useState(false);
+
   const signInWithGoogle = useCallback(async () => {
+    if (isOAuthInProgress) {
+      console.log('[OAuth] Another sign-in is already in progress');
+      return;
+    }
     try {
       setError(null);
+      setIsOAuthInProgress(true);
       console.log('[OAuth] Google Sign-In starting, redirect URI:', oauthRedirectUri);
 
       if (!getHasGoogleCredentialsForPlatform()) {
-        setError('Google Sign-In is not configured for this platform.');
+        setError('Google Sign-In is not configured for this platform. Please use email login.');
         return;
       }
 
@@ -417,30 +424,44 @@ export function AuthProvider({ children }: AuthProviderProps) {
       
       if (result?.type === 'error') {
         const errMsg = (result as any).error?.message || 'Google sign-in was rejected';
-        if (errMsg.includes('redirect_uri_mismatch')) {
+        if (errMsg.includes('redirect_uri_mismatch') || errMsg.includes('invalid_client')) {
           console.error('[OAuth] Redirect URI mismatch. Add this URI to Google Cloud Console:', oauthRedirectUri);
-          setError('Google Sign-In redirect is not configured. Please use email login instead.');
+          setError('Google Sign-In needs configuration. Please use email login or the demo account.');
         } else {
           setError(errMsg);
         }
       } else if (result?.type === 'dismiss') {
         console.log('[OAuth] Google sign-in dismissed by user');
+      } else if (result?.type === 'locked') {
+        console.log('[OAuth] Google sign-in locked - another session active');
+        setError('Another sign-in is in progress. Please wait a moment and try again.');
       }
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Google sign-in failed';
-      setError(message);
+      if (message.includes('multiple times') || message.includes('already active')) {
+        setError('Another sign-in is in progress. Please wait a moment and try again.');
+      } else {
+        setError(message);
+      }
       console.error('[OAuth] Google sign-in error:', err);
+    } finally {
+      setIsOAuthInProgress(false);
     }
-  }, [promptGoogleAsync, oauthRedirectUri]);
+  }, [promptGoogleAsync, oauthRedirectUri, isOAuthInProgress]);
 
   const signInWithGithub = useCallback(async () => {
+    if (isOAuthInProgress) {
+      console.log('[OAuth] Another sign-in is already in progress');
+      return;
+    }
     try {
       setError(null);
+      setIsOAuthInProgress(true);
       const currentClientId = getGitHubClientId();
       console.log('[OAuth] GitHub Sign-In starting, redirect URI:', oauthRedirectUri);
 
       if (!currentClientId) {
-        setError('GitHub Sign-In is not configured for this platform.');
+        setError('GitHub Sign-In is not configured. Please use email login.');
         return;
       }
 
@@ -449,22 +470,37 @@ export function AuthProvider({ children }: AuthProviderProps) {
       
       if (result?.type === 'error') {
         console.error('[OAuth] GitHub error. Ensure callback URL is set to:', oauthRedirectUri);
-        setError('GitHub Sign-In failed. Please use email login instead.');
+        setError('GitHub Sign-In needs configuration. Please use email login or the demo account.');
+      } else if (result?.type === 'dismiss') {
+        console.log('[OAuth] GitHub sign-in dismissed by user');
+      } else if (result?.type === 'locked') {
+        setError('Another sign-in is in progress. Please wait a moment and try again.');
       }
     } catch (err) {
       const message = err instanceof Error ? err.message : 'GitHub sign-in failed';
-      setError(message);
+      if (message.includes('multiple times') || message.includes('already active')) {
+        setError('Another sign-in is in progress. Please wait a moment and try again.');
+      } else {
+        setError(message);
+      }
       console.error('[OAuth] GitHub sign-in error:', err);
+    } finally {
+      setIsOAuthInProgress(false);
     }
-  }, [promptGithubAsync, oauthRedirectUri]);
+  }, [promptGithubAsync, oauthRedirectUri, isOAuthInProgress]);
 
   const signInWithFacebook = useCallback(async () => {
+    if (isOAuthInProgress) {
+      console.log('[OAuth] Another sign-in is already in progress');
+      return;
+    }
     try {
       setError(null);
+      setIsOAuthInProgress(true);
       console.log('[OAuth] Facebook Sign-In starting, redirect URI:', oauthRedirectUri);
 
       if (!FACEBOOK_APP_ID) {
-        setError('Facebook Sign-In is not configured.');
+        setError('Facebook Sign-In is not configured. Please use email login.');
         return;
       }
 
@@ -473,14 +509,24 @@ export function AuthProvider({ children }: AuthProviderProps) {
       
       if (result?.type === 'error') {
         console.error('[OAuth] Facebook error. Ensure redirect URI is set to:', oauthRedirectUri);
-        setError('Facebook Sign-In failed. Please use email login instead.');
+        setError('Facebook Sign-In needs configuration. Please use email login or the demo account.');
+      } else if (result?.type === 'dismiss') {
+        console.log('[OAuth] Facebook sign-in dismissed by user');
+      } else if (result?.type === 'locked') {
+        setError('Another sign-in is in progress. Please wait a moment and try again.');
       }
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Facebook sign-in failed';
-      setError(message);
+      if (message.includes('multiple times') || message.includes('already active')) {
+        setError('Another sign-in is in progress. Please wait a moment and try again.');
+      } else {
+        setError(message);
+      }
       console.error('[OAuth] Facebook sign-in error:', err);
+    } finally {
+      setIsOAuthInProgress(false);
     }
-  }, [promptFacebookAsync, oauthRedirectUri]);
+  }, [promptFacebookAsync, oauthRedirectUri, isOAuthInProgress]);
 
   const mockSignIn = useCallback(async () => {
     try {

@@ -34,7 +34,7 @@ import type { User } from '@/types';
 export default function LoginScreen() {
   const navigation = useNavigation<any>();
   const appColors = useAppColors();
-  const { setAuthSession, signInWithGoogle, signInWithGithub, signInWithFacebook, signInWithApple, isAppleAuthAvailable, mockSignIn } = useAuth();
+  const { setAuthSession, signInWithGoogle, signInWithGithub, signInWithFacebook, signInWithApple, isAppleAuthAvailable, mockSignIn, error: authError, clearError, isLoading: authLoading } = useAuth();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -42,8 +42,9 @@ export default function LoginScreen() {
   const [biometricStatus, setBiometricStatus] = useState<BiometricStatus | null>(null);
   const [isBiometricEnabled, setIsBiometricEnabled] = useState(false);
 
-  // Check biometric availability on mount
+  // Check biometric availability on mount and clear any stale errors
   useEffect(() => {
+    clearError();
     checkBiometricStatus();
   }, []);
 
@@ -163,7 +164,7 @@ export default function LoginScreen() {
           {/* Form */}
           <View style={styles.form}>
             {/* Email Input */}
-            <View style={[styles.inputContainer, { borderColor: appColors.border }]}>
+            <View style={[styles.inputContainer, { borderColor: appColors.border, backgroundColor: appColors.background }]}>
               <Ionicons name="mail-outline" size={20} color={appColors.textSecondary} style={styles.inputIcon} />
               <TextInput
                 style={[styles.input, { color: appColors.textPrimary }]}
@@ -175,11 +176,12 @@ export default function LoginScreen() {
                 autoCapitalize="none"
                 autoCorrect={false}
                 editable={!loginMutation.isPending}
+                testID="input-email"
               />
             </View>
 
             {/* Password Input */}
-            <View style={[styles.inputContainer, { borderColor: appColors.border }]}>
+            <View style={[styles.inputContainer, { borderColor: appColors.border, backgroundColor: appColors.background }]}>
               <Ionicons name="lock-closed-outline" size={20} color={appColors.textSecondary} style={styles.inputIcon} />
               <TextInput
                 style={[styles.input, { color: appColors.textPrimary }]}
@@ -189,6 +191,7 @@ export default function LoginScreen() {
                 onChangeText={setPassword}
                 secureTextEntry={!showPassword}
                 editable={!loginMutation.isPending}
+                testID="input-password"
               />
               <TouchableOpacity
                 style={styles.passwordToggle}
@@ -212,6 +215,7 @@ export default function LoginScreen() {
               style={[styles.loginButton, loginMutation.isPending && styles.loginButtonDisabled]}
               onPress={handleLogin}
               disabled={loginMutation.isPending}
+              testID="button-sign-in"
             >
               <LinearGradient
                 colors={[Colors.primary, Colors.secondary]}
@@ -252,39 +256,56 @@ export default function LoginScreen() {
               <View style={[styles.dividerLine, { backgroundColor: appColors.border }]} />
             </View>
 
+            {/* Auth Error Display */}
+            {authError ? (
+              <TouchableOpacity onPress={clearError} style={[styles.errorBanner, { backgroundColor: appColors.error + '15', borderColor: appColors.error + '30' }]}>
+                <Ionicons name="alert-circle-outline" size={18} color={appColors.error} />
+                <ThemedText style={[styles.errorBannerText, { color: appColors.error }]}>{authError}</ThemedText>
+                <Ionicons name="close" size={16} color={appColors.error} />
+              </TouchableOpacity>
+            ) : null}
+
             {/* Social Login */}
             <View style={styles.socialButtons}>
               <TouchableOpacity 
-                style={[styles.socialButton, { borderColor: appColors.border }]}
+                style={[styles.socialButton, { borderColor: appColors.border, backgroundColor: appColors.surface }]}
                 onPress={() => {
                   console.log('Google button pressed');
                   signInWithGoogle();
                 }}
+                disabled={authLoading}
+                testID="button-google-login"
               >
                 <Ionicons name="logo-google" size={20} color={appColors.textPrimary} />
               </TouchableOpacity>
               <TouchableOpacity 
-                style={[styles.socialButton, { borderColor: appColors.border }]}
+                style={[styles.socialButton, { borderColor: appColors.border, backgroundColor: appColors.surface }]}
                 onPress={() => {
                   console.log('GitHub button pressed');
                   signInWithGithub();
                 }}
+                disabled={authLoading}
+                testID="button-github-login"
               >
                 <Ionicons name="logo-github" size={20} color={appColors.textPrimary} />
               </TouchableOpacity>
               <TouchableOpacity 
-                style={[styles.socialButton, { borderColor: appColors.border }]}
+                style={[styles.socialButton, { borderColor: appColors.border, backgroundColor: appColors.surface }]}
                 onPress={() => {
                   console.log('Facebook button pressed');
                   signInWithFacebook();
                 }}
+                disabled={authLoading}
+                testID="button-facebook-login"
               >
                 <Ionicons name="logo-facebook" size={20} color={appColors.textPrimary} />
               </TouchableOpacity>
               {isAppleAuthAvailable && Platform.OS === 'ios' ? (
                 <TouchableOpacity 
-                  style={[styles.socialButton, { borderColor: appColors.border }]}
+                  style={[styles.socialButton, { borderColor: appColors.border, backgroundColor: appColors.surface }]}
                   onPress={signInWithApple}
+                  disabled={authLoading}
+                  testID="button-apple-login"
                 >
                   <Ionicons name="logo-apple" size={20} color={appColors.textPrimary} />
                 </TouchableOpacity>
@@ -304,6 +325,7 @@ export default function LoginScreen() {
           <TouchableOpacity
             style={[styles.demoButton, { borderColor: appColors.border }]}
             onPress={mockSignIn}
+            disabled={authLoading}
             testID="button-demo-login"
           >
             <Ionicons name="flask-outline" size={18} color={appColors.textSecondary} />
@@ -353,10 +375,23 @@ const styles = StyleSheet.create({
   form: {
     marginTop: Spacing.lg,
   },
+  errorBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: Spacing.sm,
+    paddingHorizontal: Spacing.md,
+    borderRadius: BorderRadius.md,
+    borderWidth: 1,
+    marginBottom: Spacing.md,
+    gap: Spacing.sm,
+  },
+  errorBannerText: {
+    ...Typography.caption,
+    flex: 1,
+  },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.light.backgroundSecondary,
     borderRadius: BorderRadius.md,
     marginBottom: Spacing.md,
     borderWidth: 1,
