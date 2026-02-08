@@ -416,6 +416,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
       return;
     }
 
+    // Dismiss any stuck auth sessions before starting
+    if (Platform.OS === 'web') {
+      WebBrowser.dismissAuthSession();
+    }
+
     // IMPORTANT: Call promptAsync IMMEDIATELY - no async state updates before this
     // or the browser's popup blocker will block the OAuth window
     const startTime = Date.now();
@@ -474,6 +479,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
       return;
     }
 
+    // Dismiss any stuck auth sessions before starting
+    if (Platform.OS === 'web') {
+      WebBrowser.dismissAuthSession();
+    }
+
     // IMPORTANT: Call promptAsync IMMEDIATELY - no async state updates before this
     // or the browser's popup blocker will block the OAuth window
     const result = await promptGithubAsync();
@@ -516,6 +526,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
     if (!FACEBOOK_APP_ID) {
       setError('Facebook Sign-In is not configured. Please use email login.');
       return;
+    }
+
+    // Dismiss any stuck auth sessions before starting
+    if (Platform.OS === 'web') {
+      WebBrowser.dismissAuthSession();
     }
 
     // IMPORTANT: Call promptAsync IMMEDIATELY - no async state updates before this
