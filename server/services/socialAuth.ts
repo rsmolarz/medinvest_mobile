@@ -156,12 +156,21 @@ export async function verifyAppleToken(
     const signingKey = await appleJwksClient.getSigningKey(kid);
     const publicKey = signingKey.getPublicKey();
 
-    // Verify the token
+    const audiences = [
+      process.env.APPLE_CLIENT_ID,
+      'com.medinvest.app',
+      'host.exp.Exponent',
+    ].filter(Boolean) as string[];
+
     const payload = jwt.verify(identityToken, publicKey, {
       algorithms: ['RS256'],
       issuer: 'https://appleid.apple.com',
-      audience: process.env.APPLE_CLIENT_ID,
     }) as AppleTokenPayload;
+
+    if (!audiences.includes(payload.aud)) {
+      console.error('Apple token audience mismatch. Got:', payload.aud, 'Expected one of:', audiences);
+      return null;
+    }
 
     return payload;
   } catch (error) {
