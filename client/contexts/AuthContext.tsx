@@ -548,31 +548,34 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setIsLoading(true);
       setError(null);
 
-      const isExpoGo = Constants.appOwnership === 'expo';
-      const appRedirectUri = isExpoGo
-        ? AuthSession.makeRedirectUri()
-        : AuthSession.makeRedirectUri({ scheme: 'medinvest' });
-      const serverStartUrl = `${getApiUrl()}api/auth/${provider}/start?app_redirect_uri=${encodeURIComponent(appRedirectUri)}`;
+      const baseUrl = getApiUrl();
+      const mobileCallbackUrl = `${baseUrl}api/auth/mobile-callback`;
+      const serverStartUrl = `${baseUrl}api/auth/${provider}/start?app_redirect_uri=${encodeURIComponent(mobileCallbackUrl)}`;
       console.log(`[OAuth] Opening server-side ${provider} OAuth:`, serverStartUrl);
-      console.log(`[OAuth] App redirect URI for callback:`, appRedirectUri);
-      console.log(`[OAuth] isExpoGo:`, isExpoGo);
+      console.log(`[OAuth] Mobile callback URL:`, mobileCallbackUrl);
 
       const result = await WebBrowser.openAuthSessionAsync(
         serverStartUrl,
-        appRedirectUri
+        mobileCallbackUrl
       );
 
-      console.log(`[OAuth] ${provider} browser result:`, JSON.stringify(result));
+      console.log(`[OAuth] ${provider} browser result type:`, result.type);
 
       if (result.type === 'success' && result.url) {
         console.log(`[OAuth] Result URL:`, result.url);
         let tokenFromUrl: string | null = null;
         let errorFromUrl: string | null = null;
 
-        const tokenMatch = result.url.match(/[?&]token=([^&]+)/);
-        const errorMatch = result.url.match(/[?&]error=([^&]+)/);
-        tokenFromUrl = tokenMatch ? decodeURIComponent(tokenMatch[1]) : null;
-        errorFromUrl = errorMatch ? decodeURIComponent(errorMatch[1]) : null;
+        try {
+          const parsed = new URL(result.url);
+          tokenFromUrl = parsed.searchParams.get('token');
+          errorFromUrl = parsed.searchParams.get('error');
+        } catch {
+          const tokenMatch = result.url.match(/[?&]token=([^&]+)/);
+          const errorMatch = result.url.match(/[?&]error=([^&]+)/);
+          tokenFromUrl = tokenMatch ? decodeURIComponent(tokenMatch[1]) : null;
+          errorFromUrl = errorMatch ? decodeURIComponent(errorMatch[1]) : null;
+        }
 
         if (errorFromUrl) {
           setError(decodeURIComponent(errorFromUrl));

@@ -490,6 +490,25 @@ router.get('/facebook/start', (req: Request, res: Response) => {
 });
 
 /**
+ * GET /api/auth/mobile-callback
+ * Mobile OAuth redirect target - this URL is used as the redirect URI for
+ * openAuthSessionAsync. The browser will navigate here but the auth session
+ * intercepts it before the page loads, capturing the token from query params.
+ */
+router.get('/mobile-callback', (req: Request, res: Response) => {
+  const token = req.query.token as string;
+  const error = req.query.error as string;
+  
+  if (token) {
+    res.send('<html><body><p>Authentication successful. You can close this window.</p></body></html>');
+  } else if (error) {
+    res.send(`<html><body><p>Authentication failed: ${error}</p></body></html>`);
+  } else {
+    res.send('<html><body><p>Authentication in progress...</p></body></html>');
+  }
+});
+
+/**
  * GET /api/auth/callback
  * Server-side OAuth callback handler
  * Handles the redirect from OAuth providers, exchanges code for token,
