@@ -408,9 +408,6 @@ function getBaseUri(): string {
 
 function getCallbackUri(provider?: string): string {
   const base = getBaseUri();
-  if (provider === 'google') {
-    return `${base}/`;
-  }
   return `${base}/api/auth/callback`;
 }
 
