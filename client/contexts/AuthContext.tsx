@@ -548,31 +548,44 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setIsLoading(true);
       setError(null);
 
-      const serverStartUrl = `${getApiUrl()}api/auth/${provider}/start`;
+      const appRedirectUri = AuthSession.makeRedirectUri({ scheme: 'medinvest' });
+      const serverStartUrl = `${getApiUrl()}api/auth/${provider}/start?app_redirect_uri=${encodeURIComponent(appRedirectUri)}`;
       console.log(`[OAuth] Opening server-side ${provider} OAuth:`, serverStartUrl);
+      console.log(`[OAuth] App redirect URI for callback:`, appRedirectUri);
 
       const result = await WebBrowser.openAuthSessionAsync(
         serverStartUrl,
-        'medinvest://auth'
+        appRedirectUri
       );
 
       console.log(`[OAuth] ${provider} browser result:`, result.type);
 
       if (result.type === 'success' && result.url) {
-        const parsed = new URL(result.url.replace('medinvest://', 'https://medinvest.app/'));
-        const authToken = parsed.searchParams.get('token');
-        const errorParam = parsed.searchParams.get('error');
+        let tokenFromUrl: string | null = null;
+        let errorFromUrl: string | null = null;
 
-        if (errorParam) {
-          setError(decodeURIComponent(errorParam));
+        try {
+          const safeUrl = result.url.replace(/^exp:\/\//, 'https://placeholder.local/');
+          const parsed = new URL(safeUrl);
+          tokenFromUrl = parsed.searchParams.get('token');
+          errorFromUrl = parsed.searchParams.get('error');
+        } catch {
+          const tokenMatch = result.url.match(/[?&]token=([^&]+)/);
+          const errorMatch = result.url.match(/[?&]error=([^&]+)/);
+          tokenFromUrl = tokenMatch ? decodeURIComponent(tokenMatch[1]) : null;
+          errorFromUrl = errorMatch ? decodeURIComponent(errorMatch[1]) : null;
+        }
+
+        if (errorFromUrl) {
+          setError(decodeURIComponent(errorFromUrl));
           return;
         }
 
-        if (authToken) {
+        if (tokenFromUrl) {
           const response = await apiClient.get('/users/me', {
-            headers: { Authorization: `Bearer ${authToken}` },
+            headers: { Authorization: `Bearer ${tokenFromUrl}` },
           });
-          await saveAuthData(authToken, response.data as User);
+          await saveAuthData(tokenFromUrl, response.data as User);
           console.log(`[OAuth] Logged in via server-side ${provider} OAuth`);
         }
       } else if (result.type === 'cancel' || result.type === 'dismiss') {
