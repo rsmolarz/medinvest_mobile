@@ -744,8 +744,10 @@ router.get('/callback', async (req: Request, res: Response) => {
       return res.redirect(redirectUrl);
     }
 
-    console.log(`[OAuth Callback] Web flow - sending success page with token`);
-    return res.send(getOAuthResultPage('success', 'Login successful!', jwtToken, userData));
+    console.log(`[OAuth Callback] Web flow - redirecting to landing page with auth token`);
+    const baseUri = getBaseUri();
+    const userDataEncoded = encodeURIComponent(JSON.stringify(userData));
+    return res.redirect(`${baseUri}/?auth_token=${encodeURIComponent(jwtToken)}&auth_user=${userDataEncoded}`);
   } catch (error) {
     console.error('[OAuth Callback] Error:', error);
     return res.status(500).send(getOAuthResultPage('error', 'Authentication failed. Please try again.'));

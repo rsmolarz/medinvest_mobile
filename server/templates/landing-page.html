@@ -498,6 +498,57 @@
           }, 500);
         }
       })();
+
+      // Handle OAuth callback - detect auth token in URL
+      (function() {
+        var params = new URLSearchParams(window.location.search);
+        var authToken = params.get('auth_token');
+        var authUserRaw = params.get('auth_user');
+
+        if (!authToken) return;
+
+        // Clean URL
+        window.history.replaceState({}, '', window.location.pathname);
+
+        // Store token for the Expo app to read
+        try {
+          document.cookie = 'medinvest_auth_token=' + encodeURIComponent(authToken) + '; Path=/; Max-Age=300; SameSite=Lax; Secure';
+          if (authUserRaw) {
+            document.cookie = 'medinvest_auth_user=' + encodeURIComponent(authUserRaw) + '; Path=/; Max-Age=300; SameSite=Lax; Secure';
+          }
+          localStorage.setItem('medinvest_oauth_token', authToken);
+          if (authUserRaw) localStorage.setItem('medinvest_oauth_user', authUserRaw);
+        } catch(e) {}
+
+        // Parse user data
+        var userName = '';
+        try {
+          if (authUserRaw) {
+            var userData = JSON.parse(authUserRaw);
+            userName = userData.fullName || ((userData.firstName || '') + ' ' + (userData.lastName || '')).trim() || userData.email || '';
+          }
+        } catch(e) {}
+
+        // Show success UI
+        var wrapper = document.querySelector('.wrapper');
+        if (wrapper) {
+          wrapper.innerHTML = '<div style="padding:60px 20px;text-align:center;">' +
+            '<div style="width:64px;height:64px;border-radius:50%;background:#00A86B;margin:0 auto 20px;display:flex;align-items:center;justify-content:center;">' +
+            '<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>' +
+            '<h1 style="font-size:24px;margin-bottom:8px;">Login Successful!</h1>' +
+            (userName ? '<p style="color:#666;margin-bottom:24px;">Welcome, ' + userName + '</p>' : '') +
+            '<p style="color:#888;font-size:14px;margin-bottom:24px;">You are now signed in. Open the app on your device to continue.</p>' +
+            '<div style="display:flex;flex-direction:column;gap:12px;max-width:280px;margin:0 auto;">' +
+            '<a href="medinvest://auth?token=' + encodeURIComponent(authToken) + '" style="display:inline-block;padding:14px 32px;background:linear-gradient(135deg,#0066CC,#00A86B);color:#fff;text-decoration:none;border-radius:12px;font-size:16px;font-weight:600;">Open in App</a>' +
+            '</div></div>';
+        }
+
+        // On mobile, try to open the app automatically
+        var isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+        if (isMobile) {
+          window.location.href = 'medinvest://auth?token=' + encodeURIComponent(authToken);
+        }
+      })();
     </script>
   </body>
 </html>
