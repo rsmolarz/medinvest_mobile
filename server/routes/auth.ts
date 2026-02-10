@@ -744,23 +744,8 @@ router.get('/callback', async (req: Request, res: Response) => {
       return res.redirect(redirectUrl);
     }
 
-    res.cookie('medinvest_auth_token', jwtToken, {
-      maxAge: 300000,
-      path: '/',
-      sameSite: 'lax',
-      secure: true,
-      httpOnly: false,
-    });
-    res.cookie('medinvest_auth_user', JSON.stringify(userData), {
-      maxAge: 300000,
-      path: '/',
-      sameSite: 'lax',
-      secure: true,
-      httpOnly: false,
-    });
-
-    console.log(`[OAuth Callback] Web flow - setting cookies and redirecting to /`);
-    return res.redirect('/');
+    console.log(`[OAuth Callback] Web flow - sending success page with token`);
+    return res.send(getOAuthResultPage('success', 'Login successful!', jwtToken, userData));
   } catch (error) {
     console.error('[OAuth Callback] Error:', error);
     return res.status(500).send(getOAuthResultPage('error', 'Authentication failed. Please try again.'));
@@ -772,6 +757,7 @@ function getOAuthResultPage(status: 'success' | 'error', message: string, token?
   const deepLinkUrl = appRedirectUri 
     ? `${appRedirectUri}${appRedirectUri.includes('?') ? '&' : '?'}token=${token}`
     : `medinvest://auth?token=${token}`;
+  const userJson = user ? JSON.stringify(user).replace(/</g, '\\u003c').replace(/>/g, '\\u003e') : 'null';
   return `<!DOCTYPE html>
 <html>
 <head>
@@ -795,23 +781,48 @@ function getOAuthResultPage(status: 'success' | 'error', message: string, token?
     ${isSuccess ? `
       <div class="spinner"></div>
       <h1>Login Successful</h1>
-      <p>Redirecting to the app...</p>
+      <p id="status-msg">Signing you in...</p>
       <script>
-        try {
-          var deepLink = ${JSON.stringify(deepLinkUrl)};
-          var isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || /expo/i.test(navigator.userAgent);
-          if (isMobile) {
-            window.location.href = deepLink;
-            setTimeout(function() {
-              window.location.href = 'medinvest://auth?token=${token}';
-            }, 500);
+        (function() {
+          try {
+            var token = ${JSON.stringify(token || '')};
+            var userData = ${userJson};
+            var deepLink = ${JSON.stringify(deepLinkUrl)};
+            var isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+            // Store token and user data in cookies for the app to read
+            document.cookie = 'medinvest_auth_token=' + encodeURIComponent(token) + '; Path=/; Max-Age=300; SameSite=Lax; Secure';
+            if (userData) {
+              document.cookie = 'medinvest_auth_user=' + encodeURIComponent(JSON.stringify(userData)) + '; Path=/; Max-Age=300; SameSite=Lax; Secure';
+            }
+
+            // Also store in localStorage as backup for the Expo web app
+            try {
+              localStorage.setItem('medinvest_oauth_token', token);
+              if (userData) localStorage.setItem('medinvest_oauth_user', JSON.stringify(userData));
+            } catch(e) {}
+
+            if (isMobile) {
+              // Try deep link for native app
+              document.getElementById('status-msg').textContent = 'Opening the app...';
+              window.location.href = deepLink;
+              setTimeout(function() {
+                window.location.href = 'medinvest://auth?token=' + encodeURIComponent(token);
+              }, 500);
+              setTimeout(function() {
+                document.getElementById('status-msg').textContent = 'Login successful! You can return to the app.';
+              }, 3000);
+            } else {
+              // Web: redirect to app root so cookie-reading code picks it up
+              document.getElementById('status-msg').textContent = 'Redirecting...';
+              setTimeout(function() {
+                window.location.href = '/';
+              }, 500);
+            }
+          } catch(e) {
+            document.getElementById('status-msg').textContent = 'Login successful! You can close this tab.';
           }
-          setTimeout(function() {
-            window.location.href = '/';
-          }, 3000);
-        } catch(e) {
-          window.location.href = '/';
-        }
+        })();
       </script>
     ` : `
       <div class="icon">&#10060;</div>

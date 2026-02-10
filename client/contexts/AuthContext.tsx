@@ -145,15 +145,26 @@ export function AuthProvider({ children }: AuthProviderProps) {
           return acc;
         }, {});
 
-        const authToken = cookies['medinvest_auth_token'];
-        const authUserRaw = cookies['medinvest_auth_user'];
+        let authToken = cookies['medinvest_auth_token'];
+        let authUserRaw = cookies['medinvest_auth_user'];
+
+        if (!authToken) {
+          try {
+            authToken = localStorage.getItem('medinvest_oauth_token') || '';
+            authUserRaw = localStorage.getItem('medinvest_oauth_user') || '';
+          } catch {}
+        }
 
         if (!authToken) return;
 
-        console.log('[OAuth] Found auth cookie from server-side callback');
+        console.log('[OAuth] Found auth token from server-side callback');
 
         document.cookie = 'medinvest_auth_token=; Path=/; Max-Age=0; SameSite=Lax; Secure';
         document.cookie = 'medinvest_auth_user=; Path=/; Max-Age=0; SameSite=Lax; Secure';
+        try {
+          localStorage.removeItem('medinvest_oauth_token');
+          localStorage.removeItem('medinvest_oauth_user');
+        } catch {}
 
         let userData: User | null = null;
         if (authUserRaw) {
