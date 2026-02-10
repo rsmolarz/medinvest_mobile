@@ -88,7 +88,7 @@ function SettingItem({
 
 export default function SettingsScreen() {
   const navigation = useNavigation<any>();
-  const { user, logout, changePassword } = useAuth();
+  const { user, signOut } = useAuth();
   const appColors = useAppColors();
   const { mode, setMode, isDark } = useThemeContext();
 
@@ -111,7 +111,7 @@ export default function SettingsScreen() {
       'Are you sure you want to sign out?',
       [
         { text: 'Cancel', style: 'cancel' },
-        { text: 'Sign Out', style: 'destructive', onPress: logout },
+        { text: 'Sign Out', style: 'destructive', onPress: () => signOut() },
       ]
     );
   };
@@ -145,38 +145,7 @@ export default function SettingsScreen() {
   };
 
   const handleChangePassword = () => {
-    Alert.prompt(
-      'Current Password',
-      'Enter your current password',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Next',
-          onPress: (currentPwd) => {
-            if (!currentPwd) return;
-            Alert.prompt(
-              'New Password',
-              'Enter your new password',
-              [
-                { text: 'Cancel', style: 'cancel' },
-                {
-                  text: 'Change',
-                  onPress: async (newPwd) => {
-                    if (!newPwd) return;
-                    const success = await changePassword(currentPwd, newPwd);
-                    if (success) {
-                      Alert.alert('Success', 'Password changed successfully');
-                    }
-                  },
-                },
-              ],
-              'secure-text'
-            );
-          },
-        },
-      ],
-      'secure-text'
-    );
+    navigation.navigate('ChangePassword');
   };
 
   return (

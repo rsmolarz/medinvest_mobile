@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet, ScrollView, Pressable } from 'react-native';
+import { View, StyleSheet, ScrollView, Pressable, Alert } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
@@ -28,8 +28,15 @@ export default function ProfileScreen() {
     { icon: 'settings', label: 'Settings', screen: 'Settings' as const },
   ];
 
-  const handleLogout = async () => {
-    await signOut();
+  const handleLogout = () => {
+    Alert.alert(
+      'Sign Out',
+      'Are you sure you want to sign out?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Sign Out', style: 'destructive', onPress: () => signOut() },
+      ]
+    );
   };
 
   return (
@@ -55,21 +62,21 @@ export default function ProfileScreen() {
         </View>
 
         <View style={[styles.profileCard, { backgroundColor: colors.surface }, Shadows.card]}>
-          {user?.avatarUrl ? (
+          {user?.avatar_url ? (
             <Image
-              source={{ uri: user.avatarUrl }}
+              source={{ uri: user.avatar_url }}
               style={styles.avatarImage}
               contentFit="cover"
             />
           ) : (
             <View style={[styles.avatar, { backgroundColor: colors.primary + '20' }]}>
               <ThemedText type="title" style={{ color: colors.primary }}>
-                {user?.firstName?.[0] || user?.email?.[0]?.toUpperCase() || 'U'}
+                {user?.first_name?.[0] || user?.email?.[0]?.toUpperCase() || 'U'}
               </ThemedText>
             </View>
           )}
           <ThemedText type="heading" style={styles.userName}>
-            {user?.fullName || user?.email || 'User'}
+            {user?.full_name || user?.email || 'User'}
           </ThemedText>
           <ThemedText type="body" style={{ color: colors.textSecondary }}>
             {user?.email || ''}
