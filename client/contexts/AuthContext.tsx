@@ -488,24 +488,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
     console.log('[OAuth] Google Sign-In starting');
 
     if (Platform.OS === 'web' && typeof window !== 'undefined') {
-      if (!GOOGLE_WEB_CLIENT_ID) {
-        setError('Google sign-in is not configured');
-        return;
-      }
-      const redirectUri = getOAuthRedirectUri();
-      const state = generateOAuthState('google');
-      const params = new URLSearchParams({
-        client_id: GOOGLE_WEB_CLIENT_ID,
-        redirect_uri: redirectUri,
-        response_type: 'code',
-        scope: 'openid profile email',
-        state,
-        access_type: 'offline',
-        prompt: 'select_account',
-      });
-      const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
-      console.log('[OAuth] Redirecting directly to Google OAuth:', authUrl);
-      window.location.href = authUrl;
+      const oauthDomain = process.env.EXPO_PUBLIC_OAUTH_DOMAIN || process.env.EXPO_PUBLIC_DOMAIN?.replace(/:5000$/, '') || '';
+      const serverStartUrl = `https://${oauthDomain}/api/auth/google/start`;
+      console.log('[OAuth] Redirecting to server-side Google OAuth:', serverStartUrl);
+      window.location.href = serverStartUrl;
       return;
     }
 
@@ -520,22 +506,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
     console.log('[OAuth] GitHub Sign-In starting');
 
     if (Platform.OS === 'web' && typeof window !== 'undefined') {
-      const clientId = GITHUB_CLIENT_ID;
-      if (!clientId) {
-        setError('GitHub sign-in is not configured');
-        return;
-      }
-      const redirectUri = getOAuthRedirectUri();
-      const state = generateOAuthState('github');
-      const params = new URLSearchParams({
-        client_id: clientId,
-        redirect_uri: redirectUri,
-        scope: 'user:email read:user',
-        state,
-      });
-      const authUrl = `https://github.com/login/oauth/authorize?${params.toString()}`;
-      console.log('[OAuth] Redirecting directly to GitHub OAuth:', authUrl);
-      window.location.href = authUrl;
+      const oauthDomain = process.env.EXPO_PUBLIC_OAUTH_DOMAIN || process.env.EXPO_PUBLIC_DOMAIN?.replace(/:5000$/, '') || '';
+      const serverStartUrl = `https://${oauthDomain}/api/auth/github/start`;
+      console.log('[OAuth] Redirecting to server-side GitHub OAuth:', serverStartUrl);
+      window.location.href = serverStartUrl;
       return;
     }
 
@@ -550,22 +524,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
     console.log('[OAuth] Facebook Sign-In starting');
 
     if (Platform.OS === 'web' && typeof window !== 'undefined') {
-      if (!FACEBOOK_APP_ID) {
-        setError('Facebook sign-in is not configured');
-        return;
-      }
-      const redirectUri = getOAuthRedirectUri();
-      const state = generateOAuthState('facebook');
-      const params = new URLSearchParams({
-        client_id: FACEBOOK_APP_ID,
-        redirect_uri: redirectUri,
-        scope: 'email,public_profile',
-        state,
-        response_type: 'code',
-      });
-      const authUrl = `https://www.facebook.com/v18.0/dialog/oauth?${params.toString()}`;
-      console.log('[OAuth] Redirecting directly to Facebook OAuth:', authUrl);
-      window.location.href = authUrl;
+      const oauthDomain = process.env.EXPO_PUBLIC_OAUTH_DOMAIN || process.env.EXPO_PUBLIC_DOMAIN?.replace(/:5000$/, '') || '';
+      const serverStartUrl = `https://${oauthDomain}/api/auth/facebook/start`;
+      console.log('[OAuth] Redirecting to server-side Facebook OAuth:', serverStartUrl);
+      window.location.href = serverStartUrl;
       return;
     }
 
