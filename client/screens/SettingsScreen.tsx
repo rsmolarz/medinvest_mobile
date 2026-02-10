@@ -12,6 +12,7 @@ import {
   Switch,
   Alert,
   Linking,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -106,31 +107,45 @@ export default function SettingsScreen() {
   });
 
   const handleLogout = () => {
-    Alert.alert(
-      'Sign Out',
-      'Are you sure you want to sign out?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Sign Out', style: 'destructive', onPress: () => signOut() },
-      ]
-    );
+    if (Platform.OS === 'web') {
+      const confirmed = window.confirm('Are you sure you want to sign out?');
+      if (confirmed) {
+        signOut();
+      }
+    } else {
+      Alert.alert(
+        'Sign Out',
+        'Are you sure you want to sign out?',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Sign Out', style: 'destructive', onPress: () => signOut() },
+        ]
+      );
+    }
   };
 
   const handleDeleteAccount = () => {
-    Alert.alert(
-      'Delete Account',
-      'This action cannot be undone. All your data will be permanently deleted.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: () => {
-            Alert.alert('Contact Support', 'Please contact support to delete your account.');
+    if (Platform.OS === 'web') {
+      const confirmed = window.confirm('This action cannot be undone. All your data will be permanently deleted. Are you sure?');
+      if (confirmed) {
+        window.alert('Please contact support to delete your account.');
+      }
+    } else {
+      Alert.alert(
+        'Delete Account',
+        'This action cannot be undone. All your data will be permanently deleted.',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Delete',
+            style: 'destructive',
+            onPress: () => {
+              Alert.alert('Contact Support', 'Please contact support to delete your account.');
+            },
           },
-        },
-      ]
-    );
+        ]
+      );
+    }
   };
 
   const handleManageSubscription = async () => {
