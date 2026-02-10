@@ -392,18 +392,26 @@ router.post('/facebook/token', async (req: Request, res: Response) => {
  * and matches what's registered with OAuth providers.
  * The dev domain changes every restart - never use it for OAuth.
  */
-function getCallbackUri(_req: Request): string {
+function getBaseUri(): string {
   const oauthDomain = process.env.OAUTH_CALLBACK_DOMAIN;
   if (oauthDomain) {
-    return `https://${oauthDomain}/api/auth/callback`;
+    return `https://${oauthDomain}`;
   }
 
   const publishedDomain = process.env.EXPO_PUBLIC_DOMAIN?.replace(/:5000$/, '');
   if (publishedDomain && !publishedDomain.includes('localhost')) {
-    return `https://${publishedDomain}/api/auth/callback`;
+    return `https://${publishedDomain}`;
   }
 
-  return 'http://localhost:5000/api/auth/callback';
+  return 'http://localhost:5000';
+}
+
+function getCallbackUri(provider?: string): string {
+  const base = getBaseUri();
+  if (provider === 'google') {
+    return `${base}/`;
+  }
+  return `${base}/api/auth/callback`;
 }
 
 /**
@@ -417,7 +425,7 @@ router.get('/google/start', (req: Request, res: Response) => {
     return;
   }
 
-  const callbackUri = getCallbackUri(req);
+  const callbackUri = getCallbackUri('google');
   const appRedirectUri = req.query.app_redirect_uri as string;
   const state = createSignedOAuthState('google', appRedirectUri);
 
@@ -447,7 +455,7 @@ router.get('/github/start', (req: Request, res: Response) => {
     return;
   }
 
-  const callbackUri = getCallbackUri(req);
+  const callbackUri = getCallbackUri('github');
   const appRedirectUri = req.query.app_redirect_uri as string;
   const state = createSignedOAuthState('github', appRedirectUri);
 
@@ -474,7 +482,7 @@ router.get('/facebook/start', (req: Request, res: Response) => {
     return;
   }
 
-  const callbackUri = getCallbackUri(req);
+  const callbackUri = getCallbackUri('facebook');
   const appRedirectUri = req.query.app_redirect_uri as string;
   const state = createSignedOAuthState('facebook', appRedirectUri);
 
@@ -553,7 +561,7 @@ router.get('/callback', async (req: Request, res: Response) => {
 
     console.log(`[OAuth Callback] Provider: ${provider}, code length: ${code.length}, has appRedirectUri: ${!!stateData.appRedirectUri}`);
 
-    const callbackUri = getCallbackUri(req);
+    const callbackUri = getCallbackUri(provider);
     console.log(`[OAuth Callback] Using redirect_uri for token exchange: ${callbackUri}`);
 
     let accessToken: string | undefined;
@@ -1417,7 +1425,10 @@ router.get('/oauth-debug', (req: Request, res: Response) => {
   .section{background:#2d2d44;padding:15px;border-radius:8px;margin:10px 0}</style></head>
   <body><h1>OAuth Redirect URI Debug</h1>
   <div class="section"><h2>Current Request Origin</h2><code>${currentOrigin}</code></div>
-  <div class="section"><h2>Callback URI (used by OAuth start endpoints)</h2><code>${getCallbackUri(req)}</code></div>
+  <div class="section"><h2>Callback URIs (used by OAuth start endpoints)</h2>
+  <p>Google: <code>${getCallbackUri('google')}</code></p>
+  <p>GitHub: <code>${getCallbackUri('github')}</code></p>
+  <p>Facebook: <code>${getCallbackUri('facebook')}</code></p></div>
   <div class="section"><h2>All Redirect URIs to Register</h2>
   <p>Copy-paste ALL of these into each OAuth provider's console:</p>
   ${allCallbackUris.map(u => `<code>${u}</code>`).join('')}</div>
