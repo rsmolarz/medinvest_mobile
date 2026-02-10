@@ -408,7 +408,7 @@ function getBaseUri(): string {
 
 function getCallbackUri(provider?: string): string {
   const base = getBaseUri();
-  return `${base}/api/auth/callback`;
+  return `${base}/`;
 }
 
 /**
@@ -1400,25 +1400,25 @@ router.get('/oauth-debug', (req: Request, res: Response) => {
   const forwardedProto = req.header('x-forwarded-proto') || req.protocol || 'https';
   const forwardedHost = req.header('x-forwarded-host') || req.get('host');
   const currentOrigin = `${forwardedProto}://${forwardedHost}`;
-  const callbackUri = `${currentOrigin}/api/auth/callback`;
+  const callbackUri = `${currentOrigin}/`;
 
   const devDomain = process.env.REPLIT_DEV_DOMAIN;
   const pubDomains = process.env.REPLIT_DOMAINS;
 
   const allCallbackUris: string[] = [callbackUri];
   if (devDomain) {
-    allCallbackUris.push(`https://${devDomain}/api/auth/callback`);
+    allCallbackUris.push(`https://${devDomain}/`);
   }
   if (pubDomains) {
     const domainList = pubDomains.split(',');
     for (const d of domainList) {
-      const uri = `https://${d.trim()}/api/auth/callback`;
+      const uri = `https://${d.trim()}/`;
       if (!allCallbackUris.includes(uri)) allCallbackUris.push(uri);
     }
   }
   const knownDomains = ['themedicineandmoneyshow.com', 'medinvest-mobile--rsmolarz.replit.app'];
   for (const d of knownDomains) {
-    const uri = `https://${d}/api/auth/callback`;
+    const uri = `https://${d}/`;
     if (!allCallbackUris.includes(uri)) allCallbackUris.push(uri);
   }
 
@@ -1447,7 +1447,7 @@ router.get('/oauth-debug', (req: Request, res: Response) => {
   <div class="section"><h2>Google Console Setup</h2>
   <p>In <a href="https://console.cloud.google.com/apis/credentials" style="color:#00a86b">Google Cloud Console</a>:</p>
   <p><b>Authorized JavaScript Origins:</b></p>
-  ${[...new Set(allCallbackUris.map(u => u.replace('/api/auth/callback', '')))].map(u => `<code>${u}</code>`).join('')}
+  ${[...new Set(allCallbackUris.map(u => u.replace(/\/$/, '')))].map(u => `<code>${u}</code>`).join('')}
   <p><b>Authorized Redirect URIs:</b></p>
   ${allCallbackUris.map(u => `<code>${u}</code>`).join('')}
   <p><b>OAuth Consent Screen:</b> Must be "External" user type and "In production" (or add test users)</p></div>

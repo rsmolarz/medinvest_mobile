@@ -207,9 +207,9 @@ function configureExpoAndLanding(app: express.Application) {
     }
 
     if (req.path === "/" && req.query.code && req.query.state) {
-      const callbackUrl = `/api/auth/callback?${new URLSearchParams(req.query as Record<string, string>).toString()}`;
-      log(`OAuth redirect detected at root, forwarding to ${callbackUrl}`);
-      return res.redirect(callbackUrl);
+      log(`OAuth callback detected at root, redirecting to /api/auth/callback`);
+      const qs = new URLSearchParams(req.query as Record<string, string>).toString();
+      return res.redirect(`/api/auth/callback?${qs}`);
     }
 
     if (req.path === "/") {
