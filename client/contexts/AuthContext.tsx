@@ -9,10 +9,7 @@ import React, {
 } from 'react';
 import * as AppleAuthentication from 'expo-apple-authentication';
 import * as WebBrowser from 'expo-web-browser';
-import * as Google from 'expo-auth-session/providers/google';
-import * as AuthSession from 'expo-auth-session';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import Constants from 'expo-constants';
 import { Platform, Linking } from 'react-native';
 import { apiClient } from '@/api/client';
 import { getApiUrl } from '@/lib/query-client';
@@ -22,63 +19,7 @@ import { AUTH_TOKEN_KEY, USER_DATA_KEY } from '@/constants/auth';
 WebBrowser.maybeCompleteAuthSession();
 
 const GOOGLE_WEB_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID;
-const GOOGLE_IOS_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID;
-const GOOGLE_ANDROID_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID;
-const GOOGLE_EXPO_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_EXPO_CLIENT_ID;
-
-const GITHUB_WEB_CLIENT_ID = process.env.EXPO_PUBLIC_GITHUB_CLIENT_ID;
-const GITHUB_MOBILE_CLIENT_ID = process.env.EXPO_PUBLIC_GITHUB_MOBILE_CLIENT_ID;
 const FACEBOOK_APP_ID = process.env.EXPO_PUBLIC_FACEBOOK_APP_ID;
-
-function getGitHubClientId(): string | undefined {
-  if (Platform.OS === 'web') {
-    return GITHUB_WEB_CLIENT_ID;
-  }
-  return GITHUB_MOBILE_CLIENT_ID || GITHUB_WEB_CLIENT_ID;
-}
-
-function getServerCallbackUri(): string {
-  if (typeof window !== 'undefined') {
-    return `${window.location.origin}/api/auth/callback`;
-  }
-  const domain = process.env.EXPO_PUBLIC_DOMAIN;
-  if (domain) {
-    const cleanDomain = domain.replace(/:5000$/, '');
-    return `https://${cleanDomain}/api/auth/callback`;
-  }
-  return '/api/auth/callback';
-}
-
-function getOAuthRedirectUri(): string {
-  if (Platform.OS === 'web') {
-    return getServerCallbackUri();
-  }
-  return AuthSession.makeRedirectUri({ scheme: 'medinvest' });
-}
-
-const PLACEHOLDER_CLIENT_ID = 'placeholder.apps.googleusercontent.com';
-
-function getHasGoogleCredentialsForPlatform(): boolean {
-  const isExpoGo = Constants.appOwnership === 'expo';
-  
-  if (Platform.OS === 'web') {
-    return !!GOOGLE_WEB_CLIENT_ID;
-  } else if (Platform.OS === 'ios') {
-    return isExpoGo ? !!GOOGLE_EXPO_CLIENT_ID : !!GOOGLE_IOS_CLIENT_ID;
-  } else if (Platform.OS === 'android') {
-    return isExpoGo ? !!GOOGLE_EXPO_CLIENT_ID : !!GOOGLE_ANDROID_CLIENT_ID;
-  }
-  return false;
-}
-
-function generateRandomState(): string {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  let result = '';
-  for (let i = 0; i < 32; i++) {
-    result += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return result;
-}
 
 export interface AuthState {
   user: User | null;
@@ -132,56 +73,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [error, setError] = useState<string | null>(null);
   const [isAppleAuthAvailable, setIsAppleAuthAvailable] = useState(false);
 
-  const oauthRedirectUri = getOAuthRedirectUri();
-
   if (__DEV__) {
-    console.log('[OAuth] Redirect URI:', oauthRedirectUri);
     console.log('[OAuth] Platform:', Platform.OS);
     console.log('[OAuth] Google Web Client ID:', GOOGLE_WEB_CLIENT_ID ? 'configured' : 'missing');
-    console.log('[OAuth] GitHub Client ID:', getGitHubClientId() ? 'configured' : 'missing');
     console.log('[OAuth] Facebook App ID:', FACEBOOK_APP_ID ? 'configured' : 'missing');
   }
-
-  const [_googleRequest, googleResponse, promptGoogleAsync] = Google.useAuthRequest({
-    clientId: GOOGLE_EXPO_CLIENT_ID || PLACEHOLDER_CLIENT_ID,
-    webClientId: GOOGLE_WEB_CLIENT_ID || PLACEHOLDER_CLIENT_ID,
-    iosClientId: GOOGLE_IOS_CLIENT_ID || PLACEHOLDER_CLIENT_ID,
-    androidClientId: GOOGLE_ANDROID_CLIENT_ID || PLACEHOLDER_CLIENT_ID,
-    scopes: ['profile', 'email'],
-    redirectUri: Platform.OS === 'web' ? oauthRedirectUri : undefined,
-  });
-
-  const githubClientId = getGitHubClientId();
-  
-  const githubDiscovery = {
-    authorizationEndpoint: 'https://github.com/login/oauth/authorize',
-    tokenEndpoint: 'https://github.com/login/oauth/access_token',
-    revocationEndpoint: `https://github.com/settings/connections/applications/${githubClientId}`,
-  };
-
-  const [_githubRequest, githubResponse, promptGithubAsync] = AuthSession.useAuthRequest(
-    {
-      clientId: githubClientId || 'placeholder',
-      scopes: ['read:user', 'user:email'],
-      redirectUri: oauthRedirectUri,
-    },
-    githubDiscovery
-  );
-
-  const facebookDiscovery = {
-    authorizationEndpoint: 'https://www.facebook.com/v18.0/dialog/oauth',
-    tokenEndpoint: 'https://graph.facebook.com/v18.0/oauth/access_token',
-  };
-
-  const [_facebookRequest, facebookResponse, promptFacebookAsync] = AuthSession.useAuthRequest(
-    {
-      clientId: FACEBOOK_APP_ID || 'placeholder',
-      scopes: ['public_profile', 'email'],
-      redirectUri: oauthRedirectUri,
-      responseType: AuthSession.ResponseType.Code,
-    },
-    facebookDiscovery
-  );
 
   useEffect(() => {
     const checkAppleAuth = async () => {
@@ -446,101 +342,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   }, [authenticateWithBackend]);
 
-  const handleGoogleResponse = useCallback(async () => {
-    if (googleResponse?.type === 'success') {
-      const { authentication } = googleResponse;
-      if (authentication?.accessToken) {
-        try {
-          setIsLoading(true);
-          setError(null);
-
-          await authenticateWithBackend('google', {
-            token: authentication.accessToken,
-          });
-        } catch (err) {
-          const message = err instanceof Error ? err.message : 'Google sign-in failed';
-          setError(message);
-          console.error('Google sign-in error:', err);
-        } finally {
-          setIsLoading(false);
-        }
-      }
-    }
-  }, [googleResponse, authenticateWithBackend]);
-
-  useEffect(() => {
-    handleGoogleResponse();
-  }, [handleGoogleResponse]);
-
-  const handleGithubResponse = useCallback(async () => {
-    if (githubResponse?.type === 'success') {
-      const { code } = githubResponse.params;
-      if (code) {
-        try {
-          setIsLoading(true);
-          setError(null);
-
-          const tokenResponse = await apiClient.post('/auth/github/token', {
-            code,
-            redirect_uri: oauthRedirectUri,
-            platform: Platform.OS,
-          });
-
-          const { access_token } = tokenResponse.data;
-          if (access_token) {
-            await authenticateWithBackend('github', {
-              token: access_token,
-            });
-          }
-        } catch (err) {
-          const message = err instanceof Error ? err.message : 'GitHub sign-in failed';
-          setError(message);
-          console.error('GitHub sign-in error:', err);
-        } finally {
-          setIsLoading(false);
-        }
-      }
-    }
-  }, [githubResponse, authenticateWithBackend]);
-
-  useEffect(() => {
-    handleGithubResponse();
-  }, [handleGithubResponse]);
-
-  const handleFacebookResponse = useCallback(async () => {
-    if (facebookResponse?.type === 'success') {
-      const { code } = facebookResponse.params;
-      if (code) {
-        try {
-          setIsLoading(true);
-          setError(null);
-
-          const tokenResponse = await apiClient.post('/auth/facebook/token', {
-            code,
-            redirect_uri: oauthRedirectUri,
-          });
-
-          const { access_token } = tokenResponse.data;
-          if (access_token) {
-            await authenticateWithBackend('facebook', {
-              token: access_token,
-            });
-          }
-        } catch (err) {
-          const message = err instanceof Error ? err.message : 'Facebook sign-in failed';
-          setError(message);
-          console.error('Facebook sign-in error:', err);
-        } finally {
-          setIsLoading(false);
-        }
-      }
-    }
-  }, [facebookResponse, authenticateWithBackend]);
-
-  useEffect(() => {
-    handleFacebookResponse();
-  }, [handleFacebookResponse]);
-
   const [isOAuthInProgress, setIsOAuthInProgress] = useState(false);
 
   const handleServerSideOAuth = useCallback(async (provider: string) => {
@@ -609,7 +410,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       console.log('[OAuth] Another sign-in is already in progress');
       return;
     }
-    console.log('[OAuth] Google Sign-In starting, redirect URI:', oauthRedirectUri);
+    console.log('[OAuth] Google Sign-In starting');
 
     if (Platform.OS === 'web' && typeof window !== 'undefined') {
       const serverStartUrl = `${getApiUrl()}api/auth/google/start`;
@@ -619,14 +420,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
 
     await handleServerSideOAuth('google');
-  }, [oauthRedirectUri, isOAuthInProgress, handleServerSideOAuth]);
+  }, [isOAuthInProgress, handleServerSideOAuth]);
 
   const signInWithGithub = useCallback(async () => {
     if (isOAuthInProgress) {
       console.log('[OAuth] Another sign-in is already in progress');
       return;
     }
-    console.log('[OAuth] GitHub Sign-In starting, redirect URI:', oauthRedirectUri);
+    console.log('[OAuth] GitHub Sign-In starting');
 
     if (Platform.OS === 'web' && typeof window !== 'undefined') {
       const serverStartUrl = `${getApiUrl()}api/auth/github/start`;
@@ -636,14 +437,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
 
     await handleServerSideOAuth('github');
-  }, [oauthRedirectUri, isOAuthInProgress, handleServerSideOAuth]);
+  }, [isOAuthInProgress, handleServerSideOAuth]);
 
   const signInWithFacebook = useCallback(async () => {
     if (isOAuthInProgress) {
       console.log('[OAuth] Another sign-in is already in progress');
       return;
     }
-    console.log('[OAuth] Facebook Sign-In starting, redirect URI:', oauthRedirectUri);
+    console.log('[OAuth] Facebook Sign-In starting');
 
     if (Platform.OS === 'web' && typeof window !== 'undefined') {
       const serverStartUrl = `${getApiUrl()}api/auth/facebook/start`;
@@ -653,7 +454,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
 
     await handleServerSideOAuth('facebook');
-  }, [oauthRedirectUri, isOAuthInProgress, handleServerSideOAuth]);
+  }, [isOAuthInProgress, handleServerSideOAuth]);
 
   const mockSignIn = useCallback(async () => {
     try {
