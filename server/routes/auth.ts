@@ -498,14 +498,26 @@ router.get('/facebook/start', (req: Request, res: Response) => {
 router.get('/callback', async (req: Request, res: Response) => {
   try {
     const { code, state, error: oauthError, error_description } = req.query;
+    const stateStr = typeof state === 'string' ? state : '';
+
+    const sendError = (msg: string, statusCode = 400) => {
+      const storedState = stateStr ? oauthStateStore.get(stateStr) : null;
+      if (storedState?.appRedirectUri) {
+        oauthStateStore.delete(stateStr);
+        const appUri = storedState.appRedirectUri;
+        const separator = appUri.includes('?') ? '&' : '?';
+        return res.redirect(`${appUri}${separator}error=${encodeURIComponent(msg)}`);
+      }
+      return res.status(statusCode).send(getOAuthResultPage('error', msg));
+    };
 
     if (oauthError) {
       console.error('[OAuth Callback] Error from provider:', oauthError, error_description);
-      return res.status(400).send(getOAuthResultPage('error', `Authentication failed: ${error_description || oauthError}`));
+      return sendError(`Authentication failed: ${error_description || oauthError}`);
     }
 
     if (!code || !state || typeof code !== 'string' || typeof state !== 'string') {
-      return res.status(400).send(getOAuthResultPage('error', 'Missing authorization code or state'));
+      return sendError('Missing authorization code or state');
     }
 
     const separatorIndex = state.indexOf('_');
@@ -515,7 +527,7 @@ router.get('/callback', async (req: Request, res: Response) => {
 
     const provider = state.substring(0, separatorIndex);
     if (!['google', 'github', 'facebook'].includes(provider)) {
-      return res.status(400).send(getOAuthResultPage('error', 'Unknown provider'));
+      return sendError('Unknown provider');
     }
 
     console.log(`[OAuth Callback] Provider: ${provider}, code length: ${code.length}`);
@@ -529,7 +541,7 @@ router.get('/callback', async (req: Request, res: Response) => {
       const clientId = process.env.GITHUB_CLIENT_ID || process.env.EXPO_PUBLIC_GITHUB_CLIENT_ID;
       const clientSecret = process.env.GITHUB_CLIENT_SECRET;
       if (!clientId || !clientSecret) {
-        return res.status(500).send(getOAuthResultPage('error', 'GitHub OAuth is not configured'));
+        return sendError('GitHub OAuth is not configured', 500);
       }
       const tokenResponse = await fetch('https://github.com/login/oauth/access_token', {
         method: 'POST',
@@ -539,14 +551,14 @@ router.get('/callback', async (req: Request, res: Response) => {
       const tokenData = await tokenResponse.json();
       if (tokenData.error) {
         console.error('[OAuth Callback] GitHub token error:', tokenData);
-        return res.status(401).send(getOAuthResultPage('error', tokenData.error_description || 'GitHub token exchange failed'));
+        return sendError(tokenData.error_description || 'GitHub token exchange failed', 401);
       }
       accessToken = tokenData.access_token;
     } else if (provider === 'google') {
       const clientId = process.env.GOOGLE_WEB_CLIENT_ID || process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID;
       const clientSecret = process.env.GOOGLE_WEB_CLIENT_SECRET;
       if (!clientId || !clientSecret) {
-        return res.status(500).send(getOAuthResultPage('error', 'Google OAuth is not configured'));
+        return sendError('Google OAuth is not configured', 500);
       }
       const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
         method: 'POST',
@@ -556,14 +568,14 @@ router.get('/callback', async (req: Request, res: Response) => {
       const tokenData = await tokenResponse.json();
       if (tokenData.error) {
         console.error('[OAuth Callback] Google token error:', tokenData);
-        return res.status(401).send(getOAuthResultPage('error', tokenData.error_description || 'Google token exchange failed'));
+        return sendError(tokenData.error_description || 'Google token exchange failed', 401);
       }
       accessToken = tokenData.access_token;
     } else if (provider === 'facebook') {
       const appId = process.env.FACEBOOK_APP_ID || process.env.EXPO_PUBLIC_FACEBOOK_APP_ID;
       const appSecret = process.env.FACEBOOK_APP_SECRET;
       if (!appId || !appSecret) {
-        return res.status(500).send(getOAuthResultPage('error', 'Facebook OAuth is not configured'));
+        return sendError('Facebook OAuth is not configured', 500);
       }
       const tokenUrl = new URL('https://graph.facebook.com/v18.0/oauth/access_token');
       tokenUrl.searchParams.append('client_id', appId);
@@ -574,13 +586,13 @@ router.get('/callback', async (req: Request, res: Response) => {
       const tokenData = await tokenResponse.json();
       if (tokenData.error) {
         console.error('[OAuth Callback] Facebook token error:', tokenData);
-        return res.status(401).send(getOAuthResultPage('error', tokenData.error?.message || 'Facebook token exchange failed'));
+        return sendError(tokenData.error?.message || 'Facebook token exchange failed', 401);
       }
       accessToken = tokenData.access_token;
     }
 
     if (!accessToken) {
-      return res.status(401).send(getOAuthResultPage('error', 'Failed to obtain access token'));
+      return sendError('Failed to obtain access token', 401);
     }
 
     let verifiedEmail: string | undefined;
@@ -591,7 +603,7 @@ router.get('/callback', async (req: Request, res: Response) => {
 
     if (provider === 'google') {
       const googleData = await verifyGoogleToken(accessToken);
-      if (!googleData) return res.status(401).send(getOAuthResultPage('error', 'Invalid Google token'));
+      if (!googleData) return sendError('Invalid Google token', 401);
       verifiedEmail = googleData.email;
       providerUserId = googleData.sub;
       verifiedFirstName = googleData.given_name;
@@ -599,7 +611,7 @@ router.get('/callback', async (req: Request, res: Response) => {
       verifiedAvatarUrl = googleData.picture;
     } else if (provider === 'github') {
       const githubData = await verifyGithubToken(accessToken);
-      if (!githubData) return res.status(401).send(getOAuthResultPage('error', 'Invalid GitHub token'));
+      if (!githubData) return sendError('Invalid GitHub token', 401);
       verifiedEmail = githubData.email;
       providerUserId = githubData.sub;
       if (githubData.name) {
@@ -610,7 +622,7 @@ router.get('/callback', async (req: Request, res: Response) => {
       verifiedAvatarUrl = githubData.picture;
     } else if (provider === 'facebook') {
       const facebookData = await verifyFacebookToken(accessToken);
-      if (!facebookData) return res.status(401).send(getOAuthResultPage('error', 'Invalid Facebook token'));
+      if (!facebookData) return sendError('Invalid Facebook token', 401);
       verifiedEmail = facebookData.email;
       providerUserId = facebookData.sub;
       verifiedFirstName = facebookData.first_name;
@@ -619,7 +631,7 @@ router.get('/callback', async (req: Request, res: Response) => {
     }
 
     if (!verifiedEmail) {
-      return res.status(400).send(getOAuthResultPage('error', 'Email is required. Please ensure your account has a verified email.'));
+      return sendError('Email is required. Please ensure your account has a verified email.');
     }
 
     let [existingUser] = await db
@@ -714,8 +726,10 @@ router.get('/callback', async (req: Request, res: Response) => {
     if (storedState?.appRedirectUri) {
       oauthStateStore.delete(state);
       const appUri = storedState.appRedirectUri;
-      console.log(`[OAuth Callback] Redirecting to app URI: ${appUri}`);
-      return res.send(getOAuthResultPage('success', 'Login successful!', jwtToken, userData, appUri));
+      const separator = appUri.includes('?') ? '&' : '?';
+      const redirectUrl = `${appUri}${separator}token=${encodeURIComponent(jwtToken)}`;
+      console.log(`[OAuth Callback] Direct redirect to app URI: ${redirectUrl}`);
+      return res.redirect(redirectUrl);
     }
 
     return res.send(getOAuthResultPage('success', 'Login successful!', jwtToken, userData));
