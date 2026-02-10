@@ -584,17 +584,20 @@ router.get('/callback', async (req: Request, res: Response) => {
       const clientId = process.env.GOOGLE_WEB_CLIENT_ID || process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID;
       const clientSecret = process.env.GOOGLE_WEB_CLIENT_SECRET;
       if (!clientId || !clientSecret) {
+        console.error(`[OAuth Callback] Google OAuth missing config - clientId: ${!!clientId}, clientSecret: ${!!clientSecret}`);
         return sendError('Google OAuth is not configured', 500);
       }
+      console.log(`[OAuth Callback] Google token exchange - redirect_uri: "${callbackUri}", code length: ${code.length}`);
+      const tokenBody = new URLSearchParams({ code, client_id: clientId, client_secret: clientSecret, redirect_uri: callbackUri, grant_type: 'authorization_code' });
       const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams({ code, client_id: clientId, client_secret: clientSecret, redirect_uri: callbackUri, grant_type: 'authorization_code' }).toString(),
+        body: tokenBody.toString(),
       });
       const tokenData = await tokenResponse.json();
       if (tokenData.error) {
-        console.error('[OAuth Callback] Google token error:', tokenData);
-        return sendError(tokenData.error_description || 'Google token exchange failed', 401);
+        console.error('[OAuth Callback] Google token error:', JSON.stringify(tokenData));
+        return sendError(`Google login failed: ${tokenData.error} - ${tokenData.error_description || 'unknown'}`, 401);
       }
       accessToken = tokenData.access_token;
     } else if (provider === 'facebook') {
