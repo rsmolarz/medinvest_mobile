@@ -349,11 +349,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setIsLoading(true);
       setError(null);
 
+      const oauthDomain = process.env.EXPO_PUBLIC_OAUTH_DOMAIN || process.env.EXPO_PUBLIC_DOMAIN?.replace(/:5000$/, '') || '';
+      const mobileCallbackUrl = `https://${oauthDomain}/api/auth/mobile-callback`;
       const baseUrl = getApiUrl();
-      const mobileCallbackUrl = `${baseUrl}api/auth/mobile-callback`;
       const serverStartUrl = `${baseUrl}api/auth/${provider}/start?app_redirect_uri=${encodeURIComponent(mobileCallbackUrl)}`;
       console.log(`[OAuth] Opening server-side ${provider} OAuth:`, serverStartUrl);
-      console.log(`[OAuth] Mobile callback URL:`, mobileCallbackUrl);
+      console.log(`[OAuth] Mobile callback URL (published domain):`, mobileCallbackUrl);
 
       const result = await WebBrowser.openAuthSessionAsync(
         serverStartUrl,
