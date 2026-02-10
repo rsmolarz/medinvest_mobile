@@ -8,19 +8,36 @@ import crypto from 'crypto';
 
 const router = Router();
 
-// In-memory store for OAuth state → app redirect URI mapping
-// Used to redirect mobile clients back to the correct deep link after OAuth
-const oauthStateStore = new Map<string, { appRedirectUri: string; createdAt: number }>();
+const STATE_SECRET = process.env.SESSION_SECRET || crypto.randomBytes(32).toString('hex');
 
-// Clean up stale entries every 10 minutes
-setInterval(() => {
-  const now = Date.now();
-  for (const [key, value] of oauthStateStore) {
-    if (now - value.createdAt > 10 * 60 * 1000) {
-      oauthStateStore.delete(key);
-    }
+function createSignedOAuthState(provider: string, appRedirectUri?: string): string {
+  const payload: Record<string, string> = { p: provider, n: crypto.randomBytes(16).toString('hex') };
+  if (appRedirectUri) {
+    payload.r = appRedirectUri;
   }
-}, 10 * 60 * 1000);
+  const data = Buffer.from(JSON.stringify(payload)).toString('base64url');
+  const sig = crypto.createHmac('sha256', STATE_SECRET).update(data).digest('base64url');
+  return `${data}.${sig}`;
+}
+
+function verifySignedOAuthState(state: string): { provider: string; appRedirectUri?: string } | null {
+  try {
+    const dotIdx = state.indexOf('.');
+    if (dotIdx === -1) return null;
+    const data = state.substring(0, dotIdx);
+    const sig = state.substring(dotIdx + 1);
+    const expectedSig = crypto.createHmac('sha256', STATE_SECRET).update(data).digest('base64url');
+    if (sig !== expectedSig) {
+      console.error('[OAuth] Invalid state signature');
+      return null;
+    }
+    const payload = JSON.parse(Buffer.from(data, 'base64url').toString());
+    return { provider: payload.p, appRedirectUri: payload.r };
+  } catch (err) {
+    console.error('[OAuth] Failed to decode state:', err);
+    return null;
+  }
+}
 
 /**
  * POST /api/auth/register
@@ -401,15 +418,10 @@ router.get('/google/start', (req: Request, res: Response) => {
   }
 
   const callbackUri = getCallbackUri(req);
-  const state = `google_${crypto.randomBytes(16).toString('hex')}`;
-
   const appRedirectUri = req.query.app_redirect_uri as string;
-  if (appRedirectUri) {
-    oauthStateStore.set(state, { appRedirectUri, createdAt: Date.now() });
-    console.log(`[OAuth Start] Google - app_redirect_uri: ${appRedirectUri}`);
-  }
+  const state = createSignedOAuthState('google', appRedirectUri);
 
-  console.log(`[OAuth Start] Google - redirect_uri: ${callbackUri}`);
+  console.log(`[OAuth Start] Google - redirect_uri: ${callbackUri}, app_redirect_uri: ${appRedirectUri || 'none (web flow)'}`);
 
   const params = new URLSearchParams({
     client_id: clientId,
@@ -436,20 +448,15 @@ router.get('/github/start', (req: Request, res: Response) => {
   }
 
   const callbackUri = getCallbackUri(req);
-  const state = `github_${crypto.randomBytes(16).toString('hex')}`;
-
   const appRedirectUri = req.query.app_redirect_uri as string;
-  if (appRedirectUri) {
-    oauthStateStore.set(state, { appRedirectUri, createdAt: Date.now() });
-    console.log(`[OAuth Start] GitHub - app_redirect_uri: ${appRedirectUri}`);
-  }
+  const state = createSignedOAuthState('github', appRedirectUri);
 
-  console.log(`[OAuth Start] GitHub - redirect_uri: ${callbackUri}`);
+  console.log(`[OAuth Start] GitHub - redirect_uri: ${callbackUri}, app_redirect_uri: ${appRedirectUri || 'none (web flow)'}`);
 
   const params = new URLSearchParams({
     client_id: clientId,
     redirect_uri: callbackUri,
-    scope: 'user:email',
+    scope: 'user:email read:user',
     state,
   });
 
@@ -468,15 +475,10 @@ router.get('/facebook/start', (req: Request, res: Response) => {
   }
 
   const callbackUri = getCallbackUri(req);
-  const state = `facebook_${crypto.randomBytes(16).toString('hex')}`;
-
   const appRedirectUri = req.query.app_redirect_uri as string;
-  if (appRedirectUri) {
-    oauthStateStore.set(state, { appRedirectUri, createdAt: Date.now() });
-    console.log(`[OAuth Start] Facebook - app_redirect_uri: ${appRedirectUri}`);
-  }
+  const state = createSignedOAuthState('facebook', appRedirectUri);
 
-  console.log(`[OAuth Start] Facebook - redirect_uri: ${callbackUri}`);
+  console.log(`[OAuth Start] Facebook - redirect_uri: ${callbackUri}, app_redirect_uri: ${appRedirectUri || 'none (web flow)'}`);
 
   const params = new URLSearchParams({
     client_id: appId,
@@ -519,11 +521,11 @@ router.get('/callback', async (req: Request, res: Response) => {
     const { code, state, error: oauthError, error_description } = req.query;
     const stateStr = typeof state === 'string' ? state : '';
 
+    const stateData = stateStr ? verifySignedOAuthState(stateStr) : null;
+
     const sendError = (msg: string, statusCode = 400) => {
-      const storedState = stateStr ? oauthStateStore.get(stateStr) : null;
-      if (storedState?.appRedirectUri) {
-        oauthStateStore.delete(stateStr);
-        const appUri = storedState.appRedirectUri;
+      if (stateData?.appRedirectUri) {
+        const appUri = stateData.appRedirectUri;
         const separator = appUri.includes('?') ? '&' : '?';
         return res.redirect(`${appUri}${separator}error=${encodeURIComponent(msg)}`);
       }
@@ -539,17 +541,17 @@ router.get('/callback', async (req: Request, res: Response) => {
       return sendError('Missing authorization code or state');
     }
 
-    const separatorIndex = state.indexOf('_');
-    if (separatorIndex === -1) {
-      return res.status(400).send(getOAuthResultPage('error', 'Invalid state parameter'));
+    if (!stateData) {
+      console.error('[OAuth Callback] Invalid or tampered state parameter');
+      return res.status(400).send(getOAuthResultPage('error', 'Invalid state parameter. Please try again.'));
     }
 
-    const provider = state.substring(0, separatorIndex);
+    const provider = stateData.provider;
     if (!['google', 'github', 'facebook'].includes(provider)) {
       return sendError('Unknown provider');
     }
 
-    console.log(`[OAuth Callback] Provider: ${provider}, code length: ${code.length}`);
+    console.log(`[OAuth Callback] Provider: ${provider}, code length: ${code.length}, has appRedirectUri: ${!!stateData.appRedirectUri}`);
 
     const callbackUri = getCallbackUri(req);
     console.log(`[OAuth Callback] Using redirect_uri for token exchange: ${callbackUri}`);
@@ -726,32 +728,31 @@ router.get('/callback', async (req: Request, res: Response) => {
 
     console.log(`[OAuth Callback] Success: ${verifiedEmail} via ${provider}`);
 
+    if (stateData?.appRedirectUri) {
+      const appUri = stateData.appRedirectUri;
+      const separator = appUri.includes('?') ? '&' : '?';
+      const redirectUrl = `${appUri}${separator}token=${encodeURIComponent(jwtToken)}`;
+      console.log(`[OAuth Callback] Redirecting to mobile app: ${redirectUrl}`);
+      return res.redirect(redirectUrl);
+    }
+
     res.cookie('medinvest_auth_token', jwtToken, {
-      maxAge: 120000,
+      maxAge: 300000,
       path: '/',
       sameSite: 'lax',
       secure: true,
       httpOnly: false,
     });
     res.cookie('medinvest_auth_user', JSON.stringify(userData), {
-      maxAge: 120000,
+      maxAge: 300000,
       path: '/',
       sameSite: 'lax',
       secure: true,
       httpOnly: false,
     });
 
-    const storedState = oauthStateStore.get(state);
-    if (storedState?.appRedirectUri) {
-      oauthStateStore.delete(state);
-      const appUri = storedState.appRedirectUri;
-      const separator = appUri.includes('?') ? '&' : '?';
-      const redirectUrl = `${appUri}${separator}token=${encodeURIComponent(jwtToken)}`;
-      console.log(`[OAuth Callback] Direct redirect to app URI: ${redirectUrl}`);
-      return res.redirect(redirectUrl);
-    }
-
-    return res.send(getOAuthResultPage('success', 'Login successful!', jwtToken, userData));
+    console.log(`[OAuth Callback] Web flow - setting cookies and redirecting to /`);
+    return res.redirect('/');
   } catch (error) {
     console.error('[OAuth Callback] Error:', error);
     return res.status(500).send(getOAuthResultPage('error', 'Authentication failed. Please try again.'));

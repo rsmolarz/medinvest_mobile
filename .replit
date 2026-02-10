@@ -84,3 +84,4 @@ EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID = "969555602977-n0pt5bprikb9jen9rbfnjf4qn1lpntb
 GOOGLE_WEB_CLIENT_ID = "969555602977-n0pt5bprikb9jen9rbfnjf4qn1lpntbo.apps.googleusercontent.com"
 EXPO_PUBLIC_DOMAIN = "medinvest-mobile--rsmolarz.replit.app"
 OAUTH_CALLBACK_DOMAIN = "medinvest-mobile--rsmolarz.replit.app"
+EXPO_PUBLIC_OAUTH_DOMAIN = "medinvest-mobile--rsmolarz.replit.app"
