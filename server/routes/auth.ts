@@ -8,6 +8,20 @@ import crypto from 'crypto';
 
 const router = Router();
 
+// In-memory store for OAuth state → app redirect URI mapping
+// Used to redirect mobile clients back to the correct deep link after OAuth
+const oauthStateStore = new Map<string, { appRedirectUri: string; createdAt: number }>();
+
+// Clean up stale entries every 10 minutes
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, value] of oauthStateStore) {
+    if (now - value.createdAt > 10 * 60 * 1000) {
+      oauthStateStore.delete(key);
+    }
+  }
+}, 10 * 60 * 1000);
+
 /**
  * POST /api/auth/register
  * Email/password registration
@@ -389,6 +403,12 @@ router.get('/google/start', (req: Request, res: Response) => {
   const callbackUri = getCallbackUri(req);
   const state = `google_${crypto.randomBytes(16).toString('hex')}`;
 
+  const appRedirectUri = req.query.app_redirect_uri as string;
+  if (appRedirectUri) {
+    oauthStateStore.set(state, { appRedirectUri, createdAt: Date.now() });
+    console.log(`[OAuth Start] Google - app_redirect_uri: ${appRedirectUri}`);
+  }
+
   console.log(`[OAuth Start] Google - redirect_uri: ${callbackUri}`);
 
   const params = new URLSearchParams({
@@ -418,6 +438,12 @@ router.get('/github/start', (req: Request, res: Response) => {
   const callbackUri = getCallbackUri(req);
   const state = `github_${crypto.randomBytes(16).toString('hex')}`;
 
+  const appRedirectUri = req.query.app_redirect_uri as string;
+  if (appRedirectUri) {
+    oauthStateStore.set(state, { appRedirectUri, createdAt: Date.now() });
+    console.log(`[OAuth Start] GitHub - app_redirect_uri: ${appRedirectUri}`);
+  }
+
   console.log(`[OAuth Start] GitHub - redirect_uri: ${callbackUri}`);
 
   const params = new URLSearchParams({
@@ -443,6 +469,12 @@ router.get('/facebook/start', (req: Request, res: Response) => {
 
   const callbackUri = getCallbackUri(req);
   const state = `facebook_${crypto.randomBytes(16).toString('hex')}`;
+
+  const appRedirectUri = req.query.app_redirect_uri as string;
+  if (appRedirectUri) {
+    oauthStateStore.set(state, { appRedirectUri, createdAt: Date.now() });
+    console.log(`[OAuth Start] Facebook - app_redirect_uri: ${appRedirectUri}`);
+  }
 
   console.log(`[OAuth Start] Facebook - redirect_uri: ${callbackUri}`);
 
@@ -678,6 +710,14 @@ router.get('/callback', async (req: Request, res: Response) => {
       httpOnly: false,
     });
 
+    const storedState = oauthStateStore.get(state);
+    if (storedState?.appRedirectUri) {
+      oauthStateStore.delete(state);
+      const appUri = storedState.appRedirectUri;
+      console.log(`[OAuth Callback] Redirecting to app URI: ${appUri}`);
+      return res.send(getOAuthResultPage('success', 'Login successful!', jwtToken, userData, appUri));
+    }
+
     return res.send(getOAuthResultPage('success', 'Login successful!', jwtToken, userData));
   } catch (error) {
     console.error('[OAuth Callback] Error:', error);
@@ -685,8 +725,11 @@ router.get('/callback', async (req: Request, res: Response) => {
   }
 });
 
-function getOAuthResultPage(status: 'success' | 'error', message: string, token?: string, user?: any): string {
+function getOAuthResultPage(status: 'success' | 'error', message: string, token?: string, user?: any, appRedirectUri?: string): string {
   const isSuccess = status === 'success';
+  const deepLinkUrl = appRedirectUri 
+    ? `${appRedirectUri}${appRedirectUri.includes('?') ? '&' : '?'}token=${token}`
+    : `medinvest://auth?token=${token}`;
   return `<!DOCTYPE html>
 <html>
 <head>
@@ -713,14 +756,17 @@ function getOAuthResultPage(status: 'success' | 'error', message: string, token?
       <p>Redirecting to the app...</p>
       <script>
         try {
-          var scheme = 'medinvest://auth?token=${token}';
-          var isExpoGo = /expo/i.test(navigator.userAgent);
-          if (isExpoGo || /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
-            window.location.href = scheme;
+          var deepLink = ${JSON.stringify(deepLinkUrl)};
+          var isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || /expo/i.test(navigator.userAgent);
+          if (isMobile) {
+            window.location.href = deepLink;
+            setTimeout(function() {
+              window.location.href = 'medinvest://auth?token=${token}';
+            }, 500);
           }
           setTimeout(function() {
             window.location.href = '/';
-          }, 2000);
+          }, 3000);
         } catch(e) {
           window.location.href = '/';
         }
