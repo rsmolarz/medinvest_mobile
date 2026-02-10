@@ -408,7 +408,7 @@ function getBaseUri(): string {
 
 function getCallbackUri(provider?: string): string {
   const base = getBaseUri();
-  return `${base}/`;
+  return base;
 }
 
 /**
