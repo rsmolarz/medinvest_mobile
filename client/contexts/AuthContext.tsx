@@ -548,33 +548,31 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setIsLoading(true);
       setError(null);
 
-      const appRedirectUri = AuthSession.makeRedirectUri({ scheme: 'medinvest' });
+      const isExpoGo = Constants.appOwnership === 'expo';
+      const appRedirectUri = isExpoGo
+        ? AuthSession.makeRedirectUri()
+        : AuthSession.makeRedirectUri({ scheme: 'medinvest' });
       const serverStartUrl = `${getApiUrl()}api/auth/${provider}/start?app_redirect_uri=${encodeURIComponent(appRedirectUri)}`;
       console.log(`[OAuth] Opening server-side ${provider} OAuth:`, serverStartUrl);
       console.log(`[OAuth] App redirect URI for callback:`, appRedirectUri);
+      console.log(`[OAuth] isExpoGo:`, isExpoGo);
 
       const result = await WebBrowser.openAuthSessionAsync(
         serverStartUrl,
         appRedirectUri
       );
 
-      console.log(`[OAuth] ${provider} browser result:`, result.type);
+      console.log(`[OAuth] ${provider} browser result:`, JSON.stringify(result));
 
       if (result.type === 'success' && result.url) {
+        console.log(`[OAuth] Result URL:`, result.url);
         let tokenFromUrl: string | null = null;
         let errorFromUrl: string | null = null;
 
-        try {
-          const safeUrl = result.url.replace(/^exp:\/\//, 'https://placeholder.local/');
-          const parsed = new URL(safeUrl);
-          tokenFromUrl = parsed.searchParams.get('token');
-          errorFromUrl = parsed.searchParams.get('error');
-        } catch {
-          const tokenMatch = result.url.match(/[?&]token=([^&]+)/);
-          const errorMatch = result.url.match(/[?&]error=([^&]+)/);
-          tokenFromUrl = tokenMatch ? decodeURIComponent(tokenMatch[1]) : null;
-          errorFromUrl = errorMatch ? decodeURIComponent(errorMatch[1]) : null;
-        }
+        const tokenMatch = result.url.match(/[?&]token=([^&]+)/);
+        const errorMatch = result.url.match(/[?&]error=([^&]+)/);
+        tokenFromUrl = tokenMatch ? decodeURIComponent(tokenMatch[1]) : null;
+        errorFromUrl = errorMatch ? decodeURIComponent(errorMatch[1]) : null;
 
         if (errorFromUrl) {
           setError(decodeURIComponent(errorFromUrl));
@@ -587,6 +585,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
           });
           await saveAuthData(tokenFromUrl, response.data as User);
           console.log(`[OAuth] Logged in via server-side ${provider} OAuth`);
+        } else {
+          console.log(`[OAuth] No token found in result URL`);
+          setError('Authentication completed but no token received. Please try again.');
         }
       } else if (result.type === 'cancel' || result.type === 'dismiss') {
         console.log(`[OAuth] ${provider} sign-in cancelled by user`);
