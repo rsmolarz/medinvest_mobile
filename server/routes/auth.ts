@@ -10,8 +10,8 @@ const router = Router();
 
 const STATE_SECRET = process.env.SESSION_SECRET || crypto.randomBytes(32).toString('hex');
 
-function createSignedOAuthState(provider: string, appRedirectUri?: string): string {
-  const payload: Record<string, string> = { p: provider, n: crypto.randomBytes(16).toString('hex') };
+function createSignedOAuthState(provider: string, flow: 'popup' | 'mobile' | 'landing', appRedirectUri?: string): string {
+  const payload: Record<string, string> = { p: provider, f: flow, n: crypto.randomBytes(16).toString('hex') };
   if (appRedirectUri) {
     payload.r = appRedirectUri;
   }
@@ -20,7 +20,7 @@ function createSignedOAuthState(provider: string, appRedirectUri?: string): stri
   return `${data}.${sig}`;
 }
 
-function verifySignedOAuthState(state: string): { provider: string; appRedirectUri?: string } | null {
+function verifySignedOAuthState(state: string): { provider: string; flow: string; appRedirectUri?: string } | null {
   try {
     const dotIdx = state.indexOf('.');
     if (dotIdx === -1) return null;
@@ -32,7 +32,7 @@ function verifySignedOAuthState(state: string): { provider: string; appRedirectU
       return null;
     }
     const payload = JSON.parse(Buffer.from(data, 'base64url').toString());
-    return { provider: payload.p, appRedirectUri: payload.r };
+    return { provider: payload.p, flow: payload.f || 'landing', appRedirectUri: payload.r };
   } catch (err) {
     console.error('[OAuth] Failed to decode state:', err);
     return null;
@@ -423,10 +423,11 @@ router.get('/google/start', (req: Request, res: Response) => {
   }
 
   const callbackUri = getCallbackUri('google');
+  const flow = (req.query.flow as string) || 'landing';
   const appRedirectUri = req.query.app_redirect_uri as string;
-  const state = createSignedOAuthState('google', appRedirectUri);
+  const state = createSignedOAuthState('google', flow as any, appRedirectUri);
 
-  console.log(`[OAuth Start] Google - redirect_uri: ${callbackUri}, app_redirect_uri: ${appRedirectUri || 'none (web flow)'}`);
+  console.log(`[OAuth Start] Google - redirect_uri: ${callbackUri}, flow: ${flow}`);
 
   const params = new URLSearchParams({
     client_id: clientId,
@@ -453,10 +454,11 @@ router.get('/github/start', (req: Request, res: Response) => {
   }
 
   const callbackUri = getCallbackUri('github');
+  const flow = (req.query.flow as string) || 'landing';
   const appRedirectUri = req.query.app_redirect_uri as string;
-  const state = createSignedOAuthState('github', appRedirectUri);
+  const state = createSignedOAuthState('github', flow as any, appRedirectUri);
 
-  console.log(`[OAuth Start] GitHub - redirect_uri: ${callbackUri}, app_redirect_uri: ${appRedirectUri || 'none (web flow)'}`);
+  console.log(`[OAuth Start] GitHub - redirect_uri: ${callbackUri}, flow: ${flow}`);
 
   const params = new URLSearchParams({
     client_id: clientId,
@@ -480,10 +482,11 @@ router.get('/facebook/start', (req: Request, res: Response) => {
   }
 
   const callbackUri = getCallbackUri('facebook');
+  const flow = (req.query.flow as string) || 'landing';
   const appRedirectUri = req.query.app_redirect_uri as string;
-  const state = createSignedOAuthState('facebook', appRedirectUri);
+  const state = createSignedOAuthState('facebook', flow as any, appRedirectUri);
 
-  console.log(`[OAuth Start] Facebook - redirect_uri: ${callbackUri}, app_redirect_uri: ${appRedirectUri || 'none (web flow)'}`);
+  console.log(`[OAuth Start] Facebook - redirect_uri: ${callbackUri}, flow: ${flow}`);
 
   const params = new URLSearchParams({
     client_id: appId,
@@ -529,6 +532,9 @@ router.get('/callback', async (req: Request, res: Response) => {
     const stateData = stateStr ? verifySignedOAuthState(stateStr) : null;
 
     const sendError = (msg: string, statusCode = 400) => {
+      if (stateData?.flow === 'popup') {
+        return res.status(statusCode).send(getPopupErrorPage(msg));
+      }
       if (stateData?.appRedirectUri) {
         const appUri = stateData.appRedirectUri;
         const separator = appUri.includes('?') ? '&' : '?';
@@ -734,9 +740,14 @@ router.get('/callback', async (req: Request, res: Response) => {
       fullName: [user.firstName, user.lastName].filter(Boolean).join(' ') || undefined,
     };
 
-    console.log(`[OAuth Callback] Success: ${verifiedEmail} via ${provider}`);
+    console.log(`[OAuth Callback] Success: ${verifiedEmail} via ${provider}, flow: ${stateData.flow}`);
 
-    if (stateData?.appRedirectUri) {
+    if (stateData.flow === 'popup') {
+      console.log(`[OAuth Callback] Popup flow - sending postMessage with token`);
+      return res.send(getPopupPostMessagePage(jwtToken, userData));
+    }
+
+    if (stateData.flow === 'mobile' && stateData.appRedirectUri) {
       const appUri = stateData.appRedirectUri;
       const separator = appUri.includes('?') ? '&' : '?';
       const redirectUrl = `${appUri}${separator}token=${encodeURIComponent(jwtToken)}`;
@@ -744,7 +755,7 @@ router.get('/callback', async (req: Request, res: Response) => {
       return res.redirect(redirectUrl);
     }
 
-    console.log(`[OAuth Callback] Web flow - redirecting to landing page with auth token`);
+    console.log(`[OAuth Callback] Landing page flow - redirecting with auth token`);
     const baseUri = getBaseUri();
     const userDataEncoded = encodeURIComponent(JSON.stringify(userData));
     return res.redirect(`${baseUri}/?auth_token=${encodeURIComponent(jwtToken)}&auth_user=${userDataEncoded}`);
@@ -833,6 +844,85 @@ function getOAuthResultPage(status: 'success' | 'error', message: string, token?
       <a href="/" class="btn">Try Again</a>
     `}
   </div>
+</body>
+</html>`;
+}
+
+function getPopupPostMessagePage(token: string, user: any): string {
+  const userJson = JSON.stringify(user).replace(/</g, '\\u003c').replace(/>/g, '\\u003e');
+  return `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MedInvest - Login Successful</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0a0a0a; color: #fff; display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+    .container { text-align: center; padding: 40px; max-width: 400px; }
+    .spinner { border: 3px solid #333; border-top: 3px solid #0066CC; border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite; display: inline-block; margin-bottom: 16px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    h1 { font-size: 24px; margin-bottom: 12px; }
+    p { color: #999; font-size: 16px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="spinner"></div>
+    <h1>Login Successful</h1>
+    <p id="status">Completing sign-in...</p>
+  </div>
+  <script>
+    (function() {
+      var token = ${JSON.stringify(token)};
+      var user = ${userJson};
+      try {
+        if (window.opener) {
+          window.opener.postMessage({ type: 'medinvest-oauth-success', token: token, user: user }, '*');
+          document.getElementById('status').textContent = 'You can close this window.';
+          setTimeout(function() { window.close(); }, 1500);
+        } else {
+          document.getElementById('status').textContent = 'Login successful! You can close this tab.';
+        }
+      } catch(e) {
+        document.getElementById('status').textContent = 'Login successful! You can close this tab.';
+      }
+    })();
+  </script>
+</body>
+</html>`;
+}
+
+function getPopupErrorPage(message: string): string {
+  return `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MedInvest - Login Failed</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0a0a0a; color: #fff; display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+    .container { text-align: center; padding: 40px; max-width: 400px; }
+    h1 { font-size: 24px; margin-bottom: 12px; }
+    p { color: #999; font-size: 16px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Login Failed</h1>
+    <p>${message}</p>
+  </div>
+  <script>
+    (function() {
+      try {
+        if (window.opener) {
+          window.opener.postMessage({ type: 'medinvest-oauth-error', error: ${JSON.stringify(message)} }, '*');
+          setTimeout(function() { window.close(); }, 3000);
+        }
+      } catch(e) {}
+    })();
+  </script>
 </body>
 </html>`;
 }
