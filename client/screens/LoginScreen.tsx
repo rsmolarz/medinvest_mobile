@@ -17,7 +17,7 @@ export default function LoginScreen() {
   const { theme } = useTheme();
   const appColors = useAppColors();
   const navigation = useNavigation<any>();
-  const { signInWithApple, signInWithGoogle, isAppleAuthAvailable, isLoading, error } = useAuth();
+  const { signInWithApple, signInWithGoogle, signInWithGithub, signInWithFacebook, isAppleAuthAvailable, isLoading, error } = useAuth();
 
   const handleAppleSignIn = async () => {
     if (Platform.OS !== "web") {
@@ -32,6 +32,20 @@ export default function LoginScreen() {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     }
     await signInWithGoogle();
+  };
+
+  const handleGithubSignIn = async () => {
+    if (Platform.OS !== "web") {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    }
+    await signInWithGithub();
+  };
+
+  const handleFacebookSignIn = async () => {
+    if (Platform.OS !== "web") {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    }
+    await signInWithFacebook();
   };
 
   const handleEmailSignIn = () => {
@@ -96,16 +110,37 @@ export default function LoginScreen() {
         ) : null}
         <Pressable
           onPress={handleGoogleSignIn}
-          style={[styles.googleButton, { backgroundColor: theme.backgroundSecondary, padding: Spacing.md, borderRadius: BorderRadius.md, alignItems: 'center', borderColor: appColors.border }]}
+          style={[styles.socialButton, { backgroundColor: theme.backgroundSecondary, borderColor: appColors.border }]}
           disabled={isLoading}
+          testID="button-google-signin"
         >
           <Text style={{ color: theme.text, fontSize: 16 }}>
             {isLoading ? 'Signing in...' : 'Sign In with Google'}
           </Text>
         </Pressable>
+        <Pressable
+          onPress={handleGithubSignIn}
+          style={[styles.socialButton, { backgroundColor: theme.backgroundSecondary, borderColor: appColors.border }]}
+          disabled={isLoading}
+          testID="button-github-signin"
+        >
+          <Text style={{ color: theme.text, fontSize: 16 }}>
+            {isLoading ? 'Signing in...' : 'Sign In with GitHub'}
+          </Text>
+        </Pressable>
+        <Pressable
+          onPress={handleFacebookSignIn}
+          style={[styles.socialButton, { backgroundColor: theme.backgroundSecondary, borderColor: appColors.border }]}
+          disabled={isLoading}
+          testID="button-facebook-signin"
+        >
+          <Text style={{ color: theme.text, fontSize: 16 }}>
+            {isLoading ? 'Signing in...' : 'Sign In with Facebook'}
+          </Text>
+        </Pressable>
         <Button
           onPress={handleEmailSignIn}
-          style={[styles.googleButton, { backgroundColor: 'transparent', borderWidth: 1, borderColor: appColors.border }]}
+          style={[styles.socialButton, { backgroundColor: 'transparent', borderWidth: 1, borderColor: appColors.border }]}
         >
           {"Sign Up with Email"}
         </Button>
@@ -201,8 +236,11 @@ const styles = StyleSheet.create({
   signInButton: {
     backgroundColor: Colors.primary,
   },
-  googleButton: {
+  socialButton: {
     borderWidth: 1,
+    padding: Spacing.md,
+    borderRadius: BorderRadius.md,
+    alignItems: 'center',
   },
   terms: {
     textAlign: "center",
