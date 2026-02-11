@@ -26,7 +26,7 @@ const CONFIG = {
   
   // Store URLs
   APP_STORE_URL: 'https://apps.apple.com/app/idXXXXXXXXXX?action=write-review',
-  PLAY_STORE_URL: 'https://play.google.com/store/apps/details?id=app.marketagent.trading',
+  PLAY_STORE_URL: 'https://play.google.com/store/apps/details?id=com.medinvest.app',
 };
 
 // Storage keys

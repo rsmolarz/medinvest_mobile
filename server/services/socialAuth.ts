@@ -158,8 +158,7 @@ export async function verifyAppleToken(
 
     const audiences = [
       process.env.APPLE_CLIENT_ID,
-      'app.marketagent.trading',
-      'com.marketagent.web.signin',
+      'com.medinvest.app',
       'host.exp.Exponent',
     ].filter(Boolean) as string[];
 

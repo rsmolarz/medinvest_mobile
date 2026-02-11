@@ -10,7 +10,7 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "app.marketagent.trading"
+      "bundleIdentifier": "com.medinvest.app"
     },
     "android": {
       "adaptiveIcon": {
@@ -19,7 +19,7 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "app.marketagent.trading"
+      "package": "com.medinvest.app"
     },
     "web": {
       "output": "single",
