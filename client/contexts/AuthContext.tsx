@@ -18,31 +18,6 @@ import { AUTH_TOKEN_KEY, USER_DATA_KEY } from '@/constants/auth';
 
 WebBrowser.maybeCompleteAuthSession();
 
-const GOOGLE_WEB_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID;
-const FACEBOOK_APP_ID = process.env.EXPO_PUBLIC_FACEBOOK_APP_ID;
-const GITHUB_CLIENT_ID = process.env.EXPO_PUBLIC_GITHUB_CLIENT_ID;
-
-function getOAuthRedirectUri(): string {
-  const domain = process.env.EXPO_PUBLIC_OAUTH_DOMAIN || process.env.EXPO_PUBLIC_DOMAIN?.replace(/:5000$/, '') || '';
-  if (domain) return `https://${domain}`;
-  if (typeof window !== 'undefined' && window.location) return window.location.origin;
-  return 'https://medinvest-mobile--rsmolarz.replit.app';
-}
-
-function generateOAuthState(provider: string): string {
-  const nonce = Math.random().toString(36).substring(2, 15);
-  const data = JSON.stringify({ p: provider, n: nonce, t: Date.now() });
-  return btoa(data);
-}
-
-function parseOAuthState(state: string): { provider: string } | null {
-  try {
-    const data = JSON.parse(atob(state));
-    return { provider: data.p };
-  } catch {
-    return null;
-  }
-}
 
 export interface AuthState {
   user: User | null;
@@ -95,12 +70,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isAppleAuthAvailable, setIsAppleAuthAvailable] = useState(false);
-
-  if (__DEV__) {
-    console.log('[OAuth] Platform:', Platform.OS);
-    console.log('[OAuth] Google Web Client ID:', GOOGLE_WEB_CLIENT_ID ? 'configured' : 'missing');
-    console.log('[OAuth] Facebook App ID:', FACEBOOK_APP_ID ? 'configured' : 'missing');
-  }
 
   useEffect(() => {
     const checkAppleAuth = async () => {
@@ -160,102 +129,33 @@ export function AuthProvider({ children }: AuthProviderProps) {
     if (Platform.OS !== 'web') return;
     if (typeof window === 'undefined') return;
     
-    const handleOAuthCallback = async () => {
+    const handleLandingPageAuth = async () => {
       try {
         const params = new URLSearchParams(window.location.search);
-        const code = params.get('code');
-        const state = params.get('state');
+        const authToken = params.get('auth_token');
+        const authUserRaw = params.get('auth_user');
 
-        if (!code || !state) {
-          const cookies = document.cookie.split(';').reduce((acc: Record<string, string>, c) => {
-            const [key, ...val] = c.trim().split('=');
-            if (key) acc[key] = decodeURIComponent(val.join('='));
-            return acc;
-          }, {});
-          let authToken = cookies['medinvest_auth_token'];
-          let authUserRaw = cookies['medinvest_auth_user'];
-          if (!authToken) {
-            try {
-              authToken = localStorage.getItem('medinvest_oauth_token') || '';
-              authUserRaw = localStorage.getItem('medinvest_oauth_user') || '';
-            } catch {}
-          }
-          if (!authToken) return;
-          console.log('[OAuth] Found auth token from server-side callback');
-          document.cookie = 'medinvest_auth_token=; Path=/; Max-Age=0; SameSite=Lax; Secure';
-          document.cookie = 'medinvest_auth_user=; Path=/; Max-Age=0; SameSite=Lax; Secure';
-          try { localStorage.removeItem('medinvest_oauth_token'); localStorage.removeItem('medinvest_oauth_user'); } catch {}
-          let userData: User | null = null;
-          if (authUserRaw) { try { userData = JSON.parse(authUserRaw); } catch {} }
-          if (userData) {
-            await saveAuthData(authToken, userData);
-          } else {
-            try {
-              const response = await apiClient.get('/users/me', { headers: { Authorization: `Bearer ${authToken}` } });
-              await saveAuthData(authToken, response.data as User);
-            } catch (err) { console.error('[OAuth] Failed to verify token:', err); }
-          }
-          return;
-        }
+        if (!authToken) return;
 
-        const stateData = parseOAuthState(state);
-        if (!stateData) {
-          console.error('[OAuth] Invalid state parameter in callback');
-          return;
-        }
-
-        const provider = stateData.provider;
-        console.log(`[OAuth] Direct callback detected: provider=${provider}, code length=${code.length}`);
-
+        console.log('[OAuth] Found auth token from landing page redirect');
         window.history.replaceState({}, '', window.location.pathname);
 
-        setIsLoading(true);
-        setError(null);
-
-        const redirectUri = getOAuthRedirectUri();
-        const baseUrl = getApiUrl();
-
-        const tokenResponse = await fetch(`${baseUrl}api/auth/${provider}/token`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ code, redirect_uri: redirectUri }),
-        });
-
-        const tokenResult = await tokenResponse.json();
-
-        if (!tokenResponse.ok || !tokenResult.access_token) {
-          console.error(`[OAuth] ${provider} token exchange failed:`, tokenResult);
-          setError(tokenResult.message || `${provider} login failed`);
-          setIsLoading(false);
-          return;
+        let userData: User | null = null;
+        if (authUserRaw) { try { userData = JSON.parse(decodeURIComponent(authUserRaw)); } catch {} }
+        if (userData) {
+          await saveAuthData(authToken, userData);
+        } else {
+          try {
+            const response = await apiClient.get('/users/me', { headers: { Authorization: `Bearer ${authToken}` } });
+            await saveAuthData(authToken, response.data as User);
+          } catch (err) { console.error('[OAuth] Failed to verify token:', err); }
         }
-
-        const socialResponse = await fetch(`${baseUrl}api/auth/social`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ provider, token: tokenResult.access_token }),
-        });
-
-        const socialResult = await socialResponse.json();
-
-        if (!socialResponse.ok || !socialResult.token) {
-          console.error(`[OAuth] ${provider} social auth failed:`, socialResult);
-          setError(socialResult.message || `${provider} login failed`);
-          setIsLoading(false);
-          return;
-        }
-
-        await saveAuthData(socialResult.token, socialResult.user);
-        console.log(`[OAuth] Logged in via direct ${provider} OAuth`);
-        setIsLoading(false);
       } catch (err) {
-        console.error('[OAuth] Callback handling error:', err);
-        setError('Authentication failed. Please try again.');
-        setIsLoading(false);
+        console.error('[OAuth] Landing page auth error:', err);
       }
     };
 
-    handleOAuthCallback();
+    handleLandingPageAuth();
   }, []);
 
   useEffect(() => {
@@ -418,17 +318,96 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const [isOAuthInProgress, setIsOAuthInProgress] = useState(false);
 
+  const openOAuthPopup = useCallback((provider: string): Promise<{ token: string; user: any } | null> => {
+    return new Promise((resolve) => {
+      const baseUrl = getApiUrl();
+      const startUrl = `${baseUrl}api/auth/${provider}/start?flow=popup`;
+      const width = 500;
+      const height = 650;
+      const left = window.screenX + (window.innerWidth - width) / 2;
+      const top = window.screenY + (window.innerHeight - height) / 2;
+      const popup = window.open(startUrl, `medinvest_${provider}_auth`, `width=${width},height=${height},left=${left},top=${top},toolbar=no,menubar=no`);
+
+      if (!popup) {
+        resolve(null);
+        return;
+      }
+
+      const cleanup = () => {
+        clearInterval(pollTimer);
+        window.removeEventListener('message', handleMessage);
+      };
+
+      const handleMessage = (event: MessageEvent) => {
+        const data = event.data;
+        if (!data || typeof data !== 'object') return;
+        if (data.type === 'medinvest-oauth-success' && data.token) {
+          console.log(`[OAuth] Popup success: received token for ${provider}`);
+          cleanup();
+          resolve({ token: data.token, user: data.user });
+        } else if (data.type === 'medinvest-oauth-error') {
+          console.error(`[OAuth] Popup error:`, data.error);
+          cleanup();
+          resolve(null);
+        }
+      };
+
+      window.addEventListener('message', handleMessage);
+
+      const pollTimer = setInterval(() => {
+        try {
+          if (popup.closed) {
+            console.log(`[OAuth] Popup closed by user`);
+            cleanup();
+            resolve(null);
+          }
+        } catch {
+          cleanup();
+          resolve(null);
+        }
+      }, 500);
+
+      setTimeout(() => {
+        cleanup();
+        try { popup.close(); } catch {}
+        resolve(null);
+      }, 300000);
+    });
+  }, []);
+
   const handleServerSideOAuth = useCallback(async (provider: string) => {
+    if (isOAuthInProgress) {
+      console.log('[OAuth] Another sign-in is already in progress');
+      return;
+    }
+
     try {
+      setIsOAuthInProgress(true);
       setIsLoading(true);
       setError(null);
+
+      if (Platform.OS === 'web' && typeof window !== 'undefined') {
+        console.log(`[OAuth] Opening ${provider} popup window`);
+        const result = await openOAuthPopup(provider);
+        if (result) {
+          if (result.user) {
+            await saveAuthData(result.token, result.user);
+          } else {
+            const response = await apiClient.get('/users/me', {
+              headers: { Authorization: `Bearer ${result.token}` },
+            });
+            await saveAuthData(result.token, response.data as User);
+          }
+          console.log(`[OAuth] Logged in via ${provider} popup`);
+        }
+        return;
+      }
 
       const oauthDomain = process.env.EXPO_PUBLIC_OAUTH_DOMAIN || process.env.EXPO_PUBLIC_DOMAIN?.replace(/:5000$/, '') || '';
       const mobileCallbackUrl = `https://${oauthDomain}/api/auth/mobile-callback`;
       const baseUrl = getApiUrl();
-      const serverStartUrl = `${baseUrl}api/auth/${provider}/start?app_redirect_uri=${encodeURIComponent(mobileCallbackUrl)}`;
+      const serverStartUrl = `${baseUrl}api/auth/${provider}/start?flow=mobile&app_redirect_uri=${encodeURIComponent(mobileCallbackUrl)}`;
       console.log(`[OAuth] Opening server-side ${provider} OAuth:`, serverStartUrl);
-      console.log(`[OAuth] Mobile callback URL (published domain):`, mobileCallbackUrl);
 
       const result = await WebBrowser.openAuthSessionAsync(
         serverStartUrl,
@@ -438,7 +417,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
       console.log(`[OAuth] ${provider} browser result type:`, result.type);
 
       if (result.type === 'success' && result.url) {
-        console.log(`[OAuth] Result URL:`, result.url);
         let tokenFromUrl: string | null = null;
         let errorFromUrl: string | null = null;
 
@@ -465,11 +443,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
           await saveAuthData(tokenFromUrl, response.data as User);
           console.log(`[OAuth] Logged in via server-side ${provider} OAuth`);
         } else {
-          console.log(`[OAuth] No token found in result URL`);
           setError('Authentication completed but no token received. Please try again.');
         }
-      } else if (result.type === 'cancel' || result.type === 'dismiss') {
-        console.log(`[OAuth] ${provider} sign-in cancelled by user`);
       }
     } catch (err) {
       const message = err instanceof Error ? err.message : `${provider} sign-in failed`;
@@ -477,62 +452,21 @@ export function AuthProvider({ children }: AuthProviderProps) {
       console.error(`[OAuth] ${provider} sign-in error:`, err);
     } finally {
       setIsLoading(false);
+      setIsOAuthInProgress(false);
     }
-  }, []);
+  }, [isOAuthInProgress, openOAuthPopup]);
 
   const signInWithGoogle = useCallback(async () => {
-    if (isOAuthInProgress) {
-      console.log('[OAuth] Another sign-in is already in progress');
-      return;
-    }
-    console.log('[OAuth] Google Sign-In starting');
-
-    if (Platform.OS === 'web' && typeof window !== 'undefined') {
-      const oauthDomain = process.env.EXPO_PUBLIC_OAUTH_DOMAIN || process.env.EXPO_PUBLIC_DOMAIN?.replace(/:5000$/, '') || '';
-      const serverStartUrl = `https://${oauthDomain}/api/auth/google/start`;
-      console.log('[OAuth] Redirecting to server-side Google OAuth:', serverStartUrl);
-      window.location.href = serverStartUrl;
-      return;
-    }
-
     await handleServerSideOAuth('google');
-  }, [isOAuthInProgress, handleServerSideOAuth]);
+  }, [handleServerSideOAuth]);
 
   const signInWithGithub = useCallback(async () => {
-    if (isOAuthInProgress) {
-      console.log('[OAuth] Another sign-in is already in progress');
-      return;
-    }
-    console.log('[OAuth] GitHub Sign-In starting');
-
-    if (Platform.OS === 'web' && typeof window !== 'undefined') {
-      const oauthDomain = process.env.EXPO_PUBLIC_OAUTH_DOMAIN || process.env.EXPO_PUBLIC_DOMAIN?.replace(/:5000$/, '') || '';
-      const serverStartUrl = `https://${oauthDomain}/api/auth/github/start`;
-      console.log('[OAuth] Redirecting to server-side GitHub OAuth:', serverStartUrl);
-      window.location.href = serverStartUrl;
-      return;
-    }
-
     await handleServerSideOAuth('github');
-  }, [isOAuthInProgress, handleServerSideOAuth]);
+  }, [handleServerSideOAuth]);
 
   const signInWithFacebook = useCallback(async () => {
-    if (isOAuthInProgress) {
-      console.log('[OAuth] Another sign-in is already in progress');
-      return;
-    }
-    console.log('[OAuth] Facebook Sign-In starting');
-
-    if (Platform.OS === 'web' && typeof window !== 'undefined') {
-      const oauthDomain = process.env.EXPO_PUBLIC_OAUTH_DOMAIN || process.env.EXPO_PUBLIC_DOMAIN?.replace(/:5000$/, '') || '';
-      const serverStartUrl = `https://${oauthDomain}/api/auth/facebook/start`;
-      console.log('[OAuth] Redirecting to server-side Facebook OAuth:', serverStartUrl);
-      window.location.href = serverStartUrl;
-      return;
-    }
-
     await handleServerSideOAuth('facebook');
-  }, [isOAuthInProgress, handleServerSideOAuth]);
+  }, [handleServerSideOAuth]);
 
   const mockSignIn = useCallback(async () => {
     try {
