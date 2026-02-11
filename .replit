@@ -80,8 +80,6 @@ ensurePreviewReachable = "/status"
 [userenv.shared]
 EXPO_PUBLIC_GITHUB_MOBILE_CLIENT_ID = "Ov23li0L1mgzOg5veCd0"
 GITHUB_MOBILE_CLIENT_ID = "Ov23li0L1mgzOg5veCd0"
-EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID = "969555602977-n0pt5bprikb9jen9rbfnjf4qn1lpntbo.apps.googleusercontent.com"
-GOOGLE_WEB_CLIENT_ID = "969555602977-n0pt5bprikb9jen9rbfnjf4qn1lpntbo.apps.googleusercontent.com"
 EXPO_PUBLIC_DOMAIN = "medinvest-mobile--rsmolarz.replit.app"
 OAUTH_CALLBACK_DOMAIN = "medinvest-mobile--rsmolarz.replit.app"
 EXPO_PUBLIC_OAUTH_DOMAIN = "medinvest-mobile--rsmolarz.replit.app"
