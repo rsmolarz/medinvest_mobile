@@ -68,7 +68,7 @@ const WIDGET_DATA_KEYS = {
 };
 
 // App Group identifier for sharing data with widgets
-const APP_GROUP_ID = 'group.com.medinvest.app';
+const APP_GROUP_ID = 'group.app.marketagent.trading';
 
 /**
  * iOS Widgets Service

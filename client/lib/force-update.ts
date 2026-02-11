@@ -52,7 +52,7 @@ export type UpdateType = 'required' | 'recommended' | 'none';
 // Store URLs
 const STORE_URLS = {
   ios: 'https://apps.apple.com/app/idXXXXXXXXXX',
-  android: 'https://play.google.com/store/apps/details?id=com.medinvest.app',
+  android: 'https://play.google.com/store/apps/details?id=app.marketagent.trading',
 };
 
 /**

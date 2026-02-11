@@ -300,8 +300,8 @@ export const ANDROID_SHORTCUTS = `
         android:shortcutLongLabel="@string/shortcut_new_post_long">
         <intent
             android:action="android.intent.action.VIEW"
-            android:targetPackage="com.medinvest.app"
-            android:targetClass="com.medinvest.app.MainActivity"
+            android:targetPackage="app.marketagent.trading"
+            android:targetClass="app.marketagent.trading.MainActivity"
             android:data="medinvest://post/new" />
     </shortcut>
     <shortcut
@@ -312,8 +312,8 @@ export const ANDROID_SHORTCUTS = `
         android:shortcutLongLabel="@string/shortcut_search_long">
         <intent
             android:action="android.intent.action.VIEW"
-            android:targetPackage="com.medinvest.app"
-            android:targetClass="com.medinvest.app.MainActivity"
+            android:targetPackage="app.marketagent.trading"
+            android:targetClass="app.marketagent.trading.MainActivity"
             android:data="medinvest://search" />
     </shortcut>
     <shortcut
@@ -324,8 +324,8 @@ export const ANDROID_SHORTCUTS = `
         android:shortcutLongLabel="@string/shortcut_messages_long">
         <intent
             android:action="android.intent.action.VIEW"
-            android:targetPackage="com.medinvest.app"
-            android:targetClass="com.medinvest.app.MainActivity"
+            android:targetPackage="app.marketagent.trading"
+            android:targetClass="app.marketagent.trading.MainActivity"
             android:data="medinvest://messages" />
     </shortcut>
 </shortcuts>
