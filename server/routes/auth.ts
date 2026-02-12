@@ -227,7 +227,7 @@ router.post('/google/token', async (req: Request, res: Response) => {
       return;
     }
 
-    const clientId = process.env.GOOGLE_WEB_CLIENT_ID || process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID;
+    const clientId = process.env.github/token_ID || process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID;
     const clientSecret = process.env.GOOGLE_WEB_CLIENT_SECRET;
 
     if (!clientId || !clientSecret) {
