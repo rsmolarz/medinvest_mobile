@@ -6,6 +6,9 @@ import { verifyAppleToken, verifyGoogleToken, verifyGithubToken, verifyFacebookT
 import bcrypt from 'bcrypt';
 import crypto from 'crypto';
 
+// OAuth redirect base URL - must match registered URIs in OAuth apps
+const OAUTH_REDIRECT_BASE = process.env.OAUTH_REDIRECT_BASE || 'https://themedicineandmoneyshow.com';
+
 const router = Router();
 
 const STATE_SECRET = process.env.SESSION_SECRET || crypto.randomBytes(32).toString('hex');
@@ -246,7 +249,7 @@ router.post('/google/token', async (req: Request, res: Response) => {
         code,
         client_id: clientId,
         client_secret: clientSecret,
-        redirect_uri: redirect_uri || '',
+        redirect_uri:`${OAUTH_REDIRECT_BASE}/api/auth/google/callback`,
         grant_type: 'authorization_code',
       }).toString(),
     });
@@ -322,7 +325,7 @@ router.post('/github/token', async (req: Request, res: Response) => {
         client_id: clientId,
         client_secret: clientSecret,
         code,
-        redirect_uri,
+        redirect_uri: `${OAUTH_REDIRECT_BASE}/api/auth/github/callback`,
       }),
     });
 
@@ -367,7 +370,7 @@ router.post('/facebook/token', async (req: Request, res: Response) => {
     const tokenUrl = new URL('https://graph.facebook.com/v18.0/oauth/access_token');
     tokenUrl.searchParams.append('client_id', appId);
     tokenUrl.searchParams.append('client_secret', appSecret);
-    tokenUrl.searchParams.append('redirect_uri', redirect_uri);
+    tokenUrl.searchParams.append('redirect_uri', `${OAUTH_REDIRECT_BASE}/api/auth/facebook/callback`);
     tokenUrl.searchParams.append('code', code);
 
     const tokenResponse = await fetch(tokenUrl.toString());
