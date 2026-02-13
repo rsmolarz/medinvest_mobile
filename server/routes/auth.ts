@@ -17,7 +17,7 @@ function cleanEnv(key: string): string | undefined {
 }
 
 function getGoogleClientId(): string | undefined {
-  return cleanEnv('EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID') || cleanEnv('GOOGLE_WEB_CLIENT_ID');
+  return cleanEnv('GOOGLE_WEB_CLIENT_ID') || cleanEnv('EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID');
 }
 
 function getGoogleClientSecret(): string | undefined {
