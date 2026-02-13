@@ -472,7 +472,7 @@ router.get('/google/start', (req: Request, res: Response) => {
  * Server-side GitHub OAuth initiation
  */
 router.get('/github/start', (req: Request, res: Response) => {
-  const clientId = getGithubClientId();
+  const clientId = getGithubClientId() || getGithubClientId(true);
   if (!clientId) {
     res.status(500).json({ message: 'GitHub OAuth is not configured' });
     return;
@@ -595,9 +595,10 @@ router.get('/callback', async (req: Request, res: Response) => {
     let accessToken: string | undefined;
 
     if (provider === 'github') {
-      const clientId = getGithubClientId();
-      const clientSecret = getGithubClientSecret();
+      const clientId = getGithubClientId() || getGithubClientId(true);
+      const clientSecret = getGithubClientSecret() || getGithubClientSecret(true);
       if (!clientId || !clientSecret) {
+        console.error('[OAuth Callback] GitHub missing config - clientId:', !!clientId, 'clientSecret:', !!clientSecret);
         return sendError('GitHub OAuth is not configured', 500);
       }
       const tokenResponse = await fetch('https://github.com/login/oauth/access_token', {
