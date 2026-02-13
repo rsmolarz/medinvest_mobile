@@ -8,7 +8,12 @@ import crypto from 'crypto';
 
 function cleanEnv(key: string): string | undefined {
   const val = process.env[key];
-  return val ? val.trim().replace(/[\r\n]+.*$/s, '') : undefined;
+  if (!val) return undefined;
+  let cleaned = val.trim();
+  cleaned = cleaned.replace(/[\r\n]+.*$/s, '');
+  cleaned = cleaned.replace(/\\n.*$/s, '');
+  cleaned = cleaned.replace(/[\x00-\x1F\x7F]/g, '');
+  return cleaned || undefined;
 }
 
 function getGoogleClientId(): string | undefined {
