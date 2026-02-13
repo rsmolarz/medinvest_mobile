@@ -340,6 +340,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
       }
 
       let resolved = false;
+      let popupAppearedClosed = false;
+      let popupClosedAt = 0;
+      const GRACE_PERIOD = 15000;
 
       const cleanup = () => {
         clearInterval(pollTimer);
@@ -357,6 +360,21 @@ export function AuthProvider({ children }: AuthProviderProps) {
         resolve(result);
       };
 
+      const checkLocalStorage = (): boolean => {
+        try {
+          const storedToken = localStorage.getItem('medinvest_oauth_token');
+          if (storedToken) {
+            const storedUserStr = localStorage.getItem('medinvest_oauth_user');
+            const storedUser = storedUserStr ? JSON.parse(storedUserStr) : null;
+            console.log(`[OAuth] Found token in localStorage for ${provider}`);
+            try { popup.close(); } catch {}
+            finishWith({ token: storedToken, user: storedUser });
+            return true;
+          }
+        } catch {}
+        return false;
+      };
+
       const handleMessage = (event: MessageEvent) => {
         const data = event.data;
         if (!data || typeof data !== 'object') return;
@@ -372,35 +390,26 @@ export function AuthProvider({ children }: AuthProviderProps) {
       window.addEventListener('message', handleMessage);
 
       const pollTimer = setInterval(() => {
-        try {
-          const storedToken = localStorage.getItem('medinvest_oauth_token');
-          if (storedToken) {
-            const storedUserStr = localStorage.getItem('medinvest_oauth_user');
-            const storedUser = storedUserStr ? JSON.parse(storedUserStr) : null;
-            console.log(`[OAuth] Popup success via localStorage fallback for ${provider}`);
-            try { popup.close(); } catch {}
-            finishWith({ token: storedToken, user: storedUser });
-            return;
-          }
-        } catch {}
+        if (checkLocalStorage()) return;
 
+        let isClosed = false;
         try {
-          if (popup.closed) {
-            try {
-              const storedToken = localStorage.getItem('medinvest_oauth_token');
-              if (storedToken) {
-                const storedUserStr = localStorage.getItem('medinvest_oauth_user');
-                const storedUser = storedUserStr ? JSON.parse(storedUserStr) : null;
-                console.log(`[OAuth] Popup closed - found token in localStorage for ${provider}`);
-                finishWith({ token: storedToken, user: storedUser });
-                return;
-              }
-            } catch {}
-            console.log(`[OAuth] Popup closed by user`);
+          isClosed = popup.closed;
+        } catch {
+          isClosed = true;
+        }
+
+        if (isClosed && !popupAppearedClosed) {
+          popupAppearedClosed = true;
+          popupClosedAt = Date.now();
+          console.log(`[OAuth] Popup appears closed for ${provider}, waiting grace period for localStorage...`);
+        }
+
+        if (popupAppearedClosed && Date.now() - popupClosedAt > GRACE_PERIOD) {
+          if (!checkLocalStorage()) {
+            console.log(`[OAuth] Grace period expired, no token found for ${provider}`);
             finishWith(null);
           }
-        } catch {
-          finishWith(null);
         }
       }, 500);
 
