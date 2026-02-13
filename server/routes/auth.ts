@@ -563,7 +563,11 @@ router.get('/callback', async (req: Request, res: Response) => {
       if (stateData?.appRedirectUri) {
         const appUri = stateData.appRedirectUri;
         const separator = appUri.includes('?') ? '&' : '?';
-        return res.redirect(`${appUri}${separator}error=${encodeURIComponent(msg)}`);
+        const errorRedirect = `${appUri}${separator}error=${encodeURIComponent(msg)}`;
+        if (appUri.startsWith('http')) {
+          return res.redirect(errorRedirect);
+        }
+        return res.send(`<!DOCTYPE html><html><head><meta charset="utf-8"></head><body><script>window.location.href=${JSON.stringify(errorRedirect)};</script></body></html>`);
       }
       return res.status(statusCode).send(getOAuthResultPage('error', msg));
     };
@@ -778,7 +782,12 @@ router.get('/callback', async (req: Request, res: Response) => {
       const separator = appUri.includes('?') ? '&' : '?';
       const redirectUrl = `${appUri}${separator}token=${encodeURIComponent(jwtToken)}`;
       console.log(`[OAuth Callback] Redirecting to mobile app: ${redirectUrl}`);
-      return res.redirect(redirectUrl);
+
+      if (appUri.startsWith('http')) {
+        return res.redirect(redirectUrl);
+      }
+
+      return res.send(`<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Redirecting...</title></head><body><p>Redirecting to app...</p><script>window.location.href=${JSON.stringify(redirectUrl)};</script></body></html>`);
     }
 
     console.log(`[OAuth Callback] Landing page flow - redirecting with auth token`);

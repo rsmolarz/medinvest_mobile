@@ -461,15 +461,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
         return;
       }
 
-      const oauthDomain = process.env.EXPO_PUBLIC_OAUTH_DOMAIN || process.env.EXPO_PUBLIC_DOMAIN?.replace(/:5000$/, '') || '';
-      const mobileCallbackUrl = `https://${oauthDomain}/api/auth/mobile-callback`;
+      const deepLinkCallback = 'medinvest://auth';
       const baseUrl = getApiUrl();
-      const serverStartUrl = `${baseUrl}api/auth/${provider}/start?flow=mobile&app_redirect_uri=${encodeURIComponent(mobileCallbackUrl)}`;
+      const serverStartUrl = `${baseUrl}api/auth/${provider}/start?flow=mobile&app_redirect_uri=${encodeURIComponent(deepLinkCallback)}`;
       console.log(`[OAuth] Opening server-side ${provider} OAuth:`, serverStartUrl);
 
       const result = await WebBrowser.openAuthSessionAsync(
         serverStartUrl,
-        mobileCallbackUrl
+        deepLinkCallback
       );
 
       console.log(`[OAuth] ${provider} browser result type:`, result.type);
