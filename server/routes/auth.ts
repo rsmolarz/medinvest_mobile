@@ -6,6 +6,38 @@ import { verifyAppleToken, verifyGoogleToken, verifyGithubToken, verifyFacebookT
 import bcrypt from 'bcrypt';
 import crypto from 'crypto';
 
+function cleanEnv(key: string): string | undefined {
+  const val = process.env[key];
+  return val ? val.trim().replace(/[\r\n]+.*$/s, '') : undefined;
+}
+
+function getGoogleClientId(): string | undefined {
+  return cleanEnv('EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID') || cleanEnv('GOOGLE_WEB_CLIENT_ID');
+}
+
+function getGoogleClientSecret(): string | undefined {
+  return cleanEnv('GOOGLE_WEB_CLIENT_SECRET');
+}
+
+function getGithubClientId(mobile = false): string | undefined {
+  if (mobile) {
+    return cleanEnv('GITHUB_MOBILE_CLIENT_ID') || cleanEnv('EXPO_PUBLIC_GITHUB_MOBILE_CLIENT_ID');
+  }
+  return cleanEnv('GITHUB_CLIENT_ID') || cleanEnv('EXPO_PUBLIC_GITHUB_CLIENT_ID');
+}
+
+function getGithubClientSecret(mobile = false): string | undefined {
+  return mobile ? cleanEnv('GITHUB_MOBILE_CLIENT_SECRET') : cleanEnv('GITHUB_CLIENT_SECRET');
+}
+
+function getFacebookAppId(): string | undefined {
+  return cleanEnv('FACEBOOK_APP_ID') || cleanEnv('EXPO_PUBLIC_FACEBOOK_APP_ID');
+}
+
+function getFacebookAppSecret(): string | undefined {
+  return cleanEnv('FACEBOOK_APP_SECRET');
+}
+
 // OAuth redirect base URL - must match registered URIs in OAuth apps
 const OAUTH_REDIRECT_BASE = process.env.OAUTH_REDIRECT_BASE || 'https://themedicineandmoneyshow.com';
 
@@ -230,8 +262,8 @@ router.post('/google/token', async (req: Request, res: Response) => {
       return;
     }
 
-    const clientId = process.env.GOOGLE_WEB_CLIENT_ID || process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID;
-    const clientSecret = process.env.GOOGLE_WEB_CLIENT_SECRET;
+    const clientId = getGoogleClientId();
+    const clientSecret = getGoogleClientSecret();
 
     if (!clientId || !clientSecret) {
       res.status(500).json({ message: 'Google OAuth is not configured' });
@@ -283,28 +315,15 @@ router.post('/github/token', async (req: Request, res: Response) => {
       return;
     }
 
-    // Use platform-specific credentials
-    // Mobile app uses separate OAuth app with different redirect URI
     const isMobile = platform === 'mobile' || platform === 'ios' || platform === 'android';
     
-    let clientId: string | undefined;
-    let clientSecret: string | undefined;
+    let clientId = getGithubClientId(isMobile);
+    let clientSecret = getGithubClientSecret(isMobile);
     
-    if (isMobile) {
-      // Mobile OAuth credentials
-      clientId = process.env.GITHUB_MOBILE_CLIENT_ID || process.env.EXPO_PUBLIC_GITHUB_MOBILE_CLIENT_ID;
-      clientSecret = process.env.GITHUB_MOBILE_CLIENT_SECRET;
-      
-      // Fall back to web credentials if mobile not configured
-      if (!clientId || !clientSecret) {
-        console.log('Mobile GitHub credentials not found, falling back to web credentials');
-        clientId = process.env.GITHUB_CLIENT_ID || process.env.EXPO_PUBLIC_GITHUB_CLIENT_ID;
-        clientSecret = process.env.GITHUB_CLIENT_SECRET;
-      }
-    } else {
-      // Web OAuth credentials
-      clientId = process.env.GITHUB_CLIENT_ID || process.env.EXPO_PUBLIC_GITHUB_CLIENT_ID;
-      clientSecret = process.env.GITHUB_CLIENT_SECRET;
+    if (isMobile && (!clientId || !clientSecret)) {
+      console.log('Mobile GitHub credentials not found, falling back to web credentials');
+      clientId = getGithubClientId(false);
+      clientSecret = getGithubClientSecret(false);
     }
 
     if (!clientId || !clientSecret) {
@@ -357,16 +376,14 @@ router.post('/facebook/token', async (req: Request, res: Response) => {
       return;
     }
 
-    // Use server-side env vars
-    const appId = process.env.FACEBOOK_APP_ID || process.env.EXPO_PUBLIC_FACEBOOK_APP_ID;
-    const appSecret = process.env.FACEBOOK_APP_SECRET;
+    const appId = getFacebookAppId();
+    const appSecret = getFacebookAppSecret();
 
     if (!appId || !appSecret) {
       res.status(500).json({ message: 'Facebook OAuth is not configured' });
       return;
     }
 
-    // Exchange code for access token
     const tokenUrl = new URL('https://graph.facebook.com/v18.0/oauth/access_token');
     tokenUrl.searchParams.append('client_id', appId);
     tokenUrl.searchParams.append('client_secret', appSecret);
@@ -419,7 +436,7 @@ function getCallbackUri(provider?: string): string {
  * Server-side Google OAuth initiation - redirects to Google with correct redirect_uri
  */
 router.get('/google/start', (req: Request, res: Response) => {
-  const clientId = process.env.GOOGLE_WEB_CLIENT_ID || process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID;
+  const clientId = getGoogleClientId();
   if (!clientId) {
     res.status(500).json({ message: 'Google OAuth is not configured' });
     return;
@@ -450,7 +467,7 @@ router.get('/google/start', (req: Request, res: Response) => {
  * Server-side GitHub OAuth initiation
  */
 router.get('/github/start', (req: Request, res: Response) => {
-  const clientId = process.env.GITHUB_CLIENT_ID || process.env.EXPO_PUBLIC_GITHUB_CLIENT_ID;
+  const clientId = getGithubClientId();
   if (!clientId) {
     res.status(500).json({ message: 'GitHub OAuth is not configured' });
     return;
@@ -478,7 +495,7 @@ router.get('/github/start', (req: Request, res: Response) => {
  * Server-side Facebook OAuth initiation
  */
 router.get('/facebook/start', (req: Request, res: Response) => {
-  const appId = process.env.FACEBOOK_APP_ID || process.env.EXPO_PUBLIC_FACEBOOK_APP_ID;
+  const appId = getFacebookAppId();
   if (!appId) {
     res.status(500).json({ message: 'Facebook OAuth is not configured' });
     return;
@@ -573,8 +590,8 @@ router.get('/callback', async (req: Request, res: Response) => {
     let accessToken: string | undefined;
 
     if (provider === 'github') {
-      const clientId = process.env.GITHUB_CLIENT_ID || process.env.EXPO_PUBLIC_GITHUB_CLIENT_ID;
-      const clientSecret = process.env.GITHUB_CLIENT_SECRET;
+      const clientId = getGithubClientId();
+      const clientSecret = getGithubClientSecret();
       if (!clientId || !clientSecret) {
         return sendError('GitHub OAuth is not configured', 500);
       }
@@ -590,8 +607,8 @@ router.get('/callback', async (req: Request, res: Response) => {
       }
       accessToken = tokenData.access_token;
     } else if (provider === 'google') {
-      const clientId = process.env.GOOGLE_WEB_CLIENT_ID || process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID;
-      const clientSecret = process.env.GOOGLE_WEB_CLIENT_SECRET;
+      const clientId = getGoogleClientId();
+      const clientSecret = getGoogleClientSecret();
       if (!clientId || !clientSecret) {
         console.error(`[OAuth Callback] Google OAuth missing config - clientId: ${!!clientId}, clientSecret: ${!!clientSecret}`);
         return sendError('Google OAuth is not configured', 500);
@@ -610,8 +627,8 @@ router.get('/callback', async (req: Request, res: Response) => {
       }
       accessToken = tokenData.access_token;
     } else if (provider === 'facebook') {
-      const appId = process.env.FACEBOOK_APP_ID || process.env.EXPO_PUBLIC_FACEBOOK_APP_ID;
-      const appSecret = process.env.FACEBOOK_APP_SECRET;
+      const appId = getFacebookAppId();
+      const appSecret = getFacebookAppSecret();
       if (!appId || !appSecret) {
         return sendError('Facebook OAuth is not configured', 500);
       }
@@ -1520,9 +1537,9 @@ router.get('/oauth-debug', (req: Request, res: Response) => {
     if (!allCallbackUris.includes(uri)) allCallbackUris.push(uri);
   }
 
-  const hasGoogle = !!(process.env.GOOGLE_WEB_CLIENT_ID || process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID);
-  const hasGithub = !!(process.env.GITHUB_CLIENT_ID || process.env.EXPO_PUBLIC_GITHUB_CLIENT_ID);
-  const hasFacebook = !!(process.env.FACEBOOK_APP_ID || process.env.EXPO_PUBLIC_FACEBOOK_APP_ID);
+  const hasGoogle = !!getGoogleClientId();
+  const hasGithub = !!getGithubClientId();
+  const hasFacebook = !!getFacebookAppId();
 
   const html = `<!DOCTYPE html><html><head><title>OAuth Debug</title>
   <style>body{font-family:system-ui;max-width:800px;margin:40px auto;padding:20px;background:#1a1a2e;color:#e0e0e0}
