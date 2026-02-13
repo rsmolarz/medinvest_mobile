@@ -1585,4 +1585,28 @@ router.get('/oauth-debug', (req: Request, res: Response) => {
   res.send(html);
 });
 
+// Temporary credential diagnostic endpoint
+router.get('/cred-check', (req: Request, res: Response) => {
+  const mask = (s: string | undefined) => s ? `${s.substring(0, 12)}...${s.slice(-4)} (len=${s.length})` : 'UNDEFINED';
+  const raw = (key: string) => {
+    const v = process.env[key];
+    return v ? `raw_len=${v.length}, cleaned_len=${cleanEnv(key)?.length || 0}` : 'NOT SET';
+  };
+  
+  const googleId = getGoogleClientId();
+  const googleSecret = getGoogleClientSecret();
+  
+  res.json({
+    google_client_id: mask(googleId),
+    google_client_secret: mask(googleSecret),
+    env_detail: {
+      EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID: raw('EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID'),
+      GOOGLE_WEB_CLIENT_ID: raw('GOOGLE_WEB_CLIENT_ID'),
+      GOOGLE_WEB_CLIENT_SECRET: raw('GOOGLE_WEB_CLIENT_SECRET'),
+    },
+    github_client_id: mask(getGithubClientId()),
+    facebook_app_id: mask(getFacebookAppId()),
+  });
+});
+
 export default router;
