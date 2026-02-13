@@ -326,6 +326,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
       const height = 650;
       const left = window.screenX + (window.innerWidth - width) / 2;
       const top = window.screenY + (window.innerHeight - height) / 2;
+
+      try {
+        localStorage.removeItem('medinvest_oauth_token');
+        localStorage.removeItem('medinvest_oauth_user');
+      } catch {}
+
       const popup = window.open(startUrl, `medinvest_${provider}_auth`, `width=${width},height=${height},left=${left},top=${top},toolbar=no,menubar=no`);
 
       if (!popup) {
@@ -333,22 +339,33 @@ export function AuthProvider({ children }: AuthProviderProps) {
         return;
       }
 
+      let resolved = false;
+
       const cleanup = () => {
         clearInterval(pollTimer);
         window.removeEventListener('message', handleMessage);
+      };
+
+      const finishWith = (result: { token: string; user: any } | null) => {
+        if (resolved) return;
+        resolved = true;
+        cleanup();
+        try {
+          localStorage.removeItem('medinvest_oauth_token');
+          localStorage.removeItem('medinvest_oauth_user');
+        } catch {}
+        resolve(result);
       };
 
       const handleMessage = (event: MessageEvent) => {
         const data = event.data;
         if (!data || typeof data !== 'object') return;
         if (data.type === 'medinvest-oauth-success' && data.token) {
-          console.log(`[OAuth] Popup success: received token for ${provider}`);
-          cleanup();
-          resolve({ token: data.token, user: data.user });
+          console.log(`[OAuth] Popup success via postMessage for ${provider}`);
+          finishWith({ token: data.token, user: data.user });
         } else if (data.type === 'medinvest-oauth-error') {
           console.error(`[OAuth] Popup error:`, data.error);
-          cleanup();
-          resolve(null);
+          finishWith(null);
         }
       };
 
@@ -356,21 +373,40 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       const pollTimer = setInterval(() => {
         try {
+          const storedToken = localStorage.getItem('medinvest_oauth_token');
+          if (storedToken) {
+            const storedUserStr = localStorage.getItem('medinvest_oauth_user');
+            const storedUser = storedUserStr ? JSON.parse(storedUserStr) : null;
+            console.log(`[OAuth] Popup success via localStorage fallback for ${provider}`);
+            try { popup.close(); } catch {}
+            finishWith({ token: storedToken, user: storedUser });
+            return;
+          }
+        } catch {}
+
+        try {
           if (popup.closed) {
+            try {
+              const storedToken = localStorage.getItem('medinvest_oauth_token');
+              if (storedToken) {
+                const storedUserStr = localStorage.getItem('medinvest_oauth_user');
+                const storedUser = storedUserStr ? JSON.parse(storedUserStr) : null;
+                console.log(`[OAuth] Popup closed - found token in localStorage for ${provider}`);
+                finishWith({ token: storedToken, user: storedUser });
+                return;
+              }
+            } catch {}
             console.log(`[OAuth] Popup closed by user`);
-            cleanup();
-            resolve(null);
+            finishWith(null);
           }
         } catch {
-          cleanup();
-          resolve(null);
+          finishWith(null);
         }
       }, 500);
 
       setTimeout(() => {
-        cleanup();
         try { popup.close(); } catch {}
-        resolve(null);
+        finishWith(null);
       }, 300000);
     });
   }, []);
@@ -390,13 +426,26 @@ export function AuthProvider({ children }: AuthProviderProps) {
         console.log(`[OAuth] Opening ${provider} popup window`);
         const result = await openOAuthPopup(provider);
         if (result) {
+          const normalizeUser = (u: any): User => ({
+            id: u.id,
+            email: u.email,
+            first_name: u.first_name || u.firstName,
+            last_name: u.last_name || u.lastName,
+            full_name: u.full_name || u.fullName,
+            avatar_url: u.avatar_url || u.avatarUrl,
+            provider: u.provider,
+            is_verified: u.is_verified ?? u.isVerified,
+            is_accredited: u.is_accredited ?? u.isAccredited,
+            created_at: u.created_at || u.createdAt,
+          });
+
           if (result.user) {
-            await saveAuthData(result.token, result.user);
+            await saveAuthData(result.token, normalizeUser(result.user));
           } else {
             const response = await apiClient.get('/users/me', {
               headers: { Authorization: `Bearer ${result.token}` },
             });
-            await saveAuthData(result.token, response.data as User);
+            await saveAuthData(result.token, normalizeUser(response.data));
           }
           console.log(`[OAuth] Logged in via ${provider} popup`);
         }

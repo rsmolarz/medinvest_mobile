@@ -902,16 +902,28 @@ function getPopupPostMessagePage(token: string, user: any): string {
     (function() {
       var token = ${JSON.stringify(token)};
       var user = ${userJson};
+      var sent = false;
+
       try {
-        if (window.opener) {
+        localStorage.setItem('medinvest_oauth_token', token);
+        localStorage.setItem('medinvest_oauth_user', JSON.stringify(user));
+      } catch(e) {}
+
+      try {
+        if (window.opener && !window.opener.closed) {
           window.opener.postMessage({ type: 'medinvest-oauth-success', token: token, user: user }, '*');
-          document.getElementById('status').textContent = 'You can close this window.';
-          setTimeout(function() { window.close(); }, 1500);
-        } else {
-          document.getElementById('status').textContent = 'Login successful! You can close this tab.';
+          sent = true;
         }
-      } catch(e) {
-        document.getElementById('status').textContent = 'Login successful! You can close this tab.';
+      } catch(e) {}
+
+      if (sent) {
+        document.getElementById('status').textContent = 'You can close this window.';
+        setTimeout(function() { try { window.close(); } catch(e) {} }, 1500);
+      } else {
+        document.getElementById('status').textContent = 'Completing sign-in...';
+        setTimeout(function() {
+          document.getElementById('status').textContent = 'You can close this window and return to the app.';
+        }, 2000);
       }
     })();
   </script>
