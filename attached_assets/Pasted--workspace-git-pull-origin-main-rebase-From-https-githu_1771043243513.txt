@@ -1,0 +1,48 @@
+~/workspace$ git pull origin main --rebase
+From https://github.com/rsmolarz/medinvest_mobile
+ * branch            main       -> FETCH_HEAD
+Current branch main is up to date.
+~/workspace$ git push origin main --force
+Enumerating objects: 314, done.
+Counting objects: 100% (314/314), done.
+Delta compression using up to 8 threads
+Compressing objects: 100% (288/288), done.
+Writing objects: 100% (288/288), 4.74 MiB | 10.76 MiB/s, done.
+Total 288 (delta 237), reused 0 (delta 0), pack-reused 0 (from 0)
+remote: Resolving deltas: 100% (237/237), completed with 23 local objects.
+remote: error: GH013: Repository rule violations found for refs/heads/main.
+remote: 
+remote: - GITHUB PUSH PROTECTION
+remote:   —————————————————————————————————————————
+remote:     Resolve the following violations before pushing again
+remote: 
+remote:     - Push cannot contain secrets
+remote: 
+remote:     
+remote:      (?) Learn how to resolve a blocked push
+remote:      https://docs.github.com/code-security/secret-scanning/working-with-secret-scanning-and-push-protection/working-with-push-protection-from-the-command-line#resolving-a-blocked-push
+remote:     
+remote:     
+remote:       —— Google OAuth Client ID ————————————————————————————
+remote:        locations:
+remote:          - commit: 12ecd3dd5b6ba0114457220c36157fbf2017ffc4
+remote:            path: attached_assets/client_secret_851381628889-7avlnr4j89jpaffobjhmm9medtb61fl4.a_1770815806017.json:1
+remote:     
+remote:        (?) To push, remove secret from commit(s) or follow this URL to allow the secret.
+remote:        https://github.com/rsmolarz/medinvest_mobile/security/secret-scanning/unblock-secret/39e43w7kQNODQh82W1g2HmGvYas
+remote:     
+remote:     
+remote:       —— Google OAuth Client Secret ————————————————————————
+remote:        locations:
+remote:          - commit: 12ecd3dd5b6ba0114457220c36157fbf2017ffc4
+remote:            path: attached_assets/client_secret_851381628889-7avlnr4j89jpaffobjhmm9medtb61fl4.a_1770815806017.json:1
+remote:     
+remote:        (?) To push, remove secret from commit(s) or follow this URL to allow the secret.
+remote:        https://github.com/rsmolarz/medinvest_mobile/security/secret-scanning/unblock-secret/39e43vot5kmIs1xYLEHIjaTuyIY
+remote:     
+remote: 
+remote: 
+To https://github.com/rsmolarz/medinvest_mobile.git
+ ! [remote rejected] main -> main (push declined due to repository rule violations)
+error: failed to push some refs to 'https://github.com/rsmolarz/medinvest_mobile.git'
+~/workspace$ 
