@@ -222,6 +222,14 @@ function configureExpoAndLanding(app: express.Application) {
     res.sendFile(termsPath);
   });
 
+  app.get("/manifest/ios", (req: Request, res: Response) => {
+    return serveExpoManifest("ios", req, res);
+  });
+
+  app.get("/manifest/android", (req: Request, res: Response) => {
+    return serveExpoManifest("android", req, res);
+  });
+
   app.use((req: Request, res: Response, next: NextFunction) => {
     if (req.path.startsWith("/api")) {
       return next();
