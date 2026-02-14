@@ -788,9 +788,24 @@ export interface AMA {
   title: string;
   description: string;
   expert: User;
+  expert_bio: string;
   status: 'scheduled' | 'live' | 'ended';
   scheduled_at: string;
+  ended_at?: string;
   questions_count: number;
+  attendees_count: number;
+  is_attending: boolean;
+  questions?: AMAQuestion[];
+}
+
+export interface AMAQuestion {
+  id: number;
+  question: string;
+  author: User;
+  answer?: string;
+  upvotes: number;
+  is_answered: boolean;
+  created_at: string;
 }
 
 

@@ -25,8 +25,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { ThemedText } from '@/components/ThemedText';
 import { Colors, Spacing, BorderRadius, Typography, Shadows } from '@/constants/theme';
 import { useAppColors } from '@/hooks/useAppColors';
-import { contentApi } from '@/lib/api';
-import { AMA } from '@/types';
+import { contentApi, AMA, AMAQuestion } from '@/lib/api';
 import { formatRelativeTime, formatDate } from '@/lib/utils';
 
 type AMADetailRouteParams = {
@@ -34,21 +33,6 @@ type AMADetailRouteParams = {
     amaId: number;
   };
 };
-
-interface Question {
-  id: number;
-  content: string;
-  author: {
-    id: number;
-    full_name: string;
-    avatar_url?: string;
-  };
-  upvotes: number;
-  user_voted: boolean;
-  answer?: string;
-  answered_at?: string;
-  created_at: string;
-}
 
 export default function AMADetailScreen() {
   const navigation = useNavigation<any>();
@@ -94,24 +78,24 @@ export default function AMADetailScreen() {
     askQuestionMutation.mutate();
   }, [questionText, askQuestionMutation]);
 
-  const handleUserPress = useCallback((userId: number) => {
+  const handleUserPress = useCallback((userId: number | string) => {
     navigation.navigate('UserProfile', { userId });
   }, [navigation]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'live': return appColors.error;
-      case 'upcoming': return appColors.warning;
-      case 'completed': return appColors.textSecondary;
+      case 'scheduled': return appColors.warning;
+      case 'ended': return appColors.textSecondary;
       default: return Colors.primary;
     }
   };
 
   const getStatusText = (status: string) => {
     switch (status) {
-      case 'live': return '🔴 LIVE NOW';
-      case 'upcoming': return '📅 Upcoming';
-      case 'completed': return '✓ Completed';
+      case 'live': return 'LIVE NOW';
+      case 'scheduled': return 'Upcoming';
+      case 'ended': return 'Completed';
       default: return status;
     }
   };
@@ -133,26 +117,26 @@ export default function AMADetailScreen() {
           </View>
         </LinearGradient>
 
-        {/* Host Info */}
+        {/* Expert Info */}
         <View style={[styles.hostSection, { borderBottomColor: appColors.border }]}>
           <TouchableOpacity
             style={styles.hostInfo}
-            onPress={() => handleUserPress(ama.host.id)}
+            onPress={() => handleUserPress(ama.expert.id)}
           >
-            {ama.host.avatar_url ? (
-              <Image source={{ uri: ama.host.avatar_url }} style={styles.hostAvatar} />
+            {ama.expert.avatar_url ? (
+              <Image source={{ uri: ama.expert.avatar_url }} style={styles.hostAvatar} />
             ) : (
               <View style={[styles.hostAvatar, styles.hostAvatarPlaceholder]}>
                 <ThemedText style={styles.hostAvatarText}>
-                  {ama.host.first_name[0]}{ama.host.last_name[0]}
+                  {ama.expert.full_name?.[0] || 'E'}
                 </ThemedText>
               </View>
             )}
             <View style={styles.hostDetails}>
-              <ThemedText style={[styles.hostName, { color: appColors.textPrimary }]}>{ama.host.full_name}</ThemedText>
-              {ama.host.specialty && (
-                <ThemedText style={[styles.hostSpecialty, { color: appColors.textSecondary }]}>{ama.host.specialty}</ThemedText>
-              )}
+              <ThemedText style={[styles.hostName, { color: appColors.textPrimary }]}>{ama.expert.full_name}</ThemedText>
+              {ama.expert_bio ? (
+                <ThemedText style={[styles.hostSpecialty, { color: appColors.textSecondary }]}>{ama.expert_bio}</ThemedText>
+              ) : null}
             </View>
           </TouchableOpacity>
         </View>
@@ -190,7 +174,7 @@ export default function AMADetailScreen() {
     );
   };
 
-  const renderQuestion = ({ item }: { item: Question }) => (
+  const renderQuestion = ({ item }: { item: AMAQuestion }) => (
     <View style={[styles.questionCard, { backgroundColor: appColors.surface }]}>
       <TouchableOpacity
         style={styles.questionAuthor}
@@ -201,7 +185,7 @@ export default function AMADetailScreen() {
         ) : (
           <View style={[styles.questionAvatar, styles.questionAvatarPlaceholder]}>
             <ThemedText style={styles.questionAvatarText}>
-              {item.author.full_name[0]}
+              {item.author.full_name?.[0] || '?'}
             </ThemedText>
           </View>
         )}
@@ -211,9 +195,9 @@ export default function AMADetailScreen() {
         </View>
       </TouchableOpacity>
 
-      <ThemedText style={[styles.questionContent, { color: appColors.textPrimary }]}>{item.content}</ThemedText>
+      <ThemedText style={[styles.questionContent, { color: appColors.textPrimary }]}>{item.question}</ThemedText>
 
-      {item.answer && (
+      {item.answer ? (
         <View style={styles.answerContainer}>
           <View style={styles.answerBadge}>
             <MaterialCommunityIcons name="check-circle" size={14} color={Colors.secondary} />
@@ -221,20 +205,16 @@ export default function AMADetailScreen() {
           </View>
           <ThemedText style={[styles.answerText, { color: appColors.textPrimary }]}>{item.answer}</ThemedText>
         </View>
-      )}
+      ) : null}
 
       <View style={[styles.questionActions, { borderTopColor: appColors.border }]}>
         <TouchableOpacity style={styles.upvoteButton}>
           <Ionicons
-            name={item.user_voted ? 'arrow-up' : 'arrow-up-outline'}
+            name="arrow-up-outline"
             size={20}
-            color={item.user_voted ? Colors.primary : appColors.textSecondary}
+            color={appColors.textSecondary}
           />
-          <ThemedText style={[
-            styles.upvoteCount,
-            { color: appColors.textSecondary },
-            item.user_voted && styles.upvoteCountActive,
-          ]}>
+          <ThemedText style={[styles.upvoteCount, { color: appColors.textSecondary }]}>
             {item.upvotes}
           </ThemedText>
         </TouchableOpacity>
@@ -261,7 +241,7 @@ export default function AMADetailScreen() {
   }
 
   const isLive = ama?.status === 'live';
-  const isUpcoming = ama?.status === 'upcoming';
+  const isScheduled = ama?.status === 'scheduled';
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: appColors.background }]} edges={['top']}>
@@ -299,7 +279,7 @@ export default function AMADetailScreen() {
         />
 
         {/* Ask Question Input */}
-        {(isLive || isUpcoming) && (
+        {(isLive || isScheduled) ? (
           <View style={[styles.inputContainer, { backgroundColor: appColors.surface, borderTopColor: appColors.border }]}>
             <TextInput
               ref={inputRef}
@@ -327,7 +307,7 @@ export default function AMADetailScreen() {
               )}
             </TouchableOpacity>
           </View>
-        )}
+        ) : null}
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
