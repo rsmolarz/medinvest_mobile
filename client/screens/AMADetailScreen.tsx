@@ -292,7 +292,7 @@ export default function AMADetailScreen() {
               maxLength={500}
             />
             <TouchableOpacity
-              style={[styles.sendButton, !questionText.trim() && styles.sendButtonDisabled]}
+              style={[styles.sendButton, !questionText.trim() ? styles.sendButtonDisabled : undefined]}
               onPress={handleSubmitQuestion}
               disabled={!questionText.trim() || askQuestionMutation.isPending}
             >
