@@ -1366,6 +1366,51 @@ router.get('/fb-delete', (_req: Request, res: Response) => {
 });
 
 /**
+ * POST /api/auth/facebook/setup-deletion-url
+ * One-time admin endpoint to set the Facebook data deletion URL via Graph API
+ * Bypasses the Facebook developer console UI validation bug
+ */
+router.post('/facebook/setup-deletion-url', async (req: Request, res: Response) => {
+  try {
+    const appId = getFacebookAppId();
+    const appSecret = getFacebookAppSecret();
+    if (!appId || !appSecret) {
+      res.status(500).json({ message: 'Facebook credentials not configured' });
+      return;
+    }
+
+    const callbackDomain = process.env.FACEBOOK_CALLBACK_DOMAIN || req.get('host');
+    const protocol = req.get('x-forwarded-proto') || req.protocol;
+    const deletionUrl = `${protocol}://${callbackDomain}/api/auth/facebook/data-deletion`;
+
+    const appAccessToken = `${appId}|${appSecret}`;
+    const graphUrl = new URL(`https://graph.facebook.com/v18.0/${appId}`);
+
+    const updateResponse = await fetch(graphUrl.toString(), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        access_token: appAccessToken,
+        user_data_deletion_callback_url: deletionUrl,
+      }).toString(),
+    });
+
+    const result = await updateResponse.json();
+    if (result.error) {
+      console.error('[Facebook Setup] Error setting deletion URL:', result.error);
+      res.status(400).json({ message: result.error.message, deletionUrl });
+      return;
+    }
+
+    console.log('[Facebook Setup] Successfully set data deletion URL:', deletionUrl);
+    res.json({ success: true, deletionUrl, result });
+  } catch (error) {
+    console.error('[Facebook Setup] Error:', error);
+    res.status(500).json({ message: 'Failed to set deletion URL' });
+  }
+});
+
+/**
  * GET /api/auth/facebook/data-deletion
  * Facebook Data Deletion Instructions Page
  * Can be used as "Data Deletion Instructions URL" in Facebook developer console
