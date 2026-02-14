@@ -1358,8 +1358,50 @@ router.post('/demo', async (req: Request, res: Response) => {
 });
 
 /**
+ * GET /api/auth/facebook/data-deletion
+ * Facebook Data Deletion Instructions Page
+ * Can be used as "Data Deletion Instructions URL" in Facebook developer console
+ */
+router.get('/facebook/data-deletion', (_req: Request, res: Response) => {
+  res.send(`<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Data Deletion - MedInvest</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; max-width: 600px; margin: 40px auto; padding: 20px; color: #333; }
+    h1 { color: #1a73e8; }
+    ol { line-height: 1.8; }
+    .contact { background: #f5f5f5; padding: 16px; border-radius: 8px; margin-top: 20px; }
+  </style>
+</head>
+<body>
+  <h1>Data Deletion Request</h1>
+  <p>If you signed in to MedInvest using Facebook, you can request deletion of your data by following these steps:</p>
+  <ol>
+    <li>Open the MedInvest app</li>
+    <li>Go to your Profile</li>
+    <li>Tap "Delete Account"</li>
+    <li>Confirm the deletion</li>
+  </ol>
+  <p>Your data will be permanently deleted within 30 days of your request.</p>
+  <p>You can also remove MedInvest from your Facebook settings:</p>
+  <ol>
+    <li>Go to your <a href="https://www.facebook.com/settings?tab=applications">Facebook App Settings</a></li>
+    <li>Find MedInvest and click "Remove"</li>
+  </ol>
+  <div class="contact">
+    <strong>Need help?</strong>
+    <p>Contact us at support@medinvest.app to request data deletion.</p>
+  </div>
+</body>
+</html>`);
+});
+
+/**
  * POST /api/auth/facebook/data-deletion
- * Facebook Data Deletion Callback
+ * Facebook Data Deletion Callback (POST version)
  * Required by Facebook for apps using Facebook Login
  */
 router.post('/facebook/data-deletion', async (req: Request, res: Response) => {
