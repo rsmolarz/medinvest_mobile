@@ -1358,6 +1358,14 @@ router.post('/demo', async (req: Request, res: Response) => {
 });
 
 /**
+ * GET /api/auth/fb-delete
+ * Facebook Data Deletion Instructions Page (short URL for Facebook console)
+ */
+router.get('/fb-delete', (_req: Request, res: Response) => {
+  res.redirect('/api/auth/facebook/data-deletion');
+});
+
+/**
  * GET /api/auth/facebook/data-deletion
  * Facebook Data Deletion Instructions Page
  * Can be used as "Data Deletion Instructions URL" in Facebook developer console
