@@ -6,34 +6,27 @@ import Constants from "expo-constants";
  * @returns {string} The API base URL
  */
 export function getApiUrl(): string {
-  const extraApiBaseUrl = Constants.expoConfig?.extra?.apiBaseUrl;
-  if (extraApiBaseUrl) {
-    let url = extraApiBaseUrl;
-    try {
-      const parsed = new URL(url);
-      if (parsed.hostname !== 'localhost' && parsed.hostname !== '127.0.0.1') {
-        parsed.port = '';
-        url = parsed.href;
-      }
-    } catch {}
-    return url.endsWith('/') ? url : `${url}/`;
-  }
-  
   if (typeof window !== 'undefined' && window.location) {
-    return window.location.origin.endsWith('/') ? window.location.origin : `${window.location.origin}/`;
+    const origin = window.location.origin;
+    return origin.endsWith('/') ? origin : `${origin}/`;
+  }
+
+  const hostUri = Constants.expoConfig?.extra?.expoClient?.hostUri
+    || Constants.expoConfig?.hostUri;
+  if (hostUri) {
+    const host = hostUri.replace(/\/(ios|android)$/, '').replace(/:5000$/, '');
+    if (host && host !== 'localhost' && host !== '127.0.0.1') {
+      return `https://${host}/`;
+    }
   }
 
   let host = process.env.EXPO_PUBLIC_DOMAIN;
-
   if (!host) {
-    console.warn('[API] No API base URL configured, using localhost fallback');
     return 'http://localhost:5000/';
   }
 
   host = host.replace(/:5000$/, '');
-  let url = new URL(`https://${host}`);
-
-  return url.href;
+  return new URL(`https://${host}`).href;
 }
 
 async function throwIfResNotOk(res: Response) {

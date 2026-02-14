@@ -1,37 +1,86 @@
 {
-  "id": "e8621633-5092-4514-aba7-c300046ffeb1",
-  "createdAt": "2026-02-14T05:42:32.823Z",
+  "id": "4dbafb8e-6439-460e-8c4b-42a91eecf90d",
+  "createdAt": "2026-02-14T06:00:00.561Z",
   "runtimeVersion": "exposdk:54.0.0",
   "launchAsset": {
-    "key": "bundle-1771047752823-45214",
+    "key": "bundle-1771048800561-48648",
     "contentType": "application/javascript",
-    "url": "https://medinvest-mobile--rsmolarz.replit.app/1771047752823-45214/_expo/static/js/ios/bundle.js"
+    "url": "https://28d7ef42-c835-47b7-8c57-e5fbfb80c491-00-sudx66ludnd9.picard.replit.dev/1771048800561-48648/_expo/static/js/ios/bundle.js"
   },
   "assets": [],
   "metadata": {},
   "extra": {
-    "eas": {},
+    "eas": {
+      "projectId": ""
+    },
     "expoClient": {
+      "name": "MedInvest",
+      "slug": "medinvest",
+      "version": "1.0.0",
+      "orientation": "portrait",
+      "icon": "./assets/images/icon.png",
+      "scheme": "medinvest",
+      "userInterfaceStyle": "automatic",
+      "newArchEnabled": true,
+      "splash": {
+        "image": "./assets/images/splash-icon.png",
+        "resizeMode": "contain",
+        "backgroundColor": "#1E88E5",
+        "imageUrl": "https://28d7ef42-c835-47b7-8c57-e5fbfb80c491-00-sudx66ludnd9.picard.replit.dev/assets/./assets/images/splash-icon.png"
+      },
+      "ios": {
+        "supportsTablet": true,
+        "bundleIdentifier": "com.medinvest.app",
+        "usesAppleSignIn": true
+      },
+      "android": {
+        "adaptiveIcon": {
+          "foregroundImage": "./assets/images/adaptive-icon-foreground.png",
+          "backgroundImage": "./assets/images/android-icon-background.png",
+          "monochromeImage": "./assets/images/android-icon-monochrome.png",
+          "foregroundImageUrl": "https://28d7ef42-c835-47b7-8c57-e5fbfb80c491-00-sudx66ludnd9.picard.replit.dev/assets/./assets/images/adaptive-icon-foreground.png",
+          "monochromeImageUrl": "https://28d7ef42-c835-47b7-8c57-e5fbfb80c491-00-sudx66ludnd9.picard.replit.dev/assets/./assets/images/android-icon-monochrome.png",
+          "backgroundImageUrl": "https://28d7ef42-c835-47b7-8c57-e5fbfb80c491-00-sudx66ludnd9.picard.replit.dev/assets/./assets/images/android-icon-background.png"
+        },
+        "package": "com.medinvest.app"
+      },
+      "web": {
+        "bundler": "metro",
+        "output": "static",
+        "favicon": "./assets/images/favicon.png"
+      },
+      "extra": {
+        "eas": {
+          "projectId": ""
+        }
+      },
+      "plugins": [
+        "expo-apple-authentication"
+      ],
       "_internal": {
         "isDebug": false,
         "projectRoot": "/home/runner/workspace",
-        "dynamicConfigPath": null,
-        "staticConfigPath": null,
-        "packageJsonPath": "/home/runner/workspace/package.json"
+        "dynamicConfigPath": {},
+        "staticConfigPath": "/home/runner/workspace/app.json",
+        "packageJsonPath": "/home/runner/workspace/package.json",
+        "pluginHistory": {
+          "expo-apple-authentication": {
+            "name": "expo-apple-authentication",
+            "version": "8.0.8"
+          }
+        }
       },
-      "name": "my-app",
-      "slug": "my-app",
-      "version": "1.0.0",
       "sdkVersion": "54.0.0",
       "platforms": [
         "ios",
         "android",
         "web"
       ],
-      "hostUri": "medinvest-mobile--rsmolarz.replit.app/ios"
+      "iconUrl": "https://28d7ef42-c835-47b7-8c57-e5fbfb80c491-00-sudx66ludnd9.picard.replit.dev/assets/./assets/images/icon.png",
+      "hostUri": "28d7ef42-c835-47b7-8c57-e5fbfb80c491-00-sudx66ludnd9.picard.replit.dev/ios"
     },
     "expoGo": {
-      "debuggerHost": "medinvest-mobile--rsmolarz.replit.app/ios",
+      "debuggerHost": "28d7ef42-c835-47b7-8c57-e5fbfb80c491-00-sudx66ludnd9.picard.replit.dev/ios",
       "developer": {
         "tool": "expo-cli",
         "projectRoot": "/home/runner/workspace"
@@ -41,6 +90,6 @@
       },
       "mainModuleName": "client/index"
     },
-    "scopeKey": "@anonymous/my-app-d8616cb7-92ee-434c-8556-1167828d6801"
+    "scopeKey": "@anonymous/medinvest-d8616cb7-92ee-434c-8556-1167828d6801"
   }
 }
