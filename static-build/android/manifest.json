@@ -1,0 +1,46 @@
+{
+  "id": "099be871-ada8-45a2-af41-474476a7f6cb",
+  "createdAt": "2026-02-14T05:28:49.684Z",
+  "runtimeVersion": "exposdk:54.0.0",
+  "launchAsset": {
+    "key": "bundle-1771046929684-42247",
+    "contentType": "application/javascript",
+    "url": "https://28d7ef42-c835-47b7-8c57-e5fbfb80c491-00-sudx66ludnd9.picard.replit.dev/1771046929684-42247/_expo/static/js/android/bundle.js"
+  },
+  "assets": [],
+  "metadata": {},
+  "extra": {
+    "eas": {},
+    "expoClient": {
+      "_internal": {
+        "isDebug": false,
+        "projectRoot": "/home/runner/workspace",
+        "dynamicConfigPath": null,
+        "staticConfigPath": null,
+        "packageJsonPath": "/home/runner/workspace/package.json"
+      },
+      "name": "my-app",
+      "slug": "my-app",
+      "version": "1.0.0",
+      "sdkVersion": "54.0.0",
+      "platforms": [
+        "ios",
+        "android",
+        "web"
+      ],
+      "hostUri": "28d7ef42-c835-47b7-8c57-e5fbfb80c491-00-sudx66ludnd9.picard.replit.dev/android"
+    },
+    "expoGo": {
+      "debuggerHost": "28d7ef42-c835-47b7-8c57-e5fbfb80c491-00-sudx66ludnd9.picard.replit.dev/android",
+      "developer": {
+        "tool": "expo-cli",
+        "projectRoot": "/home/runner/workspace"
+      },
+      "packagerOpts": {
+        "dev": false
+      },
+      "mainModuleName": "client/index"
+    },
+    "scopeKey": "@anonymous/my-app-d8616cb7-92ee-434c-8556-1167828d6801"
+  }
+}
