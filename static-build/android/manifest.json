@@ -1,11 +1,11 @@
 {
-  "id": "099be871-ada8-45a2-af41-474476a7f6cb",
-  "createdAt": "2026-02-14T05:28:49.684Z",
+  "id": "c908b15d-bc9b-4324-a63b-f9188aa55382",
+  "createdAt": "2026-02-14T05:42:32.823Z",
   "runtimeVersion": "exposdk:54.0.0",
   "launchAsset": {
-    "key": "bundle-1771046929684-42247",
+    "key": "bundle-1771047752823-45214",
     "contentType": "application/javascript",
-    "url": "https://28d7ef42-c835-47b7-8c57-e5fbfb80c491-00-sudx66ludnd9.picard.replit.dev/1771046929684-42247/_expo/static/js/android/bundle.js"
+    "url": "https://medinvest-mobile--rsmolarz.replit.app/1771047752823-45214/_expo/static/js/android/bundle.js"
   },
   "assets": [],
   "metadata": {},
@@ -28,10 +28,10 @@
         "android",
         "web"
       ],
-      "hostUri": "28d7ef42-c835-47b7-8c57-e5fbfb80c491-00-sudx66ludnd9.picard.replit.dev/android"
+      "hostUri": "medinvest-mobile--rsmolarz.replit.app/android"
     },
     "expoGo": {
-      "debuggerHost": "28d7ef42-c835-47b7-8c57-e5fbfb80c491-00-sudx66ludnd9.picard.replit.dev/android",
+      "debuggerHost": "medinvest-mobile--rsmolarz.replit.app/android",
       "developer": {
         "tool": "expo-cli",
         "projectRoot": "/home/runner/workspace"
