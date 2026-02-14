@@ -648,6 +648,7 @@ router.get('/callback', async (req: Request, res: Response) => {
       if (!appId || !appSecret) {
         return sendError('Facebook OAuth is not configured', 500);
       }
+      console.log(`[OAuth Callback] Facebook token exchange - redirect_uri: "${callbackUri}", code length: ${code.length}`);
       const tokenUrl = new URL('https://graph.facebook.com/v18.0/oauth/access_token');
       tokenUrl.searchParams.append('client_id', appId);
       tokenUrl.searchParams.append('client_secret', appSecret);
@@ -656,8 +657,12 @@ router.get('/callback', async (req: Request, res: Response) => {
       const tokenResponse = await fetch(tokenUrl.toString());
       const tokenData = await tokenResponse.json();
       if (tokenData.error) {
-        console.error('[OAuth Callback] Facebook token error:', tokenData);
-        return sendError(tokenData.error?.message || 'Facebook token exchange failed', 401);
+        console.error('[OAuth Callback] Facebook token error:', JSON.stringify(tokenData));
+        const fbErrMsg = tokenData.error?.message || 'Facebook token exchange failed';
+        if (fbErrMsg.includes("domain") && fbErrMsg.includes("app's domains")) {
+          return sendError('Facebook login configuration error. The callback domain needs to be added to the Facebook app settings.', 401);
+        }
+        return sendError(fbErrMsg, 401);
       }
       accessToken = tokenData.access_token;
     }
