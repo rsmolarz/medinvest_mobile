@@ -41,6 +41,7 @@ export default function DiscoverScreen() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [refreshing, setRefreshing] = useState(false);
+  const [headerHeight, setHeaderHeight] = useState(0);
 
   const filteredOpportunities = investmentOpportunities.filter((opp) => {
     const matchesSearch =
@@ -89,6 +90,25 @@ export default function DiscoverScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: theme.backgroundRoot }]}>
+      <FlatList
+        data={filteredOpportunities}
+        renderItem={renderItem}
+        keyExtractor={(item) => item.id}
+        contentContainerStyle={[
+          styles.listContent,
+          { paddingTop: headerHeight + Spacing.md, paddingBottom: insets.bottom + 100 },
+        ]}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            progressViewOffset={headerHeight}
+          />
+        }
+        ListEmptyComponent={renderEmptyState}
+      />
+
       <View
         style={[
           styles.header,
@@ -97,6 +117,7 @@ export default function DiscoverScreen() {
             backgroundColor: theme.backgroundRoot,
           },
         ]}
+        onLayout={(e) => setHeaderHeight(e.nativeEvent.layout.height)}
       >
         <View
           style={[
@@ -135,21 +156,6 @@ export default function DiscoverScreen() {
           ))}
         </ScrollView>
       </View>
-
-      <FlatList
-        data={filteredOpportunities}
-        renderItem={renderItem}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={[
-          styles.listContent,
-          { paddingBottom: insets.bottom + 100 },
-        ]}
-        showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
-        ListEmptyComponent={renderEmptyState}
-      />
     </View>
   );
 }
@@ -307,6 +313,10 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
     paddingHorizontal: Spacing.xl,
     paddingBottom: Spacing.md,
     zIndex: 10,
