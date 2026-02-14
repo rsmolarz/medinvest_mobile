@@ -94,7 +94,7 @@ export default function DiscoverScreen() {
           styles.header,
           {
             paddingTop: insets.top + Spacing.lg,
-            backgroundColor: isDark ? theme.backgroundRoot + "E6" : "#FFFFFFE6",
+            backgroundColor: theme.backgroundRoot,
           },
         ]}
       >
@@ -310,6 +310,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.xl,
     paddingBottom: Spacing.md,
     zIndex: 10,
+    elevation: 10,
   },
   searchContainer: {
     flexDirection: "row",
