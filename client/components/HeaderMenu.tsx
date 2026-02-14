@@ -57,9 +57,6 @@ export default function HeaderMenu({ visible, onClose }: HeaderMenuProps) {
     { icon: 'videocam', iconType: 'ionicons', label: 'AMAs', route: 'AMADetail' },
     { icon: 'newspaper', iconType: 'ionicons', label: 'News', route: 'Search' },
     { icon: 'globe', iconType: 'ionicons', label: 'Network', route: 'Followers' },
-  ];
-
-  const quickActions: MenuItem[] = [
     { icon: 'robot', iconType: 'material', label: 'AI Assistant', route: 'AIChat' },
   ];
 
@@ -140,12 +137,6 @@ export default function HeaderMenu({ visible, onClose }: HeaderMenuProps) {
             <View style={[styles.menuSection, { borderBottomColor: appColors.border }]}>
               <ThemedText style={[styles.sectionTitle, { color: appColors.textSecondary }]}>Navigation</ThemedText>
               {mainMenuItems.map(renderMenuItem)}
-            </View>
-
-            {/* Quick Actions */}
-            <View style={[styles.menuSection, { borderBottomColor: appColors.border }]}>
-              <ThemedText style={[styles.sectionTitle, { color: appColors.textSecondary }]}>Quick Actions</ThemedText>
-              {quickActions.map(renderMenuItem)}
             </View>
 
             {/* Account */}
