@@ -3,7 +3,7 @@
  * Main social feed with posts, trending topics, and room filters
  */
 
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   StyleSheet,
@@ -11,7 +11,6 @@ import {
   RefreshControl,
   TouchableOpacity,
   ActivityIndicator,
-  Animated,
   Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -40,7 +39,6 @@ export default function HomeScreen() {
   const navigation = useNavigation<any>();
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const scrollY = useRef(new Animated.Value(0)).current;
   const appColors = useAppColors();
 
   const [feedStyle, setFeedStyle] = useState<FeedStyle>('algorithmic');
@@ -161,12 +159,7 @@ export default function HomeScreen() {
     navigation.navigate('CreatePost', { roomSlug: selectedRoom });
   }, [navigation, selectedRoom]);
 
-  // Header animation
-  const headerTranslate = scrollY.interpolate({
-    inputRange: [0, 100],
-    outputRange: [0, -50],
-    extrapolate: 'clamp',
-  });
+  // Header stays fixed (no scroll animation)
 
   const renderPost = useCallback(({ item }: { item: Post }) => (
     <PostCard
@@ -277,8 +270,8 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: appColors.background }]} edges={['top']}>
-      {/* Animated Header */}
-      <Animated.View style={[styles.header, { backgroundColor: appColors.surface, borderBottomColor: appColors.border }, { transform: [{ translateY: headerTranslate }] }]}>
+      {/* Header */}
+      <View style={[styles.header, { backgroundColor: appColors.surface, borderBottomColor: appColors.border }]}>
         <View style={styles.headerContent}>
           <ThemedText style={styles.headerTitle}>MedInvest</ThemedText>
           <View style={styles.headerActions}>
@@ -301,7 +294,7 @@ export default function HomeScreen() {
             <MenuButton onPress={() => setShowMenu(true)} />
           </View>
         </View>
-      </Animated.View>
+      </View>
 
       {/* Notifications Dropdown */}
       <NotificationsDropdown
@@ -319,7 +312,7 @@ export default function HomeScreen() {
       {/* Main Content */}
       <View style={styles.content}>
         {/* Feed */}
-        <Animated.FlatList
+        <FlatList
           data={posts}
           renderItem={renderPost}
           keyExtractor={(item) => item.id.toString()}
@@ -335,10 +328,6 @@ export default function HomeScreen() {
           }
           onEndReached={handleLoadMore}
           onEndReachedThreshold={0.5}
-          onScroll={Animated.event(
-            [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-            { useNativeDriver: true }
-          )}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.feedContent}
         />
