@@ -431,13 +431,7 @@ function getBaseUri(): string {
   return 'http://localhost:5000';
 }
 
-function getCallbackUri(provider?: string): string {
-  if (provider === 'facebook') {
-    const fbDomain = process.env.FACEBOOK_CALLBACK_DOMAIN;
-    if (fbDomain) {
-      return `https://${fbDomain}/api/auth/callback`;
-    }
-  }
+function getCallbackUri(_provider?: string): string {
   const base = getBaseUri();
   return `${base}/api/auth/callback`;
 }
