@@ -62,10 +62,8 @@ export default function HeaderMenu({ visible, onClose }: HeaderMenuProps) {
   ];
 
   const quickActions: MenuItem[] = [
-    { icon: 'search', iconType: 'ionicons', label: 'Search', route: 'Search' },
     { icon: 'chatbubbles', iconType: 'ionicons', label: 'Messages', route: 'Main', action: () => handleNavigate('Main', { screen: 'Messages' }) },
     { icon: 'robot', iconType: 'material', label: 'AI Assistant', route: 'AIChat' },
-    { icon: 'notifications', iconType: 'ionicons', label: 'Notifications', route: 'Notifications' },
   ];
 
   const accountItems: MenuItem[] = [
