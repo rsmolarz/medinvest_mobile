@@ -1,11 +1,11 @@
 {
-  "id": "4dbafb8e-6439-460e-8c4b-42a91eecf90d",
-  "createdAt": "2026-02-14T06:00:00.561Z",
+  "id": "09cab942-41df-4e1f-9a17-d40f58e9c9d8",
+  "createdAt": "2026-02-14T06:02:30.301Z",
   "runtimeVersion": "exposdk:54.0.0",
   "launchAsset": {
-    "key": "bundle-1771048800561-48648",
+    "key": "bundle-1771048950301-49799",
     "contentType": "application/javascript",
-    "url": "https://28d7ef42-c835-47b7-8c57-e5fbfb80c491-00-sudx66ludnd9.picard.replit.dev/1771048800561-48648/_expo/static/js/ios/bundle.js"
+    "url": "https://28d7ef42-c835-47b7-8c57-e5fbfb80c491-00-sudx66ludnd9.picard.replit.dev/1771048950301-49799/_expo/static/js/ios/bundle.js"
   },
   "assets": [],
   "metadata": {},
@@ -46,7 +46,7 @@
       },
       "web": {
         "bundler": "metro",
-        "output": "static",
+        "output": "single",
         "favicon": "./assets/images/favicon.png"
       },
       "extra": {
