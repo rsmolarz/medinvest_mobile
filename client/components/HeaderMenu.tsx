@@ -12,6 +12,7 @@ import {
   Pressable,
   Dimensions,
   Image,
+  ScrollView,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
@@ -112,56 +113,58 @@ export default function HeaderMenu({ visible, onClose }: HeaderMenuProps) {
           style={[styles.menuContainer, { backgroundColor: appColors.surface }]}
           onPress={(e) => e.stopPropagation()}
         >
-          {/* User Profile Section */}
-          <TouchableOpacity 
-            style={[styles.userSection, { borderBottomColor: appColors.border }]}
-            onPress={() => handleNavigate('Main', { screen: 'Profile' })}
-          >
-            <View style={styles.userAvatar}>
-              {user?.avatar_url ? (
-                <Image source={{ uri: user.avatar_url }} style={styles.avatarImage} />
-              ) : (
-                <View style={styles.avatarPlaceholder}>
-                  <ThemedText style={styles.avatarText}>
-                    {user?.first_name?.[0] || user?.email?.[0]?.toUpperCase() || 'U'}
-                  </ThemedText>
-                </View>
-              )}
+          <ScrollView bounces={false} showsVerticalScrollIndicator={false}>
+            {/* User Profile Section */}
+            <TouchableOpacity 
+              style={[styles.userSection, { borderBottomColor: appColors.border }]}
+              onPress={() => handleNavigate('Main', { screen: 'Profile' })}
+            >
+              <View style={styles.userAvatar}>
+                {user?.avatar_url ? (
+                  <Image source={{ uri: user.avatar_url }} style={styles.avatarImage} />
+                ) : (
+                  <View style={styles.avatarPlaceholder}>
+                    <ThemedText style={styles.avatarText}>
+                      {user?.first_name?.[0] || user?.email?.[0]?.toUpperCase() || 'U'}
+                    </ThemedText>
+                  </View>
+                )}
+              </View>
+              <View style={styles.userInfo}>
+                <ThemedText style={[styles.userName, { color: appColors.textPrimary }]}>
+                  {user?.first_name ? `${user.first_name} ${user.last_name || ''}`.trim() : user?.email?.split('@')[0] || 'User'}
+                </ThemedText>
+                <ThemedText style={[styles.userHandle, { color: appColors.textSecondary }]}>
+                  {user?.email || 'user@email.com'}
+                </ThemedText>
+              </View>
+              <Ionicons name="chevron-forward" size={20} color={appColors.textSecondary} />
+            </TouchableOpacity>
+
+            {/* Main Navigation */}
+            <View style={[styles.menuSection, { borderBottomColor: appColors.border }]}>
+              <ThemedText style={[styles.sectionTitle, { color: appColors.textSecondary }]}>Navigation</ThemedText>
+              {mainMenuItems.map(renderMenuItem)}
             </View>
-            <View style={styles.userInfo}>
-              <ThemedText style={[styles.userName, { color: appColors.textPrimary }]}>
-                {user?.first_name ? `${user.first_name} ${user.last_name || ''}`.trim() : user?.email?.split('@')[0] || 'User'}
-              </ThemedText>
-              <ThemedText style={[styles.userHandle, { color: appColors.textSecondary }]}>
-                {user?.email || 'user@email.com'}
-              </ThemedText>
+
+            {/* Quick Actions */}
+            <View style={[styles.menuSection, { borderBottomColor: appColors.border }]}>
+              <ThemedText style={[styles.sectionTitle, { color: appColors.textSecondary }]}>Quick Actions</ThemedText>
+              {quickActions.map(renderMenuItem)}
             </View>
-            <Ionicons name="chevron-forward" size={20} color={appColors.textSecondary} />
-          </TouchableOpacity>
 
-          {/* Main Navigation */}
-          <View style={[styles.menuSection, { borderBottomColor: appColors.border }]}>
-            <ThemedText style={[styles.sectionTitle, { color: appColors.textSecondary }]}>Navigation</ThemedText>
-            {mainMenuItems.map(renderMenuItem)}
-          </View>
+            {/* Account */}
+            <View style={[styles.menuSection, { borderBottomColor: appColors.border }]}>
+              <ThemedText style={[styles.sectionTitle, { color: appColors.textSecondary }]}>Account</ThemedText>
+              {accountItems.map(renderMenuItem)}
+            </View>
 
-          {/* Quick Actions */}
-          <View style={[styles.menuSection, { borderBottomColor: appColors.border }]}>
-            <ThemedText style={[styles.sectionTitle, { color: appColors.textSecondary }]}>Quick Actions</ThemedText>
-            {quickActions.map(renderMenuItem)}
-          </View>
-
-          {/* Account */}
-          <View style={[styles.menuSection, { borderBottomColor: appColors.border }]}>
-            <ThemedText style={[styles.sectionTitle, { color: appColors.textSecondary }]}>Account</ThemedText>
-            {accountItems.map(renderMenuItem)}
-          </View>
-
-          {/* Logout */}
-          <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-            <Ionicons name="log-out-outline" size={22} color={appColors.error} />
-            <ThemedText style={[styles.logoutText, { color: appColors.error }]}>Log Out</ThemedText>
-          </TouchableOpacity>
+            {/* Sign Out */}
+            <TouchableOpacity style={styles.logoutButton} onPress={handleLogout} testID="button-sign-out">
+              <Ionicons name="log-out-outline" size={22} color={appColors.error} />
+              <ThemedText style={[styles.logoutText, { color: appColors.error }]}>Sign Out</ThemedText>
+            </TouchableOpacity>
+          </ScrollView>
         </Pressable>
       </Pressable>
     </Modal>
