@@ -54,15 +54,12 @@ export default function HeaderMenu({ visible, onClose }: HeaderMenuProps) {
 
   const mainMenuItems: MenuItem[] = [
     { icon: 'home', iconType: 'ionicons', label: 'Feed', route: 'Main' },
-    { icon: 'people', iconType: 'ionicons', label: 'Rooms', route: 'Main', action: () => handleNavigate('Main', { screen: 'Rooms' }) },
     { icon: 'videocam', iconType: 'ionicons', label: 'AMAs', route: 'AMADetail' },
-    { icon: 'briefcase', iconType: 'ionicons', label: 'Deals', route: 'Main', action: () => handleNavigate('Main', { screen: 'Discover' }) },
     { icon: 'newspaper', iconType: 'ionicons', label: 'News', route: 'Search' },
     { icon: 'globe', iconType: 'ionicons', label: 'Network', route: 'Followers' },
   ];
 
   const quickActions: MenuItem[] = [
-    { icon: 'chatbubbles', iconType: 'ionicons', label: 'Messages', route: 'Main', action: () => handleNavigate('Main', { screen: 'Messages' }) },
     { icon: 'robot', iconType: 'material', label: 'AI Assistant', route: 'AIChat' },
   ];
 
