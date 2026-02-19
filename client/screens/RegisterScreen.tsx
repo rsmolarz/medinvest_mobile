@@ -20,14 +20,11 @@ import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Picker } from '@react-native-picker/picker';
-import * as WebBrowser from 'expo-web-browser';
-
 import { ThemedText } from '@/components/ThemedText';
 import { Colors, Spacing, BorderRadius, Typography, Shadows } from '@/constants/theme';
 import { useAppColors } from '@/hooks/useAppColors';
 import { useAuth } from '@/contexts/AuthContext';
 import { isValidEmail, validatePassword } from '@/lib/utils';
-import { getApiUrl } from '@/lib/query-client';
 
 const SPECIALTIES = [
   'Select your specialty',
@@ -179,23 +176,13 @@ export default function RegisterScreen() {
     navigation.navigate('Login');
   };
 
-  const openTerms = useCallback(async () => {
-    try {
-      const baseUrl = getApiUrl();
-      await WebBrowser.openBrowserAsync(`${baseUrl}terms`);
-    } catch (err) {
-      console.error('Failed to open Terms of Service:', err);
-    }
-  }, []);
+  const openTerms = useCallback(() => {
+    navigation.navigate('TermsOfService');
+  }, [navigation]);
 
-  const openPrivacy = useCallback(async () => {
-    try {
-      const baseUrl = getApiUrl();
-      await WebBrowser.openBrowserAsync(`${baseUrl}privacy`);
-    } catch (err) {
-      console.error('Failed to open Privacy Policy:', err);
-    }
-  }, []);
+  const openPrivacy = useCallback(() => {
+    navigation.navigate('PrivacyPolicy');
+  }, [navigation]);
 
   const clearFieldError = (field: string) => {
     if (errors[field]) {

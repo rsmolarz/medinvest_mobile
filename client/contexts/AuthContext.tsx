@@ -15,6 +15,7 @@ import { apiClient } from '@/api/client';
 import { getApiUrl } from '@/lib/query-client';
 import type { User } from '@/types';
 import { AUTH_TOKEN_KEY, USER_DATA_KEY } from '@/constants/auth';
+import { markOnboardingComplete } from '@/screens/OnboardingScreen';
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -212,6 +213,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     await Promise.all([
       AsyncStorage.setItem(AUTH_TOKEN_KEY, authToken),
       AsyncStorage.setItem(USER_DATA_KEY, JSON.stringify(userData)),
+      markOnboardingComplete(),
     ]);
 
     setToken(authToken);

@@ -480,6 +480,8 @@ export type AuthStackParamList = {
   ForgotPassword: undefined;
   ResetPassword: { token: string };
   VerifyEmail: { email: string };
+  TermsOfService: undefined;
+  PrivacyPolicy: undefined;
 };
 
 // =============================================================================

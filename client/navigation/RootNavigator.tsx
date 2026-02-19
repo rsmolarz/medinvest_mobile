@@ -21,6 +21,8 @@ import RegisterScreen from '@/screens/RegisterScreen';
 import ForgotPasswordScreen from '@/screens/ForgotPasswordScreen';
 import VerifyEmailScreen from '@/screens/VerifyEmailScreen';
 import OnboardingScreen, { hasCompletedOnboarding, markOnboardingComplete } from '@/screens/OnboardingScreen';
+import AuthTermsOfServiceScreen from '@/screens/TermsOfServiceScreen';
+import AuthPrivacyPolicyScreen from '@/screens/PrivacyPolicyScreen';
 
 // Main Screens
 import HomeScreen from '@/screens/HomeScreen';
@@ -88,6 +90,8 @@ function AuthNavigator() {
       <AuthStack.Screen name="Register" component={RegisterScreen} />
       <AuthStack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
       <AuthStack.Screen name="VerifyEmail" component={VerifyEmailScreen} />
+      <AuthStack.Screen name="TermsOfService" component={AuthTermsOfServiceScreen} />
+      <AuthStack.Screen name="PrivacyPolicy" component={AuthPrivacyPolicyScreen} />
     </AuthStack.Navigator>
   );
 }
