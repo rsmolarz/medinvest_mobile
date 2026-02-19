@@ -1288,7 +1288,7 @@ router.post('/demo', async (req: Request, res: Response) => {
       .where(eq(users.email, demoEmail))
       .limit(1);
 
-    const demoPassword = 'Demo1234';
+    const demoPassword = 'Demo1234!';
     const demoPasswordHash = await bcrypt.hash(demoPassword, 10);
 
     if (!demoUser) {
@@ -1309,13 +1309,9 @@ router.post('/demo', async (req: Request, res: Response) => {
         userId: demoUser.id,
       });
     } else {
-      const updates: Record<string, any> = { lastLoginAt: new Date() };
-      if (!demoUser.passwordHash) {
-        updates.passwordHash = demoPasswordHash;
-      }
       await db
         .update(users)
-        .set(updates)
+        .set({ lastLoginAt: new Date(), passwordHash: demoPasswordHash, isVerified: true })
         .where(eq(users.id, demoUser.id));
     }
 
