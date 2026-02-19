@@ -277,6 +277,17 @@ export async function hasCompletedOnboarding(): Promise<boolean> {
 }
 
 /**
+ * Mark onboarding as complete (called after successful auth)
+ */
+export async function markOnboardingComplete(): Promise<void> {
+  try {
+    await AsyncStorage.setItem(ONBOARDING_COMPLETE_KEY, 'true');
+  } catch (error) {
+    console.error('Error marking onboarding complete:', error);
+  }
+}
+
+/**
  * Reset onboarding status (for testing)
  */
 export async function resetOnboarding(): Promise<void> {

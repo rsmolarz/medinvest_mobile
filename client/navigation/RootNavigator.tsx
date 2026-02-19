@@ -20,7 +20,7 @@ import LoginScreen from '@/screens/LoginScreenNew';
 import RegisterScreen from '@/screens/RegisterScreen';
 import ForgotPasswordScreen from '@/screens/ForgotPasswordScreen';
 import VerifyEmailScreen from '@/screens/VerifyEmailScreen';
-import OnboardingScreen, { hasCompletedOnboarding } from '@/screens/OnboardingScreen';
+import OnboardingScreen, { hasCompletedOnboarding, markOnboardingComplete } from '@/screens/OnboardingScreen';
 
 // Main Screens
 import HomeScreen from '@/screens/HomeScreen';
@@ -194,15 +194,20 @@ export default function RootNavigator() {
     },
   };
 
-  // Check onboarding status on mount
   useEffect(() => {
+    const checkOnboarding = async () => {
+      const completed = await hasCompletedOnboarding();
+      setHasOnboarded(completed);
+    };
     checkOnboarding();
   }, []);
 
-  const checkOnboarding = async () => {
-    const completed = await hasCompletedOnboarding();
-    setHasOnboarded(completed);
-  };
+  useEffect(() => {
+    if (isAuthenticated && hasOnboarded === false) {
+      markOnboardingComplete();
+      setHasOnboarded(true);
+    }
+  }, [isAuthenticated, hasOnboarded]);
 
   if (isLoading || hasOnboarded === null) {
     return (
