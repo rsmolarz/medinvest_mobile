@@ -3,7 +3,7 @@
  * New user registration with validation
  */
 
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   StyleSheet,
@@ -20,12 +20,14 @@ import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Picker } from '@react-native-picker/picker';
+import * as WebBrowser from 'expo-web-browser';
 
 import { ThemedText } from '@/components/ThemedText';
 import { Colors, Spacing, BorderRadius, Typography, Shadows } from '@/constants/theme';
 import { useAppColors } from '@/hooks/useAppColors';
 import { useAuth } from '@/contexts/AuthContext';
 import { isValidEmail, validatePassword } from '@/lib/utils';
+import { getApiUrl } from '@/lib/query-client';
 
 const SPECIALTIES = [
   'Select your specialty',
@@ -176,6 +178,24 @@ export default function RegisterScreen() {
   const handleLogin = () => {
     navigation.navigate('Login');
   };
+
+  const openTerms = useCallback(async () => {
+    try {
+      const baseUrl = getApiUrl();
+      await WebBrowser.openBrowserAsync(`${baseUrl}terms`);
+    } catch (err) {
+      console.error('Failed to open Terms of Service:', err);
+    }
+  }, []);
+
+  const openPrivacy = useCallback(async () => {
+    try {
+      const baseUrl = getApiUrl();
+      await WebBrowser.openBrowserAsync(`${baseUrl}privacy`);
+    } catch (err) {
+      console.error('Failed to open Privacy Policy:', err);
+    }
+  }, []);
 
   const clearFieldError = (field: string) => {
     if (errors[field]) {
@@ -410,11 +430,18 @@ export default function RegisterScreen() {
             </TouchableOpacity>
 
             {/* Terms */}
-            <ThemedText style={[styles.terms, { color: appColors.textSecondary }]}>
-              By creating an account, you agree to our{' '}
-              <ThemedText style={styles.termsLink}>Terms of Service</ThemedText> and{' '}
-              <ThemedText style={styles.termsLink}>Privacy Policy</ThemedText>
-            </ThemedText>
+            <View style={styles.termsContainer}>
+              <ThemedText style={[styles.terms, { color: appColors.textSecondary }]}>
+                By creating an account, you agree to our{' '}
+              </ThemedText>
+              <TouchableOpacity onPress={openTerms} testID="link-terms">
+                <ThemedText style={[styles.terms, styles.termsLink]}>Terms of Service</ThemedText>
+              </TouchableOpacity>
+              <ThemedText style={[styles.terms, { color: appColors.textSecondary }]}> and </ThemedText>
+              <TouchableOpacity onPress={openPrivacy} testID="link-privacy">
+                <ThemedText style={[styles.terms, styles.termsLink]}>Privacy Policy</ThemedText>
+              </TouchableOpacity>
+            </View>
           </View>
 
           {/* Login Link */}
@@ -529,10 +556,16 @@ const styles = StyleSheet.create({
     color: 'white',
     fontWeight: '600',
   },
+  termsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: Spacing.lg,
+  },
   terms: {
     ...Typography.small,
     textAlign: 'center',
-    marginTop: Spacing.lg,
     lineHeight: 20,
   },
   termsLink: {
