@@ -204,7 +204,7 @@ export default function RootNavigator() {
       setHasOnboarded(completed);
     };
     checkOnboarding();
-  }, []);
+  }, [isAuthenticated]);
 
   useEffect(() => {
     if (isAuthenticated && hasOnboarded === false) {
@@ -221,6 +221,8 @@ export default function RootNavigator() {
     );
   }
 
+  const showOnboarding = !hasOnboarded && !isAuthenticated;
+
   return (
     <NavigationContainer linking={linkingConfig} theme={navigationTheme}>
       <Stack.Navigator
@@ -229,10 +231,9 @@ export default function RootNavigator() {
           animation: 'slide_from_right',
         }}
       >
-        {/* Onboarding for first-time users */}
-        {!hasOnboarded && !isAuthenticated && (
+        {showOnboarding ? (
           <Stack.Screen name="Onboarding" component={OnboardingScreen} />
-        )}
+        ) : null}
         
         {!isAuthenticated ? (
           <Stack.Screen name="Auth" component={AuthNavigator} />
