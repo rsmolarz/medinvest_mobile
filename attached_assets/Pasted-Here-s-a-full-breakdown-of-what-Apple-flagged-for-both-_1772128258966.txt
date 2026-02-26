@@ -1,0 +1,118 @@
+Here's a full breakdown of what Apple flagged for both apps — good news is that none of these require Xcode changes, they're all metadata/configuration fixes you can handle right here in App Store Connect!
+MedInvest Mobile — 3 Issues
+1. Guideline 2.1 — App Completeness (Bug) This was confirmed twice by Apple. Two specific bugs:
+
+After "Sign in with Apple," the app immediately shows onboarding screens again (it should skip onboarding for returning users).
+Tapping the Terms & Privacy links on the registration page does nothing — they need to actually open. This one does require a code fix and a new build upload. Apple confirmed the device was online and the bug was reproducible across submissions. 2. Guideline 2.1 — Demo Account Not Working The demo credentials you provided (demo@medinvest.com / demo) didn't let Apple log in. You'll need to update these in App Store Connect under the Review Notes with working credentials. 3. Guideline 2.3.3 — Wrong Screenshots The 13-inch iPad screenshots are showing an iPhone device frame. You need to upload proper iPad screenshots. This is fixable directly in the App Store listing.
+MedInvest Watch — 4 Issues
+1. Guideline 2.1 — App Completeness (Bug) The app launched into blank pages — so whatever is loading on startup isn't rendering. This also requires a code fix and new build. 2. Guideline 2.3.3 — Poor Quality Screenshots The 6.5-inch iPhone and 13-inch iPad screenshots are described as "low quality and barely visible." New screenshots needed. 3. Guideline 1.5 — Bad Support URL The support URL (https://medinvest-watch--rsmolarz.replit.app) doesn't lead to a working support page. You need to either fix that page or update the URL to one that works. 4. Guideline 2.3.8 — Placeholder App Icon The app icons look like placeholders. You need to finalize and upload proper, consistent icons.
+What I Can Help With Right Now (in App Store Connect)
+✅ Update the Support URL for MedInvest Watch
+✅ Update the demo account credentials for MedInvest Mobile
+✅ Help you navigate to upload new screenshots for both apps
+✅ Help you upload a new app icon for MedInvest Watch The two code bugs (Sign in with Apple flow + blank page launch) will need to be fixed in Xcode and a new build uploaded via Xcode or Transporter first. Where do you want to start? Do you already have fixed builds ready to upload, or should we tackle the metadata/screenshot fixes first?
+ok please fix the features that you can fix and give detailed instructions on how to fix the ones you cannot fix.
+
+
+
+
+100 steps
+100 steps
+
+Created a plan
+Let me start working through the fixes. I'll begin with the MedInvest Watch Support URL.
+
+
+Navigate to https://appstoreconnect.apple....
+
+Navigate to https://appstoreconnect.apple....
+
+Wait 2 seconds
+
+Wait 2 seconds
+
+Take screenshot
+Screenshot thumbnail
+
+Take screenshot
+I can see the MedInvest Watch app version page with all the issues listed. I can see the screenshots are very dark/nearly black. I need to scroll down to find the Support URL field. Let me scroll down to find it.
+
+
+Scroll down
+Screenshot thumbnail
+
+Scroll down
+I can see the Support URL field. It currently shows https://themedicineandmoneyshow.com — wait, that's actually already different from what Apple flagged (https://medinvest-watch--rsmolarz.replit.app which is in the Marketing URL field). The Support URL already appears to be updated to https://themedicineandmoneyshow.com. Let me check if this URL actually works before accepting it. Let me also check what Apple's App Information page shows vs this version page. First, let me verify the Support URL is actually functional by looking at what we have. The issue was the Replit URL — it seems it may have already been updated on the version page. Let me scroll up to check the App Information section to see the "general" support URL.
+
+
+Click
+
+Click
+
+Wait 2 seconds
+
+Wait 2 seconds
+
+Take screenshot
+Screenshot thumbnail
+
+Take screenshot
+I can see the Support URL field on this page shows https://themedicineandmoneyshow.com — that's good! But let me check the App Information page (the general one, not the version-specific one) to see if there's a separate Support URL there that still has the bad Replit URL.
+
+
+Navigate to https://appstoreconnect.apple....
+
+Navigate to https://appstoreconnect.apple....
+
+Wait 2 seconds
+
+Wait 2 seconds
+It's redirecting me back to the version page. The Support URL in the version page is already set to https://themedicineandmoneyshow.com. Let me verify the App Information general page specifically:
+
+
+Find: "App Information link in sideba..."
+
+Find: "App Information link in sideba..."
+
+Click
+
+Click
+
+Wait 2 seconds
+
+Wait 2 seconds
+
+Extract page text
+
+Extract page text
+This is the general App Information page. I can see there's no Support URL here — the Support URL lives in the version page, and it's already set to https://themedicineandmoneyshow.com. The issue Apple flagged was the Replit URL. The current Support URL looks fine. But let me verify if that URL actually works by checking it. Actually, let me focus on what I can see — the Support URL on the version page has already been changed. Now let me also check the App Information for the Watch app to look at what categories are selected, and then go fix the demo account for MedInvest Mobile. Let me now go to the MedInvest Mobile app to fix the Review Notes with working demo credentials. First let me check what the current review notes say.
+
+
+Navigate to https://appstoreconnect.apple....
+
+Navigate to https://appstoreconnect.apple....
+
+Wait 2 seconds
+
+Wait 2 seconds
+
+Take screenshot
+Screenshot thumbnail
+
+Take screenshot
+Good - I'm on MedInvest Mobile version page. I can see the iPhone screenshots look good. Now I need to scroll down to find the Review Notes / App Review Information section where the demo credentials are stored. Let me scroll down.
+
+
+Scroll down
+Screenshot thumbnail
+
+Scroll down
+I can see the "App Review Information" section with the Sign-In credentials. The current credentials are:
+
+Username: demo@medinvest.com
+Password: Demo1234! Apple said they couldn't log in with demo@medinvest.com / demo — so it looks like the password may have already been updated to Demo1234! from demo. But Apple's latest message (from yesterday) confirmed the bug is still present (it's a code issue, not just wrong credentials). Let me scroll down further to see the Review Notes field too.
+
+Scroll down
+Screenshot thumbnail
+
+Scroll down
