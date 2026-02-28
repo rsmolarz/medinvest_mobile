@@ -1,11 +1,11 @@
 {
-  "id": "99f1e0c3-b560-4fa5-a803-b360c8db179d",
-  "createdAt": "2026-02-24T12:28:39.134Z",
+  "id": "4b28eaaa-972d-4e2f-8d01-0d899c12d01f",
+  "createdAt": "2026-02-28T21:38:13.601Z",
   "runtimeVersion": "exposdk:54.0.0",
   "launchAsset": {
-    "key": "bundle-1771936119134-817",
+    "key": "bundle-1772314693601-462",
     "contentType": "application/javascript",
-    "url": "https://28d7ef42-c835-47b7-8c57-e5fbfb80c491-00-sudx66ludnd9.picard.replit.dev/1771936119134-817/_expo/static/js/android/bundle.js"
+    "url": "https://28d7ef42-c835-47b7-8c57-e5fbfb80c491-00-sudx66ludnd9.picard.replit.dev/1772314693601-462/_expo/static/js/android/bundle.js"
   },
   "assets": [],
   "metadata": {},
@@ -29,7 +29,7 @@
         "imageUrl": "https://28d7ef42-c835-47b7-8c57-e5fbfb80c491-00-sudx66ludnd9.picard.replit.dev/assets/./assets/images/splash-icon.png"
       },
       "ios": {
-        "supportsTablet": true,
+        "supportsTablet": false,
         "bundleIdentifier": "com.medinvest.app",
         "usesAppleSignIn": true
       },
@@ -90,6 +90,6 @@
       },
       "mainModuleName": "client/index"
     },
-    "scopeKey": "@anonymous/medinvest-876a64df-86a7-44ba-983d-4058916f3131"
+    "scopeKey": "@anonymous/medinvest-b96916cf-6f8c-4c80-978a-4b58fc2f7b12"
   }
 }

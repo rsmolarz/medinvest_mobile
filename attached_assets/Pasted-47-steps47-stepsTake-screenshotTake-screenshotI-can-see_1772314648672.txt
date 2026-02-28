@@ -1,0 +1,31 @@
+47 steps47 stepsTake screenshotTake screenshotI can see the app is MedInvest Mobile (iOS App Version 1.0). I notice there's a warning icon next to "App Review" in the sidebar. Let me check that and scroll through the page to get a full picture.ClickClickFind: "App Review menu item"Find: "App Review menu item"Read page (interactive)Read page (interactive)I can see the status says "Ready for Review" in the sidebar. Let me do a thorough check by scrolling through the full page and also checking the App Review section for any issues.Extract page textExtract page textClickClickTake screenshotTake screenshotThere's a submission with "Unresolved Issues." Let me click on it to see the details.ClickClickTake screenshotTake screenshotThere's a back-and-forth with Apple. Let me read all the messages to understand the issues. I'll expand each message.ClickClickTake screenshotTake screenshotScroll downScroll downScroll downScroll downScroll downScroll downScroll downScroll downScroll downScroll downNow let me scroll back up to read the full conversation, including the second Apple message and Joseph's replies.Extract page textExtract page textI notice the second Apple message from 2026-02-24 wasn't expanded. Let me scroll back up and check it.Scroll upScroll upScroll downScroll downI can see the second Apple message (2026-02-24) is still collapsed. Let me expand it to see what Apple said after the first fix attempt.ClickClickTake screenshotTake screenshotScroll downScroll downNow I also need to check the Joseph Smolarz message from 2026-02-20 to understand the full picture. Let me also check the version info page to see the current build status and whether there are any remaining missing fields (like keywords, version number, copyright, etc.).Navigate to https://appstoreconnect.apple....Navigate to https://appstoreconnect.apple....Scroll downScroll downScroll upScroll upGood - now I can see the full page has loaded. Let me scroll down to check the iPad screenshots, then check the rest of the form fields like keywords, version, copyright, sign-in credentials, and the build.ClickClickTake screenshotTake screenshotScroll downScroll downI can see the iPad screenshots now show proper iPad frames (not iPhone frames as was the original issue). Let me zoom into the iPad screenshots to confirm they look correct.ZoomComputer action: zoomScroll downScroll downBuild 4 is attached. Let me scroll down to check the App Review Information section (sign-in credentials and notes).Scroll downScroll downScroll downScroll downNow let me also check the fields that were blank in the first read - keywords, version, copyright, support URL. Let me scroll back up to that section.Scroll upScroll upScroll upScroll upI now have a comprehensive picture of the app's status. Let me compile everything I've found.DoneHere's a full rundown of the status for MedInvest Mobile (iOS App Version 1.0):
+Overall Status: ⚠️ Not yet ready — Unresolved Issues
+The app has an active submission with Apple that currently shows "Unresolved Issues." Here's the history and current state:
+What Happened
+Apple rejected the app on Feb 18 citing three guideline violations:
+
+Guideline 2.1 – App Completeness (Bug): After Sign In with Apple, the app was looping back to onboarding screens instead of going to the dashboard.
+Guideline 2.1 – Information Needed: Apple couldn't log in with the demo credentials (demo@medinvest.com / demo) — the password was wrong/inactive.
+Guideline 2.3.3 – Accurate Metadata: The 13" iPad screenshots were showing an iPhone device frame, not an iPad frame.
+Joseph responded on Feb 20 with explanations, and Apple came back on Feb 24 saying the same two bugs were still present (onboarding loop + broken Terms/Privacy links on registration).
+
+
+What's Been Done Since
+Joseph submitted Build 4 today with a message explaining two fixes:
+
+A race condition fix in RootNavigator.tsx for the Sign In with Apple onboarding loop
+Replaced navigation.navigate() with Linking.openURL() for the Terms/Privacy links
+The demo credentials have been updated to demo@medinvest.com / Demo1234!
+
+
+Current State of the Listing
+AreaStatusiPhone Screenshots (6.5")✅ 9 of 10 uploadediPad Screenshots (13")✅ 4 of 10 — now showing proper iPad framesPromotional Text✅ Filled inDescription✅ Filled inKeywords✅ Filled in (healthcare, investing, medical, etc.)Support URL✅ https://themedicineandmoneyshow.comMarketing URL✅ Filled inVersion✅ 1.0Copyright✅ © 2026 MedInvestBuild✅ Build 4 (1.0.0) attachedDemo Credentials✅ Updated to Demo1234!Review Notes✅ Detailed notes addedRelease Setting✅ Set to "Automatically release this version"
+
+What Still Needs to Happen
+The app is in a "Ready for Review" / Unresolved Issues limbo — Build 4 has been submitted along with Joseph's message today, but it hasn't been resubmitted via the "Resubmit to App Review" button yet (or it may have just been replied to via message).
+Before you can consider it truly submitted, you should verify:
+
+Was "Resubmit to App Review" actually clicked? The page shows a blue "Resubmit to App Review" button — if that hasn't been clicked after attaching Build 4, the app hasn't formally been sent back for review.
+Confirm the onboarding loop and Terms/Privacy link bugs are fixed in Build 4 before resubmitting — Apple flagged these twice, so they'll be looking closely again.
+iPad screenshots — Apple originally flagged the iPad 13" screenshots as showing iPhone frames. The new screenshots look better, but worth double-checking they show the app on a proper iPad UI.
+Would you like me to check whether the resubmission has been formally initiated, or help with anything else?
