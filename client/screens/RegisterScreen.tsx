@@ -1,9 +1,9 @@
-/**
+/**Terms
  * Register Screen
  * New user registration with validation
  */
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback } from "react";
 import {
   View,
   StyleSheet,
@@ -14,97 +14,104 @@ import {
   ScrollView,
   ActivityIndicator,
   Alert,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
-import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
-import { Picker } from '@react-native-picker/picker';
-import { ThemedText } from '@/components/ThemedText';
-import { Colors, Spacing, BorderRadius, Typography, Shadows } from '@/constants/theme';
-import { useAppColors } from '@/hooks/useAppColors';
-import { useAuth } from '@/contexts/AuthContext';
-import { isValidEmail, validatePassword } from '@/lib/utils';
+  Linking,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useNavigation } from "@react-navigation/native";
+import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
+import { Picker } from "@react-native-picker/picker";
+import { ThemedText } from "@/components/ThemedText";
+import {
+  Colors,
+  Spacing,
+  BorderRadius,
+  Typography,
+  Shadows,
+} from "@/constants/theme";
+import { useAppColors } from "@/hooks/useAppColors";
+import { useAuth } from "@/contexts/AuthContext";
+import { isValidEmail, validatePassword } from "@/lib/utils";
 
 const SPECIALTIES = [
-  'Select your specialty',
+  "Select your specialty",
   // Primary Care
-  'Family Medicine',
-  'Internal Medicine',
-  'Pediatrics',
-  'Emergency Medicine',
-  'Geriatric Medicine',
+  "Family Medicine",
+  "Internal Medicine",
+  "Pediatrics",
+  "Emergency Medicine",
+  "Geriatric Medicine",
   // Medical Specialties
-  'Allergy & Immunology',
-  'Cardiology',
-  'Dermatology',
-  'Endocrinology',
-  'Gastroenterology',
-  'Hematology',
-  'Infectious Disease',
-  'Nephrology',
-  'Neurology',
-  'Oncology',
-  'Pulmonology',
-  'Rheumatology',
+  "Allergy & Immunology",
+  "Cardiology",
+  "Dermatology",
+  "Endocrinology",
+  "Gastroenterology",
+  "Hematology",
+  "Infectious Disease",
+  "Nephrology",
+  "Neurology",
+  "Oncology",
+  "Pulmonology",
+  "Rheumatology",
   // Surgical Specialties
-  'General Surgery',
-  'Cardiothoracic Surgery',
-  'Colorectal Surgery',
-  'Neurological Surgery',
-  'Obstetrics & Gynecology',
-  'Ophthalmology',
-  'Oral & Maxillofacial Surgery',
-  'Orthopedic Surgery',
-  'Otolaryngology (ENT)',
-  'Pediatric Surgery',
-  'Plastic Surgery',
-  'Transplant Surgery',
-  'Trauma Surgery',
-  'Urology',
-  'Vascular Surgery',
+  "General Surgery",
+  "Cardiothoracic Surgery",
+  "Colorectal Surgery",
+  "Neurological Surgery",
+  "Obstetrics & Gynecology",
+  "Ophthalmology",
+  "Oral & Maxillofacial Surgery",
+  "Orthopedic Surgery",
+  "Otolaryngology (ENT)",
+  "Pediatric Surgery",
+  "Plastic Surgery",
+  "Transplant Surgery",
+  "Trauma Surgery",
+  "Urology",
+  "Vascular Surgery",
   // Diagnostic Specialties
-  'Pathology',
-  'Radiology',
-  'Nuclear Medicine',
+  "Pathology",
+  "Radiology",
+  "Nuclear Medicine",
   // Other Medical Specialties
-  'Anesthesiology',
-  'Critical Care Medicine',
-  'Hospice & Palliative Medicine',
-  'Pain Medicine',
-  'Physical Medicine & Rehabilitation',
-  'Preventive Medicine',
-  'Sleep Medicine',
-  'Sports Medicine',
+  "Anesthesiology",
+  "Critical Care Medicine",
+  "Hospice & Palliative Medicine",
+  "Pain Medicine",
+  "Physical Medicine & Rehabilitation",
+  "Preventive Medicine",
+  "Sleep Medicine",
+  "Sports Medicine",
   // Psychiatry & Mental Health
-  'Psychiatry',
-  'Child & Adolescent Psychiatry',
-  'Addiction Medicine',
+  "Psychiatry",
+  "Child & Adolescent Psychiatry",
+  "Addiction Medicine",
   // Other Healthcare
-  'Neonatology',
-  'Genetics & Genomics',
-  'Medical Toxicology',
-  'Aerospace Medicine',
-  'Occupational Medicine',
+  "Neonatology",
+  "Genetics & Genomics",
+  "Medical Toxicology",
+  "Aerospace Medicine",
+  "Occupational Medicine",
   // Non-Clinical Roles
-  'Investor',
-  'Venture Capital',
-  'Private Equity',
-  'Healthcare Executive',
-  'Hospital Administrator',
-  'Pharmaceutical Industry',
-  'Medical Device Industry',
-  'Biotechnology',
-  'Researcher',
-  'Academic Medicine',
-  'Public Health',
-  'Health Policy',
-  'Medical Student',
-  'Resident/Fellow',
-  'Nurse Practitioner',
-  'Physician Assistant',
-  'Other Healthcare Professional',
-  'Other',
+  "Investor",
+  "Venture Capital",
+  "Private Equity",
+  "Healthcare Executive",
+  "Hospital Administrator",
+  "Pharmaceutical Industry",
+  "Medical Device Industry",
+  "Biotechnology",
+  "Researcher",
+  "Academic Medicine",
+  "Public Health",
+  "Health Policy",
+  "Medical Student",
+  "Resident/Fellow",
+  "Nurse Practitioner",
+  "Physician Assistant",
+  "Other Healthcare Professional",
+  "Other",
 ];
 
 export default function RegisterScreen() {
@@ -112,13 +119,13 @@ export default function RegisterScreen() {
   const appColors = useAppColors();
   const { register, isLoading, error, clearError } = useAuth();
 
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [specialty, setSpecialty] = useState('');
-  const [referralCode, setReferralCode] = useState('');
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [specialty, setSpecialty] = useState("");
+  const [referralCode, setReferralCode] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [showSpecialtyPicker, setShowSpecialtyPicker] = useState(false);
@@ -129,17 +136,17 @@ export default function RegisterScreen() {
     clearError();
 
     if (!firstName.trim()) {
-      newErrors.firstName = 'First name is required';
+      newErrors.firstName = "First name is required";
     }
 
     if (!lastName.trim()) {
-      newErrors.lastName = 'Last name is required';
+      newErrors.lastName = "Last name is required";
     }
 
     if (!email) {
-      newErrors.email = 'Email is required';
+      newErrors.email = "Email is required";
     } else if (!isValidEmail(email)) {
-      newErrors.email = 'Please enter a valid email';
+      newErrors.email = "Please enter a valid email";
     }
 
     const passwordValidation = validatePassword(password);
@@ -148,7 +155,7 @@ export default function RegisterScreen() {
     }
 
     if (password !== confirmPassword) {
-      newErrors.confirmPassword = 'Passwords do not match';
+      newErrors.confirmPassword = "Passwords do not match";
     }
 
     setErrors(newErrors);
@@ -163,30 +170,33 @@ export default function RegisterScreen() {
       password,
       first_name: firstName.trim(),
       last_name: lastName.trim(),
-      specialty: specialty && specialty !== 'Select your specialty' ? specialty : undefined,
+      specialty:
+        specialty && specialty !== "Select your specialty"
+          ? specialty
+          : undefined,
       referral_code: referralCode.trim() || undefined,
     });
 
     if (!success && error) {
-      Alert.alert('Registration Failed', error);
+      Alert.alert("Registration Failed", error);
     }
   };
 
   const handleLogin = () => {
-    navigation.navigate('Login');
+    navigation.navigate("Login");
   };
 
   const openTerms = useCallback(() => {
-    navigation.navigate('TermsOfService');
-  }, [navigation]);
+    Linking.openURL("https://themedicineandmoneyshow.com/terms");
+  }, []);
 
   const openPrivacy = useCallback(() => {
-    navigation.navigate('PrivacyPolicy');
-  }, [navigation]);
+    Linking.openURL("https://themedicineandmoneyshow.com/privacy");
+  }, []);
 
   const clearFieldError = (field: string) => {
     if (errors[field]) {
-      setErrors(prev => {
+      setErrors((prev) => {
         const newErrors = { ...prev };
         delete newErrors[field];
         return newErrors;
@@ -195,9 +205,11 @@ export default function RegisterScreen() {
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: appColors.surface }]}>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: appColors.surface }]}
+    >
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.keyboardView}
       >
         <ScrollView
@@ -207,8 +219,15 @@ export default function RegisterScreen() {
         >
           {/* Header */}
           <View style={styles.header}>
-            <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-              <Ionicons name="chevron-back" size={24} color={appColors.textPrimary} />
+            <TouchableOpacity
+              style={styles.backButton}
+              onPress={() => navigation.goBack()}
+            >
+              <Ionicons
+                name="chevron-back"
+                size={24}
+                color={appColors.textPrimary}
+              />
             </TouchableOpacity>
             <LinearGradient
               colors={[Colors.primary, Colors.secondary]}
@@ -218,8 +237,14 @@ export default function RegisterScreen() {
             >
               <Ionicons name="medical" size={32} color="white" />
             </LinearGradient>
-            <ThemedText style={[styles.title, { color: appColors.textPrimary }]}>Create Account</ThemedText>
-            <ThemedText style={[styles.subtitle, { color: appColors.textSecondary }]}>
+            <ThemedText
+              style={[styles.title, { color: appColors.textPrimary }]}
+            >
+              Create Account
+            </ThemedText>
+            <ThemedText
+              style={[styles.subtitle, { color: appColors.textSecondary }]}
+            >
               Join the MedInvest community
             </ThemedText>
           </View>
@@ -229,8 +254,18 @@ export default function RegisterScreen() {
             {/* Name Row */}
             <View style={styles.nameRow}>
               <View style={[styles.inputContainer, { flex: 1 }]}>
-                <ThemedText style={[styles.label, { color: appColors.textPrimary }]}>First Name</ThemedText>
-                <View style={[styles.inputWrapper, { backgroundColor: appColors.background }, errors.firstName && { borderColor: appColors.error }]}>
+                <ThemedText
+                  style={[styles.label, { color: appColors.textPrimary }]}
+                >
+                  First Name
+                </ThemedText>
+                <View
+                  style={[
+                    styles.inputWrapper,
+                    { backgroundColor: appColors.background },
+                    errors.firstName && { borderColor: appColors.error },
+                  ]}
+                >
                   <TextInput
                     style={[styles.input, { color: appColors.textPrimary }]}
                     placeholder="First"
@@ -238,19 +273,38 @@ export default function RegisterScreen() {
                     value={firstName}
                     onChangeText={(text) => {
                       setFirstName(text);
-                      clearFieldError('firstName');
+                      clearFieldError("firstName");
                     }}
                     autoCapitalize="words"
                   />
                 </View>
                 {errors.firstName && (
-                  <ThemedText style={[styles.errorText, { color: appColors.error }]}>{errors.firstName}</ThemedText>
+                  <ThemedText
+                    style={[styles.errorText, { color: appColors.error }]}
+                  >
+                    {errors.firstName}
+                  </ThemedText>
                 )}
               </View>
 
-              <View style={[styles.inputContainer, { flex: 1, marginLeft: Spacing.md }]}>
-                <ThemedText style={[styles.label, { color: appColors.textPrimary }]}>Last Name</ThemedText>
-                <View style={[styles.inputWrapper, { backgroundColor: appColors.background }, errors.lastName && { borderColor: appColors.error }]}>
+              <View
+                style={[
+                  styles.inputContainer,
+                  { flex: 1, marginLeft: Spacing.md },
+                ]}
+              >
+                <ThemedText
+                  style={[styles.label, { color: appColors.textPrimary }]}
+                >
+                  Last Name
+                </ThemedText>
+                <View
+                  style={[
+                    styles.inputWrapper,
+                    { backgroundColor: appColors.background },
+                    errors.lastName && { borderColor: appColors.error },
+                  ]}
+                >
                   <TextInput
                     style={[styles.input, { color: appColors.textPrimary }]}
                     placeholder="Last"
@@ -258,22 +312,40 @@ export default function RegisterScreen() {
                     value={lastName}
                     onChangeText={(text) => {
                       setLastName(text);
-                      clearFieldError('lastName');
+                      clearFieldError("lastName");
                     }}
                     autoCapitalize="words"
                   />
                 </View>
                 {errors.lastName && (
-                  <ThemedText style={[styles.errorText, { color: appColors.error }]}>{errors.lastName}</ThemedText>
+                  <ThemedText
+                    style={[styles.errorText, { color: appColors.error }]}
+                  >
+                    {errors.lastName}
+                  </ThemedText>
                 )}
               </View>
             </View>
 
             {/* Email */}
             <View style={styles.inputContainer}>
-              <ThemedText style={[styles.label, { color: appColors.textPrimary }]}>Email</ThemedText>
-              <View style={[styles.inputWrapper, { backgroundColor: appColors.background }, errors.email && { borderColor: appColors.error }]}>
-                <Ionicons name="mail-outline" size={20} color={appColors.textSecondary} />
+              <ThemedText
+                style={[styles.label, { color: appColors.textPrimary }]}
+              >
+                Email
+              </ThemedText>
+              <View
+                style={[
+                  styles.inputWrapper,
+                  { backgroundColor: appColors.background },
+                  errors.email && { borderColor: appColors.error },
+                ]}
+              >
+                <Ionicons
+                  name="mail-outline"
+                  size={20}
+                  color={appColors.textSecondary}
+                />
                 <TextInput
                   style={[styles.input, { color: appColors.textPrimary }]}
                   placeholder="Enter your email"
@@ -281,7 +353,7 @@ export default function RegisterScreen() {
                   value={email}
                   onChangeText={(text) => {
                     setEmail(text);
-                    clearFieldError('email');
+                    clearFieldError("email");
                   }}
                   keyboardType="email-address"
                   autoCapitalize="none"
@@ -289,15 +361,33 @@ export default function RegisterScreen() {
                 />
               </View>
               {errors.email && (
-                <ThemedText style={[styles.errorText, { color: appColors.error }]}>{errors.email}</ThemedText>
+                <ThemedText
+                  style={[styles.errorText, { color: appColors.error }]}
+                >
+                  {errors.email}
+                </ThemedText>
               )}
             </View>
 
             {/* Password */}
             <View style={styles.inputContainer}>
-              <ThemedText style={[styles.label, { color: appColors.textPrimary }]}>Password</ThemedText>
-              <View style={[styles.inputWrapper, { backgroundColor: appColors.background }, errors.password && { borderColor: appColors.error }]}>
-                <Ionicons name="lock-closed-outline" size={20} color={appColors.textSecondary} />
+              <ThemedText
+                style={[styles.label, { color: appColors.textPrimary }]}
+              >
+                Password
+              </ThemedText>
+              <View
+                style={[
+                  styles.inputWrapper,
+                  { backgroundColor: appColors.background },
+                  errors.password && { borderColor: appColors.error },
+                ]}
+              >
+                <Ionicons
+                  name="lock-closed-outline"
+                  size={20}
+                  color={appColors.textSecondary}
+                />
                 <TextInput
                   style={[styles.input, { color: appColors.textPrimary }]}
                   placeholder="Create a password"
@@ -305,32 +395,57 @@ export default function RegisterScreen() {
                   value={password}
                   onChangeText={(text) => {
                     setPassword(text);
-                    clearFieldError('password');
+                    clearFieldError("password");
                   }}
                   secureTextEntry={!showPassword}
                   autoCapitalize="none"
                 />
-                <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+                <TouchableOpacity
+                  onPress={() => setShowPassword(!showPassword)}
+                >
                   <Ionicons
-                    name={showPassword ? 'eye-off-outline' : 'eye-outline'}
+                    name={showPassword ? "eye-off-outline" : "eye-outline"}
                     size={20}
                     color={appColors.textSecondary}
                   />
                 </TouchableOpacity>
               </View>
               {errors.password && (
-                <ThemedText style={[styles.errorText, { color: appColors.error }]}>{errors.password}</ThemedText>
+                <ThemedText
+                  style={[styles.errorText, { color: appColors.error }]}
+                >
+                  {errors.password}
+                </ThemedText>
               )}
-              <ThemedText style={[styles.passwordHint, { color: appColors.textSecondary }]}>
+              <ThemedText
+                style={[
+                  styles.passwordHint,
+                  { color: appColors.textSecondary },
+                ]}
+              >
                 Min 8 chars, uppercase, lowercase, and number
               </ThemedText>
             </View>
 
             {/* Confirm Password */}
             <View style={styles.inputContainer}>
-              <ThemedText style={[styles.label, { color: appColors.textPrimary }]}>Confirm Password</ThemedText>
-              <View style={[styles.inputWrapper, { backgroundColor: appColors.background }, errors.confirmPassword && { borderColor: appColors.error }]}>
-                <Ionicons name="lock-closed-outline" size={20} color={appColors.textSecondary} />
+              <ThemedText
+                style={[styles.label, { color: appColors.textPrimary }]}
+              >
+                Confirm Password
+              </ThemedText>
+              <View
+                style={[
+                  styles.inputWrapper,
+                  { backgroundColor: appColors.background },
+                  errors.confirmPassword && { borderColor: appColors.error },
+                ]}
+              >
+                <Ionicons
+                  name="lock-closed-outline"
+                  size={20}
+                  color={appColors.textSecondary}
+                />
                 <TextInput
                   style={[styles.input, { color: appColors.textPrimary }]}
                   placeholder="Confirm your password"
@@ -338,41 +453,75 @@ export default function RegisterScreen() {
                   value={confirmPassword}
                   onChangeText={(text) => {
                     setConfirmPassword(text);
-                    clearFieldError('confirmPassword');
+                    clearFieldError("confirmPassword");
                   }}
                   secureTextEntry={!showConfirmPassword}
                   autoCapitalize="none"
                 />
-                <TouchableOpacity onPress={() => setShowConfirmPassword(!showConfirmPassword)}>
+                <TouchableOpacity
+                  onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+                >
                   <Ionicons
-                    name={showConfirmPassword ? 'eye-off-outline' : 'eye-outline'}
+                    name={
+                      showConfirmPassword ? "eye-off-outline" : "eye-outline"
+                    }
                     size={20}
                     color={appColors.textSecondary}
                   />
                 </TouchableOpacity>
               </View>
               {errors.confirmPassword && (
-                <ThemedText style={[styles.errorText, { color: appColors.error }]}>{errors.confirmPassword}</ThemedText>
+                <ThemedText
+                  style={[styles.errorText, { color: appColors.error }]}
+                >
+                  {errors.confirmPassword}
+                </ThemedText>
               )}
             </View>
 
             {/* Specialty */}
             <View style={styles.inputContainer}>
-              <ThemedText style={[styles.label, { color: appColors.textPrimary }]}>Specialty (Optional)</ThemedText>
+              <ThemedText
+                style={[styles.label, { color: appColors.textPrimary }]}
+              >
+                Specialty (Optional)
+              </ThemedText>
               <TouchableOpacity
-                style={[styles.inputWrapper, { backgroundColor: appColors.background }]}
+                style={[
+                  styles.inputWrapper,
+                  { backgroundColor: appColors.background },
+                ]}
                 onPress={() => setShowSpecialtyPicker(!showSpecialtyPicker)}
               >
-                <Ionicons name="briefcase-outline" size={20} color={appColors.textSecondary} />
-                <ThemedText style={[styles.pickerText, !specialty && { color: appColors.textSecondary }, specialty ? { color: appColors.textPrimary } : null]}>
-                  {specialty || 'Select your specialty'}
+                <Ionicons
+                  name="briefcase-outline"
+                  size={20}
+                  color={appColors.textSecondary}
+                />
+                <ThemedText
+                  style={[
+                    styles.pickerText,
+                    !specialty && { color: appColors.textSecondary },
+                    specialty ? { color: appColors.textPrimary } : null,
+                  ]}
+                >
+                  {specialty || "Select your specialty"}
                 </ThemedText>
-                <Ionicons name="chevron-down" size={20} color={appColors.textSecondary} />
+                <Ionicons
+                  name="chevron-down"
+                  size={20}
+                  color={appColors.textSecondary}
+                />
               </TouchableOpacity>
             </View>
 
             {showSpecialtyPicker ? (
-              <View style={[styles.pickerContainer, { backgroundColor: appColors.background }]}>
+              <View
+                style={[
+                  styles.pickerContainer,
+                  { backgroundColor: appColors.background },
+                ]}
+              >
                 <Picker
                   selectedValue={specialty}
                   onValueChange={(value) => {
@@ -381,7 +530,11 @@ export default function RegisterScreen() {
                   }}
                 >
                   {SPECIALTIES.map((s) => (
-                    <Picker.Item key={s} label={s} value={s === 'Select your specialty' ? '' : s} />
+                    <Picker.Item
+                      key={s}
+                      label={s}
+                      value={s === "Select your specialty" ? "" : s}
+                    />
                   ))}
                 </Picker>
               </View>
@@ -389,9 +542,22 @@ export default function RegisterScreen() {
 
             {/* Referral Code */}
             <View style={styles.inputContainer}>
-              <ThemedText style={[styles.label, { color: appColors.textPrimary }]}>Referral Code (Optional)</ThemedText>
-              <View style={[styles.inputWrapper, { backgroundColor: appColors.background }]}>
-                <Ionicons name="gift-outline" size={20} color={appColors.textSecondary} />
+              <ThemedText
+                style={[styles.label, { color: appColors.textPrimary }]}
+              >
+                Referral Code (Optional)
+              </ThemedText>
+              <View
+                style={[
+                  styles.inputWrapper,
+                  { backgroundColor: appColors.background },
+                ]}
+              >
+                <Ionicons
+                  name="gift-outline"
+                  size={20}
+                  color={appColors.textSecondary}
+                />
                 <TextInput
                   style={[styles.input, { color: appColors.textPrimary }]}
                   placeholder="Enter referral code"
@@ -405,35 +571,55 @@ export default function RegisterScreen() {
 
             {/* Register Button */}
             <TouchableOpacity
-              style={[styles.registerButton, isLoading && styles.registerButtonDisabled]}
+              style={[
+                styles.registerButton,
+                isLoading && styles.registerButtonDisabled,
+              ]}
               onPress={handleRegister}
               disabled={isLoading}
             >
               {isLoading ? (
                 <ActivityIndicator color="white" />
               ) : (
-                <ThemedText style={styles.registerButtonText}>Create Account</ThemedText>
+                <ThemedText style={styles.registerButtonText}>
+                  Create Account
+                </ThemedText>
               )}
             </TouchableOpacity>
 
             {/* Terms */}
             <View style={styles.termsContainer}>
-              <ThemedText style={[styles.terms, { color: appColors.textSecondary }]}>
-                By creating an account, you agree to our{' '}
+              <ThemedText
+                style={[styles.terms, { color: appColors.textSecondary }]}
+              >
+                By creating an account, you agree to our{" "}
               </ThemedText>
               <TouchableOpacity onPress={openTerms} testID="link-terms">
-                <ThemedText style={[styles.terms, styles.termsLink]}>Terms of Service</ThemedText>
+                <ThemedText style={[styles.terms, styles.termsLink]}>
+                  Terms of Service
+                </ThemedText>
               </TouchableOpacity>
-              <ThemedText style={[styles.terms, { color: appColors.textSecondary }]}> and </ThemedText>
+              <ThemedText
+                style={[styles.terms, { color: appColors.textSecondary }]}
+              >
+                {" "}
+                and{" "}
+              </ThemedText>
               <TouchableOpacity onPress={openPrivacy} testID="link-privacy">
-                <ThemedText style={[styles.terms, styles.termsLink]}>Privacy Policy</ThemedText>
+                <ThemedText style={[styles.terms, styles.termsLink]}>
+                  Privacy Policy
+                </ThemedText>
               </TouchableOpacity>
             </View>
           </View>
 
           {/* Login Link */}
           <View style={styles.footer}>
-            <ThemedText style={[styles.footerText, { color: appColors.textSecondary }]}>Already have an account?</ThemedText>
+            <ThemedText
+              style={[styles.footerText, { color: appColors.textSecondary }]}
+            >
+              Already have an account?
+            </ThemedText>
             <TouchableOpacity onPress={handleLogin}>
               <ThemedText style={styles.loginText}> Sign In</ThemedText>
             </TouchableOpacity>
@@ -456,11 +642,11 @@ const styles = StyleSheet.create({
     padding: Spacing.xl,
   },
   header: {
-    alignItems: 'center',
+    alignItems: "center",
     marginBottom: Spacing.xl,
   },
   backButton: {
-    position: 'absolute',
+    position: "absolute",
     left: 0,
     top: 0,
     padding: Spacing.sm,
@@ -469,8 +655,8 @@ const styles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     marginBottom: Spacing.lg,
   },
   title: {
@@ -484,30 +670,30 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   nameRow: {
-    flexDirection: 'row',
+    flexDirection: "row",
   },
   inputContainer: {
     marginBottom: Spacing.md,
   },
   label: {
     ...Typography.caption,
-    fontWeight: '600',
+    fontWeight: "600",
     marginBottom: Spacing.xs,
   },
   inputWrapper: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     borderRadius: BorderRadius.md,
     paddingHorizontal: Spacing.md,
     height: 48,
     gap: Spacing.sm,
     borderWidth: 1,
-    borderColor: 'transparent',
+    borderColor: "transparent",
   },
   input: {
     flex: 1,
     ...Typography.body,
-    height: '100%',
+    height: "100%",
   },
   pickerText: {
     flex: 1,
@@ -530,8 +716,8 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.primary,
     borderRadius: BorderRadius.md,
     paddingVertical: Spacing.lg,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     marginTop: Spacing.md,
     ...Shadows.button,
   },
@@ -540,29 +726,29 @@ const styles = StyleSheet.create({
   },
   registerButtonText: {
     ...Typography.body,
-    color: 'white',
-    fontWeight: '600',
+    color: "white",
+    fontWeight: "600",
   },
   termsContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'center',
-    alignItems: 'center',
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "center",
+    alignItems: "center",
     marginTop: Spacing.lg,
   },
   terms: {
     ...Typography.small,
-    textAlign: 'center',
+    textAlign: "center",
     lineHeight: 20,
   },
   termsLink: {
     color: Colors.primary,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   footer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
     marginTop: Spacing.xl,
     paddingBottom: Spacing.xl,
   },
@@ -572,6 +758,6 @@ const styles = StyleSheet.create({
   loginText: {
     ...Typography.body,
     color: Colors.primary,
-    fontWeight: '600',
+    fontWeight: "600",
   },
 });
